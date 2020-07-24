@@ -1,98 +1,56 @@
 "use strict"
 
-let expect = chai.expect;
+class Goal {
 
-describe('goal', () => {
+  constructor({id = "goal",
+               name = "Goal",
+               target = 1.0,
+               baseline = 0.0,
+               start = new Date(),
+               end = new Date()}) {
+    this._id = id;
+    this._name = name;
+    this._target = target;
+    this._baseline = baseline;
+    this._current = baseline;
+    this._start = start;
+    this._end = end;
+  }
 
-	it('is constructed with a name', () => {
-		let name = 'Distance';
-		let goal = new Goal({name});
-		expect(goal.name).to.equal(name);
-	});
+  get id() {
+    return this._id;
+  }
 
-	it('is constructed with an identifier', () => {
-		let id = 'distance';
-		let goal = new Goal({id});
-		expect(goal.id).to.equal(id);
-	});
+  get name() {
+    return this._name;
+  }
 
-	it('is constructed with a target', () => {
-		let target = 3.14159;
-		let goal = new Goal({target});
-		expect(goal.target).to.equal(target);
-	});
+  get target() {
+    return this._target;
+  }
 
-	it('is constructed with a baseline', () => {
-		let baseline = 0.747;
-		let goal = new Goal({baseline});
-		expect(goal.baseline).to.equal(baseline);
-	});
+  get baseline() {
+    return this._baseline;
+  }
 
-	it('is constructed with a start date', () => {
-		let start = new Date();
-		let goal = new Goal({start});
-		expect(goal.start).to.equal(start);
-	});
+  get current() {
+    return this._current;
+  }
+  
+  set current(value) {
+    return this._current = value;
+  }
 
-	it('is constructed with an end date', () => {
-		let end = new Date();
-		let goal = new Goal({end});
-		expect(goal.end).to.equal(end);
-	});
+  get start() {
+    return this._start;
+  }
 
-  it('has a target of one by default', () => {
-		let goal = new Goal({});
-		expect(goal.target).to.equal(1.0);
-	});
+  get end() {
+    return this._end;
+  }
 
-	it('has a baseline of zero by default', () => {
-		let goal = new Goal({});
-		expect(goal.baseline).to.equal(0.0);
-	});
+  get completion() {
+    return (this._current - this._baseline) / (this._target - this._baseline);
+  }
+}
 
-	it('has a current value of zero by default', () => {
-		let goal = new Goal({});
-		expect(goal.current).to.equal(0.0);
-	});
-
-	it('has a current value that can be modified', () => {
-		let goal = new Goal({});
-		expect(goal.current).to.equal(0.0);
-		goal.current = 25;
-		expect(goal.current).to.equal(25);
-	});
-
-	it('has a completion percentage', () => {
-		let goal = new Goal({});
-		expect(goal.completion).to.equal(0.0);
-	});
-
-	it('has completion percentage depending on target, baseline, current', () => {
-		let goal = new Goal({target: 1200, baseline: 200});
-		expect(goal.completion).to.equal(0.0);
-		goal.current = 600;
-		expect(goal.completion).to.equal(0.4);
-	});
-
-	it('can be completed', () => {
-		let goal = new Goal({target: 25});
-		expect(goal.completion).to.equal(0.0);
-		goal.current = 25;
-		expect(goal.completion).to.equal(1.0);
-	});
-
-	it('supports ascending towards a target', () => {
-		let goal = new Goal({target: 800, baseline: -200});
-		expect(goal.completion).to.equal(0.0);
-		goal.current = 200;
-		expect(goal.completion).to.equal(0.4);
-	});
-
-	it('supports descending towards a target', () => {
-		let goal = new Goal({target: -200, baseline: 800});
-		expect(goal.completion).to.equal(0.0);
-		goal.current = 600;
-		expect(goal.completion).to.equal(0.2);
-	});
-
-});
