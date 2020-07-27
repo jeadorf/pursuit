@@ -97,3 +97,39 @@ describe('goal', () => {
 
 });
 
+
+describe('app', () => {
+
+  it('can set goals', () => {
+    let app = new App();
+    let goals = [new Goal({}), new Goal({})]
+    expect(app.goals).to.be.empty;
+
+    app.goals = goals;
+
+    expect(app.goals).to.have.lengthOf(2);
+  });
+
+  it('can render goals', () => {
+    let app = new App();
+    app.goals = [
+      new Goal({
+        name: 'Foo',
+        target: 1200,
+        baseline: 200,
+      }),
+      new Goal({
+        name: 'Bar',
+        target: 90,
+        baseline: 20,
+      }),
+    ];
+    let container = document.createElement('div');
+
+    app.render(container);
+
+    expect(container.innerHTML).to.have.string('Foo');
+    expect(container.innerHTML).to.have.string('Bar');
+  });
+
+});

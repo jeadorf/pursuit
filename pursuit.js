@@ -54,3 +54,32 @@ class Goal {
   }
 }
 
+class App {
+
+  constructor() {
+    this._goals = [];
+  }
+
+  get goals() {
+    return this._goals;
+  }
+
+  set goals(value) {
+    this._goals = value;
+  }
+ 
+  render(container) {
+    let html = "<ul>";
+    for (let g of this._goals) {
+      html += (
+`<li>${g.name} (target=${g.target},
+                baseline=${g.baseline},
+                current=${g.current},
+                start=${g.start},
+                end=${g.end})`);
+    }
+    html += "</ul>";
+    container.innerHTML = html;
+  }
+
+}
