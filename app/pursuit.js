@@ -6,13 +6,14 @@ class Goal {
                name = "Goal",
                target = 1.0,
                baseline = 0.0,
+               current = null,
                start = new Date(),
                end = new Date()}) {
     this._id = id;
     this._name = name;
     this._target = target;
     this._baseline = baseline;
-    this._current = baseline;
+    this._current = current ?? baseline;
     this._start = start;
     this._end = end;
   }
@@ -76,6 +77,16 @@ class App {
 
   set goals(value) {
     this._goals = value;
+  }
+
+  loadGoalsFromJson(json) {
+    let gs = JSON.parse(json, (k, v) => {
+      if (k == 'start' || k == 'end') {
+        return new Date(v);
+      }
+      return v;
+    });
+    this._goals = gs.map((g) => new Goal(g));
   }
  
   render(containerSelector) {
@@ -162,4 +173,9 @@ class App {
           .text((d) => `${d.baseline}`)
     );
   }
+}
+
+
+function goalsFromJson(json) {
+
 }

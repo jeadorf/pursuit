@@ -162,4 +162,75 @@ describe('app', () => {
     expect(container.innerHTML).to.have.string('Bar');
   });
 
+  it('can load goals from json', () => {
+    let app = new App();
+    let expected = [
+      new Goal({
+        id: 'foo',
+        name: 'Foo',
+        start: new Date(0),
+        end: new Date(1234),
+        target: 1200,
+        baseline: 200,
+        current: 500,
+      }),
+      new Goal({
+        id: 'bar',
+        name: 'Bar',
+        start: new Date(0),
+        end: new Date(8383),
+        target: 90,
+        baseline: 20,
+        current: 60,
+      }),
+      new Goal({
+        id: 'baz',
+        name: 'Baz',
+        start: new Date(0),
+        end: new Date(1234),
+        target: 140,
+        baseline: -20,
+        current: 30,
+      }),
+    ];
+    let json = ` 
+[
+  {
+    "id": "foo",
+    "name": "Foo",
+    "start": 0,
+    "end": 1234,
+    "baseline": 200,
+    "target": 1200,
+    "current": 500
+  },
+  {
+    "id": "bar",
+    "name": "Bar",
+    "start": 0,
+    "end": 8383,
+    "baseline": 20,
+    "target": 90,
+    "current": 60
+  },
+  {
+    "id": "baz",
+    "name": "Bar",
+    "name":"Baz",
+    "start": 0,
+    "end": 1234,
+    "baseline": -20,
+    "target": 140,
+    "current": 30
+  }
+]` ;
+
+    app.loadGoalsFromJson(json);
+
+    console.log(app.goals);
+    console.log(expected);
+    expect(app.goals).to.eql(expected);
+  });
+
 });
+

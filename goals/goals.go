@@ -9,25 +9,43 @@ import (
 )
 
 type Goal struct {
-        Id string
-        Name string
-        Start int64
-        End int64
-        Baseline float64
-        Target float64
-        Current float64
+        Id string               `json:"id"`
+        Name string             `json:"name"`
+        Start int64             `json:"start"`
+        End int64               `json:"end"`
+        Baseline float64        `json:"baseline"`
+        Target float64          `json:"target"`
+        Current float64         `json:"current"`
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
         var goals = []Goal{
                 Goal{
+			Id: "foo",
                         Name: "Foo",
+			Start: 0,
+			End: 12345,
+			Baseline: 200,
+			Target: 1500,
+			Current: 400,
                 },
                 Goal{
+			Id: "bar",
                         Name: "Bar",
+			Start: 3000,
+			End: 52345,
+			Baseline: -200,
+			Target: 120,
+			Current: 60,
                 },
                 Goal{
+			Id: "baz",
                         Name: "Baz",
+			Start: 4422,
+			End: 12345,
+			Baseline: 150,
+			Target: -10,
+			Current: 30,
                 },
         }
 
