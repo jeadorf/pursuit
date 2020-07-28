@@ -68,18 +68,46 @@ class App {
     this._goals = value;
   }
  
-  render(container) {
-    let html = "<ul>";
-    for (let g of this._goals) {
-      html += (
-`<li>${g.name} (target=${g.target},
-                baseline=${g.baseline},
-                current=${g.current},
-                start=${g.start},
-                end=${g.end})`);
-    }
-    html += "</ul>";
-    container.innerHTML = html;
+  render(containerSelector) {
+    let svg = (
+      d3.select(containerSelector)
+        .append('svg')
+        .attr('width', 400)
+        .attr('height', 400));
+ 
+    // Draw names
+    (svg
+      .selectAll('whatever')
+        .data(this._goals)
+      .enter()
+        .append('text')
+          .attr('y', (d, i) => (i+1) * 60)
+          .text((d) => d.name)
+    );
+
+    // Draw progress bar wires
+    (svg
+      .selectAll('whatever')
+        .data(this._goals)
+      .enter()
+        .append('rect')
+          .attr('width', '100%')
+          .attr('height', '6')
+          .attr('fill', 'lightgrey')
+          .attr('y', (d, i) => (i+1) * 60 + 20)
+    );
+ 
+    // Draw progress bars
+    (svg
+      .selectAll('whatever')
+        .data(this._goals)
+      .enter()
+        .append('rect')
+          .attr('width', (d) => `${100*d.completion}%`)
+          .attr('height', '18')
+          .attr('fill', 'darkgrey')
+          .attr('y', (d, i) => (i+1) * 60 + 14)
+    );
   }
 
 }
