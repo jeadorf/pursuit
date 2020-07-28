@@ -1,7 +1,7 @@
 "use strict"
 
-class Goal {
 
+class Goal {
   constructor({id = "goal",
                name = "Goal",
                target = 1.0,
@@ -64,8 +64,8 @@ class Goal {
   }
 }
 
-class App {
 
+class App {
   constructor() {
     this._goals = [];
   }
@@ -161,8 +161,5 @@ class App {
           .attr('y', (d, i) => i * 70 + 60 + 5)
           .text((d) => `${d.baseline}`)
     );
-
-
   }
-
 }
