@@ -175,7 +175,3 @@ class App {
   }
 }
 
-
-function goalsFromJson(json) {
-
-}
