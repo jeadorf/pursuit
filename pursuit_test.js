@@ -62,12 +62,12 @@ describe('goal', () => {
     expect(goal.current).to.equal(25);
   });
 
-  it('has a progress percentage', () => {
+  it('has progress', () => {
     let goal = new Goal({});
     expect(goal.progress).to.equal(0.0);
   });
 
-  it('has progress percentage depending on target, baseline, current', () => {
+  it('has progress depending on target, baseline, current', () => {
     let goal = new Goal({target: 1200, baseline: 200});
     expect(goal.progress).to.equal(0.0);
     goal.current = 600;
@@ -93,6 +93,36 @@ describe('goal', () => {
     expect(goal.progress).to.equal(0.0);
     goal.current = 600;
     expect(goal.progress).to.equal(0.2);
+  });
+
+  it('has time spent percentage', () => {
+    let goal = new Goal({
+      start: new Date(1990, 12, 1),
+      end: new Date(1990, 12, 10),
+    });
+    expect(goal.time_spent(goal.start)).to.equal(0.0);
+    expect(goal.time_spent(goal.end)).to.equal(1.0);
+  });
+
+  it('has 100% time spent if end date equals start date', () => {
+    let goal = new Goal({
+      start: new Date(1990, 12, 1),
+      end: new Date(1990, 12, 1),
+    });
+    expect(goal.time_spent(goal.start)).to.equal(1.0);
+    expect(goal.time_spent(goal.end)).to.equal(1.0);
+  });
+
+  it('can determine whether on track', () => {
+    let goal = new Goal({
+      start: new Date(1990, 12, 1),
+      end: new Date(1990, 12, 10),
+      target: 120,
+      baseline: 20,
+    });
+    goal.current = 110;
+    expect(goal.is_on_track(new Date(1990, 12, 9))).to.be.true;
+    expect(goal.is_on_track(new Date(1990, 12, 10))).to.be.false;
   });
 
 });

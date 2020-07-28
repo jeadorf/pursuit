@@ -52,6 +52,16 @@ class Goal {
   get progress() {
     return (this._current - this._baseline) / (this._target - this._baseline);
   }
+
+  time_spent(by_date) {
+    let total = this._end.getTime() - this._start.getTime();
+    let spent = by_date.getTime() - this._start.getTime();
+    return total == 0 ? 1.0 : spent / total;
+  }
+
+  is_on_track(by_date) {
+    return this.progress >= this.time_spent(by_date);
+  }
 }
 
 class App {
@@ -72,16 +82,19 @@ class App {
     let svg = (
       d3.select(containerSelector)
         .append('svg')
-        .attr('width', 400)
-        .attr('height', 400));
- 
+        .attr('style', 'margin: auto; display: flex')
+        .attr('width', '500px')
+        .attr('height', `${70*this._goals.length}px`));
+
     // Draw names
     (svg
       .selectAll('whatever')
         .data(this._goals)
       .enter()
         .append('text')
-          .attr('y', (d, i) => (i+1) * 60)
+          .attr('style', 'font: 15px sans-serif')
+          .attr('x', 0)
+          .attr('y', (d, i) => i * 70 + 15 + 5)
           .text((d) => d.name)
     );
 
@@ -91,23 +104,65 @@ class App {
         .data(this._goals)
       .enter()
         .append('rect')
-          .attr('width', '100%')
-          .attr('height', '6')
+          .attr('width', '500')
+          .attr('height', '10')
           .attr('fill', 'lightgrey')
-          .attr('y', (d, i) => (i+1) * 60 + 20)
+          .attr('y', (d, i) => i * 70 + 35)
     );
  
     // Draw progress bars
+    let now = new Date();
     (svg
       .selectAll('whatever')
         .data(this._goals)
       .enter()
         .append('rect')
           .attr('width', (d) => `${100*d.progress}%`)
-          .attr('height', '18')
-          .attr('fill', 'darkgrey')
-          .attr('y', (d, i) => (i+1) * 60 + 14)
+          .attr('height', '30')
+          .attr('fill', (d) => d.is_on_track(now) ? '#88bb77' : '#bb6677')
+          .attr('y', (d, i) => i * 70 + 25)
     );
+
+    // Draw current date 
+    (svg
+      .selectAll('whatever')
+        .data(this._goals)
+      .enter()
+        .append('rect')
+          .attr('width', '2')
+          .attr('height', '30')
+          .attr('fill', 'orange')
+          .attr('x', (d) => 500 * d.time_spent(now))
+          .attr('y', (d, i) => i * 70 + 25)
+    );
+
+    // Draw target as text
+    (svg
+      .selectAll('whatever')
+        .data(this._goals)
+      .enter()
+        .append('text')
+          .attr('style', 'font: 11px sans-serif; fill: darkgrey')
+          .attr('text-anchor', 'end')
+          .attr('x', 500)
+          .attr('y', (d, i) => i * 70 + 60 + 5)
+          .text((d) => `${d.target}`)
+    );
+
+    // Draw baseline as text
+    (svg
+      .selectAll('whatever')
+        .data(this._goals)
+      .enter()
+        .append('text')
+          .attr('style', 'font: 11px sans-serif; fill: darkgrey')
+          .attr('text-anchor', 'start')
+          .attr('x', 0)
+          .attr('y', (d, i) => i * 70 + 60 + 5)
+          .text((d) => `${d.baseline}`)
+    );
+
+
   }
 
 }

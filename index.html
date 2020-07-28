@@ -10,19 +10,39 @@
   <script src="pursuit.js"></script>
   <script>
     let app = new App();
+
+    function addDays(date, days) {
+      var result = new Date(date);
+      result.setDate(result.getDate() + days);
+      return result;
+    }
+
     app.goals = [
       new Goal({
         name: 'Foo',
         target: 1200,
         baseline: 200,
+        start: addDays(new Date(), -60),
+        end: addDays(new Date(), 305),
       }),
       new Goal({
         name: 'Bar',
         target: 90,
         baseline: 20,
+        start: addDays(new Date(), -130),
+        end: addDays(new Date(), 235),
+      }),
+      new Goal({
+        name: 'Baz',
+        target: -100,
+        baseline: 50,
+        start: addDays(new Date(), -30),
+        end: addDays(new Date(), 335),
       }),
     ];
-    app.goals[0].current = 800;
+    app.goals[0].current = 500;
+    app.goals[1].current = 40;
+    app.goals[2].current = 30;
     app.render('#app');
   </script>
 </body>
