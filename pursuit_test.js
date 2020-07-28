@@ -62,37 +62,37 @@ describe('goal', () => {
     expect(goal.current).to.equal(25);
   });
 
-  it('has a completion percentage', () => {
+  it('has a progress percentage', () => {
     let goal = new Goal({});
-    expect(goal.completion).to.equal(0.0);
+    expect(goal.progress).to.equal(0.0);
   });
 
-  it('has completion percentage depending on target, baseline, current', () => {
+  it('has progress percentage depending on target, baseline, current', () => {
     let goal = new Goal({target: 1200, baseline: 200});
-    expect(goal.completion).to.equal(0.0);
+    expect(goal.progress).to.equal(0.0);
     goal.current = 600;
-    expect(goal.completion).to.equal(0.4);
+    expect(goal.progress).to.equal(0.4);
   });
 
   it('can be completed', () => {
     let goal = new Goal({target: 25});
-    expect(goal.completion).to.equal(0.0);
+    expect(goal.progress).to.equal(0.0);
     goal.current = 25;
-    expect(goal.completion).to.equal(1.0);
+    expect(goal.progress).to.equal(1.0);
   });
 
   it('supports ascending towards a target', () => {
     let goal = new Goal({target: 800, baseline: -200});
-    expect(goal.completion).to.equal(0.0);
+    expect(goal.progress).to.equal(0.0);
     goal.current = 200;
-    expect(goal.completion).to.equal(0.4);
+    expect(goal.progress).to.equal(0.4);
   });
 
   it('supports descending towards a target', () => {
     let goal = new Goal({target: -200, baseline: 800});
-    expect(goal.completion).to.equal(0.0);
+    expect(goal.progress).to.equal(0.0);
     goal.current = 600;
-    expect(goal.completion).to.equal(0.2);
+    expect(goal.progress).to.equal(0.2);
   });
 
 });

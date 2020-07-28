@@ -49,7 +49,7 @@ class Goal {
     return this._end;
   }
 
-  get completion() {
+  get progress() {
     return (this._current - this._baseline) / (this._target - this._baseline);
   }
 }
@@ -103,7 +103,7 @@ class App {
         .data(this._goals)
       .enter()
         .append('rect')
-          .attr('width', (d) => `${100*d.completion}%`)
+          .attr('width', (d) => `${100*d.progress}%`)
           .attr('height', '18')
           .attr('fill', 'darkgrey')
           .attr('y', (d, i) => (i+1) * 60 + 14)
