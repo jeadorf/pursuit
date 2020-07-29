@@ -19,33 +19,34 @@ type Goal struct {
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
         var goals = []Goal{
                 Goal{
-			Id: "foo",
-                        Name: "Foo",
-			Start: 0,
-			End: 12345,
-			Baseline: 200,
-			Target: 1500,
-			Current: 400,
+			Id: "running-distance-2020",
+			Name: "Running: distance (2020)",
+			Start: 1577833200000,
+			End: 1609369200000,
+			Baseline: 0,
+			Target: 750,
+			Current: 415,
                 },
                 Goal{
-			Id: "bar",
-                        Name: "Bar",
-			Start: 3000,
-			End: 52345,
-			Baseline: -200,
-			Target: 120,
-			Current: 60,
+			Id: "running-elevation-gain-2020",
+			Name: "Running: elevation gain (2020)",
+			Start: 1577833200000,
+			End: 1609369200000,
+			Baseline: 0,
+			Target: 24000,
+			Current: 15393,
                 },
                 Goal{
-			Id: "baz",
-                        Name: "Baz",
-			Start: 4422,
-			End: 12345,
-			Baseline: 150,
-			Target: -10,
-			Current: 30,
+			Id: "french-vocab-2020",
+			Name: "French: vocabulary size (2020)",
+			Start: 1577833200000,
+			End: 1609369200000,
+			Baseline: 0,
+			Target: 4000,
+			Current: 902,
                 },
         }
 
