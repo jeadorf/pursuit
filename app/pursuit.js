@@ -248,5 +248,8 @@ class App {
     return this._googleUser ? true : false;
   }
 
+  idToken() {
+    return this._googleUser.getAuthResponse().id_token;
+  }
 }
 
