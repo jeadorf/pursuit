@@ -28,7 +28,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			End: 1609369200000,
 			Baseline: 0,
 			Target: 750,
-			Current: 415,
+			Current: 453,
                 },
                 Goal{
 			Id: "running-elevation-gain-2020",
@@ -37,7 +37,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			End: 1609369200000,
 			Baseline: 0,
 			Target: 24000,
-			Current: 15393,
+			Current: 15972,
                 },
                 Goal{
 			Id: "french-vocab-2020",
