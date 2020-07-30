@@ -201,5 +201,52 @@ class App {
           .text((d) => `${d.target}`)
     );
   }
+
+  signIn(googleUser, {
+    profileImage = document.querySelector('#profile-image'),
+    signInButton = document.querySelector('#signin-button'),
+    signOutButton = document.querySelector('#signout-button'),
+  }) {
+    this._googleUser = googleUser;
+
+    if (profileImage) {
+      profileImage.src = googleUser.getBasicProfile().getImageUrl();
+      profileImage.style.display = 'block';
+    }
+
+    if (signInButton) {
+      signInButton.style.display = 'none';
+    }
+
+    if (signOutButton) {
+      signOutButton.style.display = 'block';
+    }
+  }
+
+  signOut({
+    profileImage = document.querySelector('#profile-image'),
+    signInButton = document.querySelector('#signin-button'),
+    signOutButton = document.querySelector('#signout-button'),
+  }) {
+    this._googleUser = null;
+
+    if (profileImage) {
+      profileImage.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+      profileImage.style.display = 'none';
+    }
+
+    if (signInButton) {
+      signInButton.style.display = 'block';
+    }
+
+    if (signOutButton) {
+      signOutButton.style.display = 'none';
+    }
+  }
+
+  signedIn() {
+    return this._googleUser ? true : false;
+  }
+
 }
 

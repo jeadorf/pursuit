@@ -232,5 +232,60 @@ describe('app', () => {
     expect(app.goals).to.eql(expected);
   });
 
+  /* TODO: this is ugly, improve */
+  it('can let user sign in', () => {
+    let app = new App();
+    let mockGoogleUser ={
+      getBasicProfile: () => {
+        return {
+          getImageUrl: () => {
+            return 'foo.jpg';
+          }
+        }
+      }
+    };
+    let profileImage = document.createElement('img');
+    let signInButton = document.createElement('div');
+    let signOutButton = document.createElement('div');
+    signInButton.style.display = 'block';
+    signOutButton.style.display = 'none';
+    expect(app.signedIn()).is.false;
+
+    app.signIn(mockGoogleUser,
+      {profileImage, signInButton, signOutButton});
+
+    expect(app.signedIn()).is.true;
+    expect(profileImage.src).to.include('foo.jpg');
+    expect(signInButton.style.display).is.equal('none');
+    expect(signOutButton.style.display).is.equal('block');
+  });
+
+  /* TODO: this is ugly, improve */
+  it('can let user sign out', () => {
+    let app = new App();
+    let mockGoogleUser = {
+      getBasicProfile: () => {
+        return {
+          getImageUrl: () => {
+            return 'foo.jpg';
+          }
+        }
+      }
+    };
+    let profileImage = document.createElement('img');
+    let signInButton = document.createElement('div');
+    let signOutButton = document.createElement('div');
+    app.signIn(mockGoogleUser,
+      {profileImage, signInButton, signOutButton});
+    expect(app.signedIn()).is.true;
+
+    app.signOut({profileImage, signInButton, signOutButton});
+
+    expect(app.signedIn()).is.false;
+    expect(profileImage.src).to.include('base64');
+    expect(signInButton.style.display).is.equal('block');
+    expect(signOutButton.style.display).is.equal('none');
+  });
+
 });
 

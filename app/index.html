@@ -1,22 +1,31 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <link rel="stylesheet" src="pursuit.css">
+  <link rel="stylesheet" href="pursuit.css">
   <script src="https://d3js.org/d3.v4.js"></script>
+  <script src="https://apis.google.com/js/platform.js" async defer></script>
+  <meta name="google-signin-client_id" content="115571701363-ial80dhgl21cpbtv7p4ap1475ps3fbms.apps.googleusercontent.com">
 </head>
 <body>
-  <div id="app">
+  <div id="signin">
+    <img id="profile-image" src="">
+    <div id="signin-button" class="g-signin2" data-onsuccess="onSignIn"></div>
+    <button id="signout-button" onclick="onSignOut();">Sign out</button>
   </div>
+  <div id="app"></div>
   <script src="pursuit.js"></script>
   <script>
-    function addDays(date, days) {
-      var result = new Date(date);
-      result.setDate(result.getDate() + days);
-      return result;
+    let app = new App();
+
+    function onSignIn(googleUser) {
+      app.signIn(googleUser, {});
+    }
+
+    function onSignOut() {
+      app.signOut({});
     }
 
     async function main() {
-      let app = new App();
       let res = await fetch('https://goals-33qeh4dzmq-ew.a.run.app/');
       // TODO check for errors, fallback to some fake data if necessary
       let json = await res.text();
@@ -27,5 +36,6 @@
 
     main();
   </script>
+</script>
 </body>
 </html>
