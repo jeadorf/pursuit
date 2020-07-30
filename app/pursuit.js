@@ -90,12 +90,13 @@ class App {
   }
  
   render(containerSelector) {
+    let ih = 100;
     let svg = (
       d3.select(containerSelector)
         .append('svg')
         .attr('style', 'margin: auto; display: flex')
         .attr('width', '500px')
-        .attr('height', `${70*this._goals.length}px`));
+        .attr('height', `${ih * this._goals.length}px`));
 
     // Draw names
     (svg
@@ -105,7 +106,7 @@ class App {
         .append('text')
           .attr('style', 'font: 15px sans-serif')
           .attr('x', 0)
-          .attr('y', (d, i) => i * 70 + 15 + 5)
+          .attr('y', (d, i) => i * ih + 15 + 5)
           .text((d) => d.name)
     );
 
@@ -116,9 +117,9 @@ class App {
       .enter()
         .append('rect')
           .attr('width', '500')
-          .attr('height', '10')
+          .attr('height', '6')
           .attr('fill', 'lightgrey')
-          .attr('y', (d, i) => i * 70 + 35)
+          .attr('y', (d, i) => i * ih + 52)
     );
  
     // Draw progress bars
@@ -131,7 +132,8 @@ class App {
           .attr('width', (d) => `${100*d.progress}%`)
           .attr('height', '30')
           .attr('fill', (d) => d.is_on_track(now) ? '#88bb77' : '#bb6677')
-          .attr('y', (d, i) => i * 70 + 25)
+          .attr('fill-opacity', '0.6')
+          .attr('y', (d, i) => i * ih + 40)
     );
 
     // Draw current date 
@@ -140,14 +142,27 @@ class App {
         .data(this._goals)
       .enter()
         .append('rect')
-          .attr('width', '2')
+          .attr('width', '3')
           .attr('height', '30')
           .attr('fill', 'orange')
-          .attr('x', (d) => 500 * d.time_spent(now))
-          .attr('y', (d, i) => i * 70 + 25)
+          .attr('x', (d) => 500 * d.time_spent(now) - 1)
+          .attr('y', (d, i) => i * ih + 40)
     );
 
-    // Draw target as text
+    // Draw start as text
+    (svg
+      .selectAll('whatever')
+        .data(this._goals)
+      .enter()
+        .append('text')
+          .attr('style', 'font: 11px sans-serif; fill: darkgrey')
+          .attr('text-anchor', 'start')
+          .attr('x', 0)
+          .attr('y', (d, i) => i * ih + 38)
+          .text((d) => `${d.start.toISOString().slice(0, 10)}`)
+    );
+
+    // Draw end as text
     (svg
       .selectAll('whatever')
         .data(this._goals)
@@ -156,8 +171,8 @@ class App {
           .attr('style', 'font: 11px sans-serif; fill: darkgrey')
           .attr('text-anchor', 'end')
           .attr('x', 500)
-          .attr('y', (d, i) => i * 70 + 60 + 5)
-          .text((d) => `${d.target}`)
+          .attr('y', (d, i) => i * ih + 38)
+          .text((d) => `${d.end.toISOString().slice(0, 10)}`)
     );
 
     // Draw baseline as text
@@ -169,8 +184,21 @@ class App {
           .attr('style', 'font: 11px sans-serif; fill: darkgrey')
           .attr('text-anchor', 'start')
           .attr('x', 0)
-          .attr('y', (d, i) => i * 70 + 60 + 5)
+          .attr('y', (d, i) => i * ih + 80)
           .text((d) => `${d.baseline}`)
+    );
+
+    // Draw target as text
+    (svg
+      .selectAll('whatever')
+        .data(this._goals)
+      .enter()
+        .append('text')
+          .attr('style', 'font: 11px sans-serif; fill: darkgrey')
+          .attr('text-anchor', 'end')
+          .attr('x', 500)
+          .attr('y', (d, i) => i * ih + 80)
+          .text((d) => `${d.target}`)
     );
   }
 }
