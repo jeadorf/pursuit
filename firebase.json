@@ -1,17 +1,24 @@
 {
   "hosting": {
+    "site": "pursuit-284716",
     "public": "public",
     "ignore": [
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
     ],
-    "rewrites": [ {
-      "source": "**",
-      "run": {
-        "serviceId": "goals",
-        "region": "europe-west1"
+    "rewrites": [
+      {
+        "source": "**",
+        "run": {
+          "serviceId": "goals",
+          "region": "europe-west1"
+        }
       }
-    } ]
+    ]
+  },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
   }
 }
