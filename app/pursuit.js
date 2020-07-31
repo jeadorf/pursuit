@@ -227,20 +227,30 @@ class App {
     profileImage = document.querySelector('#profile-image'),
     signInButton = document.querySelector('#signin-button'),
     signOutButton = document.querySelector('#signout-button'),
+    testing = false,
   }) {
-    this._googleUser = null;
+    let afterSignOut = () => {
+      this._googleUser = null;
+      this._goals = [];
 
-    if (profileImage) {
-      profileImage.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
-      profileImage.style.display = 'none';
+      if (profileImage) {
+        profileImage.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+        profileImage.style.display = 'none';
+      }
+
+      if (signInButton) {
+        signInButton.style.display = 'block';
+      }
+
+      if (signOutButton) {
+        signOutButton.style.display = 'none';
+      }
     }
-
-    if (signInButton) {
-      signInButton.style.display = 'block';
-    }
-
-    if (signOutButton) {
-      signOutButton.style.display = 'none';
+    if (testing) {
+      afterSignOut();
+    } else {
+      let auth2 = gapi.auth2.getAuthInstance();
+      auth2.signOut().then(afterSignOut);
     }
   }
 

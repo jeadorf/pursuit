@@ -130,6 +130,11 @@ describe('goal', () => {
 
 describe('app', () => {
 
+  it('has no goals initially', () => {
+    let app = new App();
+    expect(app.goals).to.be.empty;
+  });
+
   it('can set goals', () => {
     let app = new App();
     let goals = [new Goal({}), new Goal({})]
@@ -263,6 +268,7 @@ describe('app', () => {
   /* TODO: this is ugly, improve */
   it('can let user sign out', () => {
     let app = new App();
+    app.goals = [new Goal({})];
     let mockGoogleUser = {
       getBasicProfile: () => {
         return {
@@ -277,14 +283,16 @@ describe('app', () => {
     let signOutButton = document.createElement('div');
     app.signIn(mockGoogleUser,
       {profileImage, signInButton, signOutButton});
+    expect(app.goals).is.not.empty;
     expect(app.signedIn()).is.true;
 
-    app.signOut({profileImage, signInButton, signOutButton});
+    app.signOut({profileImage, signInButton, signOutButton, testing: true});
 
     expect(app.signedIn()).is.false;
     expect(profileImage.src).to.include('base64');
     expect(signInButton.style.display).is.equal('block');
     expect(signOutButton.style.display).is.equal('none');
+    expect(app.goals).is.empty;
   });
 
 });

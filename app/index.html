@@ -4,7 +4,8 @@
   <link rel="stylesheet" href="pursuit.css">
   <script src="https://d3js.org/d3.v4.js"></script>
   <script src="https://apis.google.com/js/platform.js" async defer></script>
-  <meta name="google-signin-client_id" content="115571701363-ial80dhgl21cpbtv7p4ap1475ps3fbms.apps.googleusercontent.com">
+  <meta name="google-signin-client_id"
+        content="115571701363-ial80dhgl21cpbtv7p4ap1475ps3fbms.apps.googleusercontent.com">
 </head>
 <body>
   <div id="signin">
@@ -15,7 +16,10 @@
   <div id="app"></div>
   <script src="pursuit.js"></script>
   <script>
+    const GOALS_SERVICE_ADDRESS = 'https://goals-33qeh4dzmq-ew.a.run.app/';
+
     let app = new App();
+    app.render('#app');
 
     function onSignIn(googleUser) {
       app.signIn(googleUser, {});
@@ -25,19 +29,22 @@
 
     function onSignOut() {
       app.signOut({});
+
+      // ugly hack
+      document.querySelector('#app').innerHTML = '';
     }
 
     async function fetchGoals() {
-      let res = await fetch('https://goals-33qeh4dzmq-ew.a.run.app/', {
-        headers: {
-          'Authorization': `Bearer ${app.idToken()}`
-        },
-      });
-      // TODO check for errors, fallback to some fake data if necessary
-      let json = await res.text();
-      // TODO check for errors, fallback to some fake data if necessary
-      app.loadGoalsFromJson(json);
-      app.render('#app');
+      let goals = (
+        fetch(GOALS_SERVICE_ADDRESS, {
+          headers: {'Authorization': `Bearer ${app.idToken()}`},
+        })
+        .then((response) => response.text())
+        .then((text) => {
+          app.loadGoalsFromJson(text);
+          app.render('#app');
+        })
+      );
     }
   </script>
 </script>
