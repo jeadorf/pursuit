@@ -78,16 +78,6 @@ class App {
   set goals(value) {
     this._goals = value;
   }
-
-  loadGoalsFromJson(json) {
-    let gs = JSON.parse(json, (k, v) => {
-      if (k == 'start' || k == 'end') {
-        return new Date(v);
-      }
-      return v;
-    });
-    this._goals = gs.map((g) => new Goal(g));
-  }
  
   render(containerSelector) {
     let ih = 100;
