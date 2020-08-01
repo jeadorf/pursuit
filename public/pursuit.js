@@ -141,7 +141,7 @@ class App {
         });
         this.goals = goals;
         this.render();
-        document.querySelector('#app').style.display = 'block';
+        document.querySelector('#app').style.display = 'flex';
     }));
   }
 
@@ -149,12 +149,12 @@ class App {
     d3.select('#app > *').remove();
 
     let ih = 100;
+    let width = 800;
     let svg = (
       d3.select('#app')
         .append('svg')
-        .attr('style', 'margin: auto; display: flex')
-        .attr('width', '500px')
-        .attr('height', `${ih * this._goals.length}px`));
+        .attr('class', 'chart')
+        .attr('viewBox', `0 0 ${width} ${ih * this._goals.length}`));
 
     // Draw names
     (svg
@@ -162,7 +162,7 @@ class App {
         .data(this._goals)
       .enter()
         .append('text')
-          .attr('style', 'font: 15px sans-serif')
+          .attr('style', 'font: 16px "Mulish"')
           .attr('x', 0)
           .attr('y', (d, i) => i * ih + 15 + 5)
           .text((d) => d.name)
@@ -174,8 +174,8 @@ class App {
         .data(this._goals)
       .enter()
         .append('rect')
-          .attr('width', '500')
-          .attr('height', '6')
+          .attr('width', width)
+          .attr('height', 6)
           .attr('fill', 'lightgrey')
           .attr('y', (d, i) => i * ih + 52)
     );
@@ -188,12 +188,12 @@ class App {
       .enter()
         .append('rect')
           .attr('width', (d) => `${100*d.progress}%`)
-          .attr('height', '30')
+          .attr('height', 26)
           .attr('fill', (d) => (d.is_on_track(now.getTime())
                                   ? '#88bb77'
                                   : '#bb6677'))
-          .attr('fill-opacity', '0.6')
-          .attr('y', (d, i) => i * ih + 40)
+          .attr('fill-opacity', 0.6)
+          .attr('y', (d, i) => i * ih + 42)
     );
 
     // Draw current date 
@@ -202,11 +202,11 @@ class App {
         .data(this._goals)
       .enter()
         .append('rect')
-          .attr('width', '3')
-          .attr('height', '30')
+          .attr('width', 3)
+          .attr('height', 26)
           .attr('fill', 'orange')
-          .attr('x', (d) => 500 * d.time_spent(now) - 1)
-          .attr('y', (d, i) => i * ih + 40)
+          .attr('x', (d) => width * d.time_spent(now) - 1)
+          .attr('y', (d, i) => i * ih + 42)
     );
 
     // Draw start as text
@@ -215,10 +215,10 @@ class App {
         .data(this._goals)
       .enter()
         .append('text')
-          .attr('style', 'font: 11px sans-serif; fill: darkgrey')
+          .attr('style', 'font: 14px "Mulish"; fill: darkgrey')
           .attr('text-anchor', 'start')
           .attr('x', 0)
-          .attr('y', (d, i) => i * ih + 38)
+          .attr('y', (d, i) => i * ih + 40)
           .text((d) => `${new Date(d.start).toISOString().slice(0, 10)}`)
     );
 
@@ -228,9 +228,9 @@ class App {
         .data(this._goals)
       .enter()
         .append('text')
-          .attr('style', 'font: 11px sans-serif; fill: darkgrey')
+          .attr('style', 'font: 14px "Mulish"; fill: darkgrey')
           .attr('text-anchor', 'end')
-          .attr('x', 500)
+          .attr('x', width)
           .attr('y', (d, i) => i * ih + 38)
           .text((d) => `${new Date(d.end).toISOString().slice(0, 10)}`)
     );
@@ -241,7 +241,7 @@ class App {
         .data(this._goals)
       .enter()
         .append('text')
-          .attr('style', 'font: 11px sans-serif; fill: darkgrey')
+          .attr('style', 'font: 14px "Mulish"; fill: darkgrey')
           .attr('text-anchor', 'start')
           .attr('x', 0)
           .attr('y', (d, i) => i * ih + 80)
@@ -254,9 +254,9 @@ class App {
         .data(this._goals)
       .enter()
         .append('text')
-          .attr('style', 'font: 11px sans-serif; fill: darkgrey')
+          .attr('style', 'font: 14px "Mulish"; fill: darkgrey')
           .attr('text-anchor', 'end')
-          .attr('x', 500)
+          .attr('x', width)
           .attr('y', (d, i) => i * ih + 80)
           .text((d) => `${d.target}`)
     );
