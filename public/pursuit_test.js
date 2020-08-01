@@ -29,13 +29,13 @@ describe('goal', () => {
   });
 
   it('is constructed with a start date', () => {
-    let start = new Date();
+    let start = 31536000000;
     let goal = new Goal({start});
     expect(goal.start).to.equal(start);
   });
 
   it('is constructed with an end date', () => {
-    let end = new Date();
+    let end = 31536000000;
     let goal = new Goal({end});
     expect(goal.end).to.equal(end);
   });
@@ -97,8 +97,8 @@ describe('goal', () => {
 
   it('has time spent percentage', () => {
     let goal = new Goal({
-      start: new Date(1990, 12, 1),
-      end: new Date(1990, 12, 10),
+      start: 637369200000,
+      end: 958082400000,
     });
     expect(goal.time_spent(goal.start)).to.equal(0.0);
     expect(goal.time_spent(goal.end)).to.equal(1.0);
@@ -106,8 +106,8 @@ describe('goal', () => {
 
   it('has 100% time spent if end date equals start date', () => {
     let goal = new Goal({
-      start: new Date(1990, 12, 1),
-      end: new Date(1990, 12, 1),
+      start: 637369200000,
+      end: 637369200000,
     });
     expect(goal.time_spent(goal.start)).to.equal(1.0);
     expect(goal.time_spent(goal.end)).to.equal(1.0);
@@ -115,14 +115,14 @@ describe('goal', () => {
 
   it('can determine whether on track', () => {
     let goal = new Goal({
-      start: new Date(1990, 12, 1),
-      end: new Date(1990, 12, 10),
+      start: 660006000000,
+      end: 660783600000,
       target: 120,
       baseline: 20,
     });
     goal.current = 110;
-    expect(goal.is_on_track(new Date(1990, 12, 9))).to.be.true;
-    expect(goal.is_on_track(new Date(1990, 12, 10))).to.be.false;
+    expect(goal.is_on_track(660697200000)).to.be.true;
+    expect(goal.is_on_track(660783600000)).to.be.false;
   });
 
 });

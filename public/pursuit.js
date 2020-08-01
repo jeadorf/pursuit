@@ -7,8 +7,8 @@ class Goal {
                target = 1.0,
                baseline = 0.0,
                current = null,
-               start = new Date(),
-               end = new Date()}) {
+               start = 0,
+               end = 0}) {
     this._id = id;
     this._name = name;
     this._target = target;
@@ -55,8 +55,8 @@ class Goal {
   }
 
   time_spent(by_date) {
-    let total = this._end.getTime() - this._start.getTime();
-    let spent = by_date.getTime() - this._start.getTime();
+    let total = this._end - this._start;
+    let spent = by_date - this._start;
     return total == 0 ? 1.0 : spent / total;
   }
 
@@ -90,8 +90,8 @@ class App {
         docs.forEach((d) => {
           goals.push(new Goal({
             name: d.data().name,
-            start: new Date(1000 * d.data().start.seconds),
-            end: new Date(1000 * d.data().end.seconds),
+            start: d.data().start,
+            end: d.data().end,
             target: d.data().target,
             baseline: d.data().baseline,
             current: d.data().current,
@@ -146,7 +146,9 @@ class App {
         .append('rect')
           .attr('width', (d) => `${100*d.progress}%`)
           .attr('height', '30')
-          .attr('fill', (d) => d.is_on_track(now) ? '#88bb77' : '#bb6677')
+          .attr('fill', (d) => (d.is_on_track(now.getTime())
+                                  ? '#88bb77'
+                                  : '#bb6677'))
           .attr('fill-opacity', '0.6')
           .attr('y', (d, i) => i * ih + 40)
     );
@@ -174,7 +176,7 @@ class App {
           .attr('text-anchor', 'start')
           .attr('x', 0)
           .attr('y', (d, i) => i * ih + 38)
-          .text((d) => `${d.start.toISOString().slice(0, 10)}`)
+          .text((d) => `${new Date(d.start).toISOString().slice(0, 10)}`)
     );
 
     // Draw end as text
@@ -187,7 +189,7 @@ class App {
           .attr('text-anchor', 'end')
           .attr('x', 500)
           .attr('y', (d, i) => i * ih + 38)
-          .text((d) => `${d.end.toISOString().slice(0, 10)}`)
+          .text((d) => `${new Date(d.end).toISOString().slice(0, 10)}`)
     );
 
     // Draw baseline as text
