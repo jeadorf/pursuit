@@ -125,6 +125,52 @@ describe('goal', () => {
     expect(goal.is_on_track(660783600000)).to.be.false;
   });
 
+  it('can convert from Firestore', () => {
+    let converter = new GoalConverter();
+    let doc = {
+      data: () => ({
+        name: 'name',
+        start: 1234,
+        end: 5678,
+        baseline: -20,
+        target: 40,
+        current: 10,
+      })
+    };
+    let expected = new Goal({
+      name: 'name',
+      start: 1234,
+      end: 5678,
+      baseline: -20,
+      target: 40,
+      current: 10,
+    });
+
+    expect(converter.fromFirestore(doc)).to.eql(expected);
+  });
+
+  it('can convert to Firestore', () => {
+    let converter = new GoalConverter();
+    let goal = new Goal({
+      name: 'name',
+      start: 1234,
+      end: 5678,
+      baseline: -20,
+      target: 40,
+      current: 10,
+    });
+    let expected = {
+      name: 'name',
+      start: 1234,
+      end: 5678,
+      baseline: -20,
+      target: 40,
+      current: 10,
+    };
+
+    expect(converter.toFirestore(goal)).to.eql(expected);
+  });
+
 });
 
 

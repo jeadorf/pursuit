@@ -1,9 +1,9 @@
-"use strict"
+'use strict'
 
 
 class Goal {
-  constructor({id = "goal",
-               name = "Goal",
+  constructor({id = 'goal',
+               name = 'Goal',
                target = 1.0,
                baseline = 0.0,
                current = null,
@@ -66,6 +66,33 @@ class Goal {
 }
 
 
+class GoalConverter {
+
+  toFirestore(goal) {
+    return {
+      name: goal.name,
+      start: goal.start,
+      end: goal.end,
+      baseline: goal.baseline,
+      target: goal.target,
+      current: goal.current,
+    };
+  }
+
+  fromFirestore(snapshot, options) {
+    const goal = snapshot.data(options);
+    return new Goal({
+      name: goal.name,
+      start: goal.start,
+      end: goal.end,
+      baseline: goal.baseline,
+      target: goal.target,
+      current: goal.current,
+    });
+  }
+};
+
+
 class App {
   constructor() {
     this._goals = [];
@@ -82,20 +109,15 @@ class App {
   fetchGoals() {
     (firebase
       .firestore()
-      .collection("users")
+      .collection('users')
       .doc('dummy')
       .collection('goals')
+      .withConverter(new GoalConverter())
       .get().then((docs) => {
+        console.log(docs);
         let goals = [];
         docs.forEach((d) => {
-          goals.push(new Goal({
-            name: d.data().name,
-            start: d.data().start,
-            end: d.data().end,
-            target: d.data().target,
-            baseline: d.data().baseline,
-            current: d.data().current,
-          }));
+          goals.push(d.data());
         });
         this.goals = goals;
         this.render();
