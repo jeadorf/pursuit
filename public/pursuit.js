@@ -79,10 +79,35 @@ class App {
     this._goals = value;
   }
  
-  render(containerSelector) {
+  fetchGoals() {
+    (firebase
+      .firestore()
+      .collection("users")
+      .doc('dummy')
+      .collection('goals')
+      .get().then((docs) => {
+        let goals = [];
+        docs.forEach((d) => {
+          goals.push(new Goal({
+            name: d.data().name,
+            start: new Date(1000 * d.data().start.seconds),
+            end: new Date(1000 * d.data().end.seconds),
+            target: d.data().target,
+            baseline: d.data().baseline,
+            current: d.data().current,
+          }));
+        });
+        this.goals = goals;
+        this.render();
+    }));
+  }
+
+  render() {
+    d3.select('#app > *').remove();
+
     let ih = 100;
     let svg = (
-      d3.select(containerSelector)
+      d3.select('#app')
         .append('svg')
         .attr('style', 'margin: auto; display: flex')
         .attr('width', '500px')

@@ -4,7 +4,8 @@
   <script src="https://d3js.org/d3.v4.js"></script>
 </head>
 <body>
-  <div id="app"></div>
+  <div id="app">
+  </div>
   <script src="pursuit.js"></script>
   <script src="/__/firebase/7.17.1/firebase-app.js"></script>
   <script src="/__/firebase/7.17.1/firebase-analytics.js"></script>
@@ -24,28 +25,7 @@
   </script>
   <script>
     let app = new App();
-    (firebase
-      .firestore()
-      .collection("users")
-      .doc('dummy')
-      .collection('goals')
-      .get().then((goals) => {
-        let g = [];
-        goals.forEach((doc) => {
-            console.log(`${doc.id} => ${doc.data()}`);
-            console.log(doc.data().start)
-            g.push(new Goal({
-              name: doc.data().name,
-              start: new Date(1000 * doc.data().start.seconds),
-              end: new Date(1000 * doc.data().end.seconds),
-              target: doc.data().target,
-              baseline: doc.data().baseline,
-              current: doc.data().current,
-            }));
-        });
-        app.goals = g;
-        app.render('#app');
-    }));
+    app.fetchGoals();
   </script>
 </body>
 </html>

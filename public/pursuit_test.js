@@ -159,12 +159,12 @@ describe('app', () => {
         baseline: 20,
       }),
     ];
-    let container = document.createElement('div');
 
-    app.render(container);
+    app.render();
 
-    expect(container.innerHTML).to.have.string('Foo');
-    expect(container.innerHTML).to.have.string('Bar');
+    let appText = document.querySelector('#app').innerHTML;
+    expect(appText).to.have.string('Foo');
+    expect(appText).to.have.string('Bar');
   });
 });
 
