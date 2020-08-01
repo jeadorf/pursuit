@@ -105,22 +105,43 @@ class App {
   set goals(value) {
     this._goals = value;
   }
+
+  signInWithGoogle() {
+    let provider = new firebase.auth.GoogleAuthProvider();
+    firebase.auth().signInWithRedirect(provider);
+  }
+
+  run() {
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        this.fetchGoals(user.uid);
+      } else {
+        let signIn = document.querySelector('#signin');
+        signIn.style.display = 'block';
+        let signInLink = document.createElement('a');
+        signInLink.href = '#';
+        signInLink.innerText = 'Sign in with Google';
+        signInLink.onclick = () => this.signInWithGoogle();
+        signIn.appendChild(signInLink);
+      }
+    });
+  }
  
-  fetchGoals() {
+  fetchGoals(uid) {
     (firebase
       .firestore()
       .collection('users')
-      .doc('dummy')
+      .doc(uid)
       .collection('goals')
       .withConverter(new GoalConverter())
       .get().then((docs) => {
-        console.log(docs);
         let goals = [];
         docs.forEach((d) => {
           goals.push(d.data());
         });
         this.goals = goals;
         this.render();
+        document.querySelector('#app').style.display = 'block';
     }));
   }
 

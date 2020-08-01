@@ -1,31 +1,22 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <script src="https://d3js.org/d3.v4.js"></script>
+  <title>Pursuit</title>
+  <link rel='stylesheet' href='pursuit.css'>
 </head>
 <body>
-  <div id="app">
-  </div>
-  <script src="pursuit.js"></script>
-  <script src="/__/firebase/7.17.1/firebase-app.js"></script>
-  <script src="/__/firebase/7.17.1/firebase-analytics.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/7.17.1/firebase-firestore.js"></script>
-  <script src="/__/firebase/init.js"></script>
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyDTwy1g4mASR5zHN4CorjS8GBEM0fDSrd8",
-      authDomain: "pursuit-284716.firebaseapp.com",
-      databaseURL: "https://pursuit-284716.firebaseio.com",
-      projectId: "pursuit-284716",
-      storageBucket: "pursuit-284716.appspot.com",
-      messagingSenderId: "115571701363",
-      appId: "1:115571701363:web:497b806dfd9ca4be761c06",
-      measurementId: "G-BD6VKE9VC4"
-    };
-  </script>
+  <div id='signin'></div>
+  <div id='app'></div>
+  <script src='pursuit.js'></script>
+  <script src='https://d3js.org/d3.v4.js'></script>
+  <script src='/__/firebase/7.17.1/firebase-app.js'></script>
+  <script src='/__/firebase/7.17.1/firebase-analytics.js'></script>
+  <script src='/__/firebase/7.17.1/firebase-auth.js'></script>
+  <script src='/__/firebase/7.17.1/firebase-firestore.js'></script>
+  <script src='/__/firebase/init.js'></script>
   <script>
     let app = new App();
-    app.fetchGoals();
+    app.run();
   </script>
 </body>
 </html>
