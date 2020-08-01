@@ -16,3 +16,27 @@
 .chart {
   width: 100%;
 }
+
+.name, .start, .end, .baseline, .target {
+  font-family: "Mulish", sans-serif;
+}
+
+.start, .end, .baseline, .target {
+  fill: darkgrey;
+}
+
+.today {
+  fill: orange;
+}
+
+.current {
+  fill-opacity: 0.75;
+}
+
+.ontrack {
+  fill: #88bb77;
+}
+
+.offtrack {
+  fill: #bb6677;
+}
