@@ -157,9 +157,15 @@ class App {
         .attr('viewBox', `0 0 ${width} ${ih * this._goals.length}`));
 
     // Draw names
+    let sortByName = (a, b) => (a.name > b.name
+                                  ? 1
+                                  : a.name < b.name
+                                      ? -1
+                                      : 0);
+    let sortedGoals = [...this._goals].sort(sortByName);
     (svg
       .selectAll('whatever')
-        .data(this._goals)
+        .data(sortedGoals)
       .enter()
         .append('text')
           .attr('class', 'name')
@@ -172,7 +178,7 @@ class App {
     // Draw progress bar wires
     (svg
       .selectAll('whatever')
-        .data(this._goals)
+        .data(sortedGoals)
       .enter()
         .append('rect')
           .attr('width', width)
@@ -185,7 +191,7 @@ class App {
     let now = new Date();
     (svg
       .selectAll('whatever')
-        .data(this._goals)
+        .data(sortedGoals)
       .enter()
         .append('rect')
           .attr('class', 'current')
@@ -200,7 +206,7 @@ class App {
     // Draw current date 
     (svg
       .selectAll('whatever')
-        .data(this._goals)
+        .data(sortedGoals)
       .enter()
         .append('rect')
           .attr('class', 'today')
@@ -213,7 +219,7 @@ class App {
     // Draw start as text
     (svg
       .selectAll('whatever')
-        .data(this._goals)
+        .data(sortedGoals)
       .enter()
         .append('text')
           .attr('class', 'start')
@@ -227,7 +233,7 @@ class App {
     // Draw end as text
     (svg
       .selectAll('whatever')
-        .data(this._goals)
+        .data(sortedGoals)
       .enter()
         .append('text')
           .attr('class', 'end')
@@ -241,7 +247,7 @@ class App {
     // Draw baseline as text
     (svg
       .selectAll('whatever')
-        .data(this._goals)
+        .data(sortedGoals)
       .enter()
         .append('text')
           .attr('class', 'baseline')
@@ -255,7 +261,7 @@ class App {
     // Draw target as text
     (svg
       .selectAll('whatever')
-        .data(this._goals)
+        .data(sortedGoals)
       .enter()
         .append('text')
           .attr('class', 'target')

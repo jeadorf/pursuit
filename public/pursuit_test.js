@@ -212,5 +212,31 @@ describe('app', () => {
     expect(appText).to.have.string('Foo');
     expect(appText).to.have.string('Bar');
   });
+
+  it('will render goals in alphabetical order', () => {
+    let app = new App();
+    app.goals = [
+      new Goal({
+        name: 'Delta',
+      }),
+      new Goal({
+        name: 'Beta',
+      }),
+      new Goal({
+        name: 'Alpha',
+      }),
+      new Goal({
+        name: 'Caesar',
+      }),
+    ];
+
+    app.render();
+
+    let appText = document.querySelector('#app').innerHTML;
+    expect(appText.indexOf('Alpha')).to.be.below(appText.indexOf('Beta'));
+    expect(appText.indexOf('Beta')).to.be.below(appText.indexOf('Caesar'));
+    expect(appText.indexOf('Caesar')).to.be.below(appText.indexOf('Delta'));
+  });
+
 });
 
