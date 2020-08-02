@@ -82,6 +82,7 @@ class GoalConverter {
   fromFirestore(snapshot, options) {
     const goal = snapshot.data(options);
     return new Goal({
+      id: snapshot.id,
       name: goal.name,
       start: goal.start,
       end: goal.end,
@@ -90,7 +91,7 @@ class GoalConverter {
       current: goal.current,
     });
   }
-};
+}
 
 
 class App {
@@ -272,6 +273,4 @@ class App {
           .text((d) => `${d.target}`)
     );
   }
-
 }
-

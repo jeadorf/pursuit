@@ -128,6 +128,7 @@ describe('goal', () => {
   it('can convert from Firestore', () => {
     let converter = new GoalConverter();
     let doc = {
+      id: 'id',
       data: () => ({
         name: 'name',
         start: 1234,
@@ -138,6 +139,7 @@ describe('goal', () => {
       })
     };
     let expected = new Goal({
+      id: 'id',
       name: 'name',
       start: 1234,
       end: 5678,
@@ -152,6 +154,7 @@ describe('goal', () => {
   it('can convert to Firestore', () => {
     let converter = new GoalConverter();
     let goal = new Goal({
+      id: 'id',
       name: 'name',
       start: 1234,
       end: 5678,
