@@ -2,6 +2,29 @@
 
 let expect = chai.expect;
 
+describe('objective', () => {
+  
+  it('is constructed with a name', () => {
+    let name = 'Travel to the Moon';
+    let objective = new Objective({name});
+    expect(objective.name).to.equal(name);
+  });
+
+  it('is constructed with an identifier', () => {
+    let id = 'moon-landing';
+    let objective = new Objective({id});
+    expect(objective.id).to.equal(id);
+  });
+
+  it('is constructed with a description', () => {
+    let description = 'Land on the moon before 1970.';
+    let objective = new Objective({description});
+    expect(objective.description).to.equal(description);
+  });
+
+
+});
+
 describe('goal', () => {
 
   it('is constructed with a name', () => {
