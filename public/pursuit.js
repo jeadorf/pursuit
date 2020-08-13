@@ -195,133 +195,139 @@ class App {
   render() {
     d3.select('#app > *').remove();
 
-    let allGoals = [];
     for (let o of this.objectives) {
-      allGoals = allGoals.concat(o.goals);
-    }
-    let sortByName = (a, b) => (a.name > b.name
-                                  ? 1
-                                  : a.name < b.name
-                                      ? -1
-                                      : 0);
-    let sortedGoals = allGoals.sort(sortByName);
+      let sortByName = (a, b) => (a.name > b.name
+                                    ? 1
+                                    : a.name < b.name
+                                        ? -1
+                                        : 0);
+      let sortedGoals = o.goals.sort(sortByName);
 
-    let ih = 100;
-    let width = 800;
-    let svg = (
-      d3.select('#app')
-        .append('svg')
-        .attr('class', 'chart')
-        .attr('viewBox', `0 0 ${width} ${ih * sortedGoals.length}`));
+      let odiv  = (
+        d3.select('#app')
+          .append('div')
+          .attr('class', 'objective'));
 
-    // Draw names
-    (svg
-      .selectAll('whatever')
-        .data(sortedGoals)
-      .enter()
-        .append('text')
-          .attr('class', 'name')
-          .attr('style', 'font-size: 16px')
-          .attr('x', 0)
-          .attr('y', (d, i) => i * ih + 15 + 5)
-          .text((d) => d.name)
-    );
+      let markdown = new SafeMarkdownRenderer();
+      odiv.html(`<h2>${markdown.render(o.name)}</h2> ${markdown.render(o.description ?? '')}`);
 
-    // Draw progress bar wires
-    (svg
-      .selectAll('whatever')
-        .data(sortedGoals)
-      .enter()
-        .append('rect')
-          .attr('width', width)
-          .attr('height', 6)
-          .attr('fill', 'lightgrey')
-          .attr('y', (d, i) => i * ih + 52)
-    );
+      let ih = 100;
+      let width = 800;
+      let svg = (
+        d3.select('#app')
+          .append('svg')
+          .attr('class', 'chart')
+          .attr('viewBox', `0 0 ${width} ${ih * sortedGoals.length}`));
+
+      // Draw names
+      (svg
+        .selectAll('whatever')
+          .data(sortedGoals)
+        .enter()
+          .append('text')
+            .attr('class', 'name')
+            .attr('style', 'font-size: 16px')
+            .attr('x', 0)
+            .attr('y', (d, i) => i * ih + 15 + 5)
+            .text((d) => d.name)
+      );
+
+      // Draw progress bar wires
+      (svg
+        .selectAll('whatever')
+          .data(sortedGoals)
+        .enter()
+          .append('rect')
+            .attr('width', width)
+            .attr('height', 6)
+            .attr('fill', 'lightgrey')
+            .attr('y', (d, i) => i * ih + 52)
+      );
  
-    // Draw progress bars
-    let now = new Date();
-    (svg
-      .selectAll('whatever')
-        .data(sortedGoals)
-      .enter()
-        .append('rect')
-          .attr('class', 'current')
-          .attr('width', (d) => `${100*d.progress}%`)
-          .attr('height', 26)
-          .attr('class', (d) => (d.is_on_track(now.getTime())
-                                  ? 'current ontrack'
-                                  : 'current offtrack'))
-          .attr('y', (d, i) => i * ih + 42)
-    );
+      // Draw progress bars
+      let now = new Date();
+      (svg
+        .selectAll('whatever')
+          .data(sortedGoals)
+        .enter()
+          .append('rect')
+            .attr('class', 'current')
+            .attr('width', (d) => `${100*d.progress}%`)
+            .attr('height', 26)
+            .attr('class', (d) => (d.is_on_track(now.getTime())
+                                    ? 'current ontrack'
+                                    : 'current offtrack'))
+            .attr('y', (d, i) => i * ih + 42)
+      );
 
-    // Draw current date 
-    (svg
-      .selectAll('whatever')
-        .data(sortedGoals)
-      .enter()
-        .append('rect')
-          .attr('class', 'today')
-          .attr('width', 3)
-          .attr('height', 26)
-          .attr('x', (d) => width * d.time_spent(now) - 1)
-          .attr('y', (d, i) => i * ih + 42)
-    );
+      // Draw current date 
+      (svg
+        .selectAll('whatever')
+          .data(sortedGoals)
+        .enter()
+          .append('rect')
+            .attr('class', 'today')
+            .attr('width', 3)
+            .attr('height', 26)
+            .attr('x', (d) => width * d.time_spent(now) - 1)
+            .attr('y', (d, i) => i * ih + 42)
+      );
 
-    // Draw start as text
-    (svg
-      .selectAll('whatever')
-        .data(sortedGoals)
-      .enter()
-        .append('text')
-          .attr('class', 'start')
-          .attr('style', 'font-size: 14px')
-          .attr('text-anchor', 'start')
-          .attr('x', 0)
-          .attr('y', (d, i) => i * ih + 40)
-          .text((d) => `${new Date(d.start).toISOString().slice(0, 10)}`)
-    );
+      // Draw start as text
+      (svg
+        .selectAll('whatever')
+          .data(sortedGoals)
+        .enter()
+          .append('text')
+            .attr('class', 'start')
+            .attr('style', 'font-size: 14px')
+            .attr('text-anchor', 'start')
+            .attr('x', 0)
+            .attr('y', (d, i) => i * ih + 40)
+            .text((d) => `${new Date(d.start).toISOString().slice(0, 10)}`)
+      );
 
-    // Draw end as text
-    (svg
-      .selectAll('whatever')
-        .data(sortedGoals)
-      .enter()
-        .append('text')
-          .attr('class', 'end')
-          .attr('style', 'font-size: 14px')
-          .attr('text-anchor', 'end')
-          .attr('x', width)
-          .attr('y', (d, i) => i * ih + 38)
-          .text((d) => `${new Date(d.end).toISOString().slice(0, 10)}`)
-    );
+      // Draw end as text
+      (svg
+        .selectAll('whatever')
+          .data(sortedGoals)
+        .enter()
+          .append('text')
+            .attr('class', 'end')
+            .attr('style', 'font-size: 14px')
+            .attr('text-anchor', 'end')
+            .attr('x', width)
+            .attr('y', (d, i) => i * ih + 38)
+            .text((d) => `${new Date(d.end).toISOString().slice(0, 10)}`)
+      );
 
-    // Draw baseline as text
-    (svg
-      .selectAll('whatever')
-        .data(sortedGoals)
-      .enter()
-        .append('text')
-          .attr('class', 'baseline')
-          .attr('style', 'font-size: 14px')
-          .attr('text-anchor', 'start')
-          .attr('x', 0)
-          .attr('y', (d, i) => i * ih + 80)
-          .text((d) => `${d.baseline}`)
-    );
+      // Draw baseline as text
+      (svg
+        .selectAll('whatever')
+          .data(sortedGoals)
+        .enter()
+          .append('text')
+            .attr('class', 'baseline')
+            .attr('style', 'font-size: 14px')
+            .attr('text-anchor', 'start')
+            .attr('x', 0)
+            .attr('y', (d, i) => i * ih + 80)
+            .text((d) => `${d.baseline}`)
+      );
 
-    // Draw target as text
-    (svg
-      .selectAll('whatever')
-        .data(sortedGoals)
-      .enter()
-        .append('text')
-          .attr('class', 'target')
-          .attr('style', 'font-size: 14px')
-          .attr('text-anchor', 'end')
-          .attr('x', width)
-          .attr('y', (d, i) => i * ih + 80)
-          .text((d) => `${d.target}`)
-    );
+      // Draw target as text
+      (svg
+        .selectAll('whatever')
+          .data(sortedGoals)
+        .enter()
+          .append('text')
+            .attr('class', 'target')
+            .attr('style', 'font-size: 14px')
+            .attr('text-anchor', 'end')
+            .attr('x', width)
+            .attr('y', (d, i) => i * ih + 80)
+            .text((d) => `${d.target}`)
+      );
+    }
   }
 }
