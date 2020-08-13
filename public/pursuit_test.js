@@ -2,8 +2,8 @@
 
 let expect = chai.expect;
 
+
 describe('objective', () => {
-  
   it('is constructed with a name', () => {
     let name = 'Travel to the Moon';
     let objective = new Objective({name});
@@ -22,11 +22,110 @@ describe('objective', () => {
     expect(objective.description).to.equal(description);
   });
 
+  it('is constructed with goals', () => {
+    let goals = [new Goal({})];
+    let objective = new Objective({goals});
+    expect(objective.goals).to.equal(goals);
+  });
 
+  it('can convert from Firestore', () => {
+    let converter = new ObjectiveConverter();
+    let doc = {
+      id: 'id',
+      data: () => ({
+        name: 'name',
+        description: 'description',
+        goals: [
+          {
+            name: 'Shuttle Speed',
+            target: 2300,
+            baseline: 0,
+            current: 0,
+            start: 2490,
+            end: 5439
+          }
+        ]
+      })
+    };
+    let expected = new Objective({
+      id: 'id',
+      name: 'name',
+      description: 'description',
+      goals: [
+        new Goal({
+          name: 'Shuttle Speed',
+          target: 2300,
+          baseline: 0,
+          current: 0,
+          start: 2490,
+          end: 5439
+        })
+      ]
+    });
+
+    expect(converter.fromFirestore(doc)).to.eql(expected);
+  });
+ 
+  it('can convert objectives without goals from Firestore', () => {
+    let converter = new ObjectiveConverter();
+    let doc = {
+      id: 'id',
+      data: () => ({
+        name: 'name',
+        description: 'description',
+      })
+    };
+    let expected = new Objective({
+      id: 'id',
+      name: 'name',
+      description: 'description',
+      goals: [],
+    });
+
+    expect(converter.fromFirestore(doc)).to.eql(expected);
+  });
+  
+ 
+  // TODO add test case where goals is not defined in document
+
+  it('can convert to Firestore', () => {
+    let converter = new ObjectiveConverter();
+    let objective = new Objective({
+      id: 'id',
+      name: 'name',
+      description: 'description',
+      goals: [
+        new Goal({
+          name: 'Shuttle Speed',
+          target: 2300,
+          baseline: 0,
+          current: 0,
+          start: 2490,
+          end: 5439
+        })
+      ]
+    });
+    let expected = {
+      name: 'name',
+      description: 'description',
+      goals: [
+        {
+          name: 'Shuttle Speed',
+          target: 2300,
+          baseline: 0,
+          current: 0,
+          start: 2490,
+          end: 5439
+        }
+      ]
+    };
+
+    expect(converter.toFirestore(objective)).to.eql(expected);
+  });
 });
 
-describe('goal', () => {
 
+describe('goal', () => {
   it('is constructed with a name', () => {
     let name = 'Distance';
     let goal = new Goal({name});
@@ -147,60 +246,24 @@ describe('goal', () => {
     expect(goal.is_on_track(660697200000)).to.be.true;
     expect(goal.is_on_track(660783600000)).to.be.false;
   });
-
-  it('can convert from Firestore', () => {
-    let converter = new GoalConverter();
-    let doc = {
-      id: 'id',
-      data: () => ({
-        name: 'name',
-        start: 1234,
-        end: 5678,
-        baseline: -20,
-        target: 40,
-        current: 10,
-      })
-    };
-    let expected = new Goal({
-      id: 'id',
-      name: 'name',
-      start: 1234,
-      end: 5678,
-      baseline: -20,
-      target: 40,
-      current: 10,
-    });
-
-    expect(converter.fromFirestore(doc)).to.eql(expected);
-  });
-
-  it('can convert to Firestore', () => {
-    let converter = new GoalConverter();
-    let goal = new Goal({
-      id: 'id',
-      name: 'name',
-      start: 1234,
-      end: 5678,
-      baseline: -20,
-      target: 40,
-      current: 10,
-    });
-    let expected = {
-      name: 'name',
-      start: 1234,
-      end: 5678,
-      baseline: -20,
-      target: 40,
-      current: 10,
-    };
-
-    expect(converter.toFirestore(goal)).to.eql(expected);
-  });
-
 });
 
 
 describe('app', () => {
+  it('has no objectives initially', () => {
+    let app = new App();
+    expect(app.objectives).to.be.empty;
+  });
+
+  it('can set objectives', () => {
+    let app = new App();
+    let objectives = [new Objective({}), new Objective({})]
+    expect(app.objectives).to.be.empty;
+
+    app.objectives = objectives;
+
+    expect(app.objectives).to.have.lengthOf(2);
+  });
 
   it('has no goals initially', () => {
     let app = new App();
@@ -219,16 +282,20 @@ describe('app', () => {
 
   it('can render goals', () => {
     let app = new App();
-    app.goals = [
-      new Goal({
-        name: 'Foo',
-        target: 1200,
-        baseline: 200,
-      }),
-      new Goal({
-        name: 'Bar',
-        target: 90,
-        baseline: 20,
+    app.objectives = [
+      new Objective({
+        goals: [
+          new Goal({
+            name: 'Foo',
+            target: 1200,
+            baseline: 200,
+          }),
+          new Goal({
+            name: 'Bar',
+            target: 90,
+            baseline: 20,
+          }),
+        ],
       }),
     ];
 
@@ -241,19 +308,22 @@ describe('app', () => {
 
   it('will render goals in alphabetical order', () => {
     let app = new App();
-    app.goals = [
-      new Goal({
-        name: 'Delta',
-      }),
-      new Goal({
-        name: 'Beta',
-      }),
-      new Goal({
-        name: 'Alpha',
-      }),
-      new Goal({
-        name: 'Caesar',
-      }),
+    app.objectives = [
+      new Objective({
+        goals: [
+          new Goal({
+            name: 'Delta',
+          }),
+          new Goal({
+            name: 'Beta',
+          }),
+          new Goal({
+            name: 'Alpha',
+          }),
+          new Goal({
+            name: 'Caesar',
+          }),
+        ]}),
     ];
 
     app.render();
@@ -287,6 +357,4 @@ describe('app', () => {
     let html = renderer.render('this [link](http://www.example.org/) abc.');
     expect(html).to.equal('<p>this link abc.</p>\n');
   });
-
-
 });

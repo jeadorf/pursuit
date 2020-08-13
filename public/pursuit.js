@@ -1,10 +1,11 @@
 'use strict'
 
 class Objective {
-  constructor({id, name, description}) {
+  constructor({id, name, description, goals}) {
     this._id = id;
     this._name = name;
     this._description = description;
+    this._goals = goals;
   }
 
   get id() {
@@ -17,6 +18,10 @@ class Objective {
 
   get description() {
     return this._description;
+  }
+
+  get goals() {
+    return this._goals;
   }
 }
 
@@ -86,29 +91,38 @@ class Goal {
 }
 
 
-class GoalConverter {
-
-  toFirestore(goal) {
+class ObjectiveConverter {
+  toFirestore(objective) {
     return {
-      name: goal.name,
-      start: goal.start,
-      end: goal.end,
-      baseline: goal.baseline,
-      target: goal.target,
-      current: goal.current,
+      name: objective.name,
+      description: objective.description,
+      goals: objective.goals.map((g) => (
+        {
+          name: g.name,
+          start: g.start,
+          end: g.end,
+          baseline: g.baseline,
+          target: g.target,
+          current: g.current,
+        })),
     };
   }
 
   fromFirestore(snapshot, options) {
-    const goal = snapshot.data(options);
-    return new Goal({
+    const objective = snapshot.data(options);
+    return new Objective({
       id: snapshot.id,
-      name: goal.name,
-      start: goal.start,
-      end: goal.end,
-      baseline: goal.baseline,
-      target: goal.target,
-      current: goal.current,
+      name: objective.name,
+      description: objective.description,
+      goals: (objective.goals ?? []).map((g) => 
+        new Goal({
+          name: g.name,
+          start: g.start,
+          end: g.end,
+          baseline: g.baseline,
+          target: g.target,
+          current: g.current,
+       }))
     });
   }
 }
@@ -128,15 +142,15 @@ class SafeMarkdownRenderer {
 
 class App {
   constructor() {
-    this._goals = [];
+    this._objectives = [];
   }
 
-  get goals() {
-    return this._goals;
+  get objectives() {
+    return this._objectives;
   }
 
-  set goals(value) {
-    this._goals = value;
+  set objectives(value) {
+    this._objectives = value;
   }
 
   signInWithGoogle() {
@@ -147,7 +161,7 @@ class App {
   run() {
     firebase.auth().onAuthStateChanged((user) => {
       if (user) {
-        this.fetchGoals(user.uid);
+        this.fetchObjectives(user.uid);
       } else {
         let signIn = document.querySelector('#signin');
         signIn.style.display = 'block';
@@ -160,19 +174,19 @@ class App {
     });
   }
  
-  fetchGoals(uid) {
+  fetchObjectives(uid) {
     (firebase
       .firestore()
       .collection('users')
       .doc(uid)
-      .collection('goals')
-      .withConverter(new GoalConverter())
+      .collection('objectives')
+      .withConverter(new ObjectiveConverter())
       .get().then((docs) => {
-        let goals = [];
+        let objectives = [];
         docs.forEach((d) => {
-          goals.push(d.data());
+          objectives.push(d.data());
         });
-        this.goals = goals;
+        this.objectives = objectives;
         this.render();
         document.querySelector('#app').style.display = 'flex';
     }));
@@ -181,21 +195,26 @@ class App {
   render() {
     d3.select('#app > *').remove();
 
+    let allGoals = [];
+    for (let o of this.objectives) {
+      allGoals = allGoals.concat(o.goals);
+    }
+    let sortByName = (a, b) => (a.name > b.name
+                                  ? 1
+                                  : a.name < b.name
+                                      ? -1
+                                      : 0);
+    let sortedGoals = allGoals.sort(sortByName);
+
     let ih = 100;
     let width = 800;
     let svg = (
       d3.select('#app')
         .append('svg')
         .attr('class', 'chart')
-        .attr('viewBox', `0 0 ${width} ${ih * this._goals.length}`));
+        .attr('viewBox', `0 0 ${width} ${ih * sortedGoals.length}`));
 
     // Draw names
-    let sortByName = (a, b) => (a.name > b.name
-                                  ? 1
-                                  : a.name < b.name
-                                      ? -1
-                                      : 0);
-    let sortedGoals = [...this._goals].sort(sortByName);
     (svg
       .selectAll('whatever')
         .data(sortedGoals)
