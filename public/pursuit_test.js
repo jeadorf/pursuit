@@ -264,5 +264,29 @@ describe('app', () => {
     expect(appText.indexOf('Caesar')).to.be.below(appText.indexOf('Delta'));
   });
 
-});
+  it('can render bold markdown', () => {
+    let renderer = new SafeMarkdownRenderer();
+    let html = renderer.render('this **bold** abc.');
+    expect(html).to.equal('<p>this <strong>bold</strong> abc.</p>\n');
+  });
 
+  it('can render italic markdown', () => {
+    let renderer = new SafeMarkdownRenderer();
+    let html = renderer.render('this *italic* abc.');
+    expect(html).to.equal('<p>this <em>italic</em> abc.</p>\n');
+  });
+
+  it('can render code markdown', () => {
+    let renderer = new SafeMarkdownRenderer();
+    let html = renderer.render('this `code` abc.');
+    expect(html).to.equal('<p>this <code>code</code> abc.</p>\n');
+  });
+
+  it('will not render link markdown', () => {
+    let renderer = new SafeMarkdownRenderer();
+    let html = renderer.render('this [link](http://www.example.org/) abc.');
+    expect(html).to.equal('<p>this link abc.</p>\n');
+  });
+
+
+});

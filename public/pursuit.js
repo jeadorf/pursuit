@@ -114,6 +114,18 @@ class GoalConverter {
 }
 
 
+class SafeMarkdownRenderer {
+  render(markdown) {
+    let rawHtml = marked(markdown);
+    return sanitizeHtml(rawHtml, {
+      allowedTags: [
+        'p', 'code', 'em', 'strong'
+      ]
+    });
+  }
+}
+
+
 class App {
   constructor() {
     this._goals = [];

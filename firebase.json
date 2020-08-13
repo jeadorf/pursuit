@@ -6,15 +6,6 @@
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
-    ],
-    "rewrites": [
-      {
-        "source": "**",
-        "run": {
-          "serviceId": "goals",
-          "region": "europe-west1"
-        }
-      }
     ]
   },
   "firestore": {
