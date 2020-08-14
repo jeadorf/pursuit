@@ -18,6 +18,24 @@
   font-family: "Mulish", sans-serif;
 }
 
+.objective-name {
+  font-size: 26px;
+	margin-bottom: 10px;
+}
+
+.objective-description {
+  color: darkgrey;
+  font-size: 18px;
+}
+
+.objective-description p:first-child {
+	margin-top: 0;
+}
+
+.goal {
+	padding-left: 20px;
+}
+
 .chart {
   width: 100%;
 }
