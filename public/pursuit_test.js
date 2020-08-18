@@ -352,9 +352,15 @@ describe('app', () => {
     expect(html).to.equal('<p>this <code>code</code> abc.</p>\n');
   });
 
-  it('will not render link markdown', () => {
+  it('will render http: link markdown', () => {
     let renderer = new SafeMarkdownRenderer();
     let html = renderer.render('this [link](http://www.example.org/) abc.');
-    expect(html).to.equal('<p>this link abc.</p>\n');
+    expect(html).to.equal('<p>this <a href="http://www.example.org/">link</a> abc.</p>\n');
+  });
+
+  it('will not render mailto: link markdown', () => {
+    let renderer = new SafeMarkdownRenderer();
+    let html = renderer.render('this [link](mailto:bert@example.org/) abc.');
+    expect(html).to.equal('<p>this <a>link</a> abc.</p>\n');
   });
 });

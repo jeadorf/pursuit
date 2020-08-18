@@ -32,6 +32,10 @@
 	margin-top: 0;
 }
 
+.objective-description a {
+  color: #cc9976;
+}
+
 .goal {
 	padding-left: 20px;
 }

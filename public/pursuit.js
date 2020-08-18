@@ -133,8 +133,18 @@ class SafeMarkdownRenderer {
     let rawHtml = marked(markdown);
     return sanitizeHtml(rawHtml, {
       allowedTags: [
-        'p', 'code', 'em', 'strong'
-      ]
+        'a', 'p', 'code', 'em', 'strong'
+      ],
+      allowedAttributes: {
+        'a': ['href'],
+        'p': [],
+        'code': [],
+        'em': [],
+        'strong': [],
+      },
+      allowedSchemesByTag: {
+        'a': [ 'http', 'https', ],
+      },
     });
   }
 }
