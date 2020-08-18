@@ -225,12 +225,10 @@ class App {
 					.join('div')
 					.attr('class', 'goal'));
 
-    let ih = 100;
-    let width = 800;
     let svg = (
 			goal.append('svg')
         .attr('class', 'chart')
-        .attr('viewBox', `0 0 ${width} ${ih}`));
+        .attr('viewBox', `0 0 100% 100`));
 
     // Draw names
 		svg.append('text')
@@ -242,7 +240,7 @@ class App {
 
     // Draw progress bar wires
     svg.append('rect')
-      .attr('width', width)
+      .attr('width', '100%')
       .attr('height', 6)
       .attr('fill', 'lightgrey')
       .attr('y', 52);
@@ -260,9 +258,9 @@ class App {
    // Draw current date 
    svg.append('rect')
      .attr('class', 'today')
-     .attr('width', 3)
+     .attr('width', '0.5%')
      .attr('height', 26)
-     .attr('x', (g) => width * g.time_spent(now) - 1)
+     .attr('x', (g) => `${100 * g.time_spent(now) - 0.25}%`)
      .attr('y', 42);
 
    // Draw start as text
@@ -279,7 +277,7 @@ class App {
      .attr('class', 'end')
      .attr('style', 'font-size: 14px')
      .attr('text-anchor', 'end')
-     .attr('x', width)
+     .attr('x', '100%')
      .attr('y', 38)
      .text((g) => `${new Date(g.end).toISOString().slice(0, 10)}`);
 
@@ -297,7 +295,7 @@ class App {
      .attr('class', 'target')
      .attr('style', 'font-size: 14px')
      .attr('text-anchor', 'end')
-     .attr('x', width)
+     .attr('x', '100%')
      .attr('y', 80)
      .text((g) => `${g.target}`);
 	}

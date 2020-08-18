@@ -10,7 +10,7 @@
   display: none;
   flex-direction: column;
   margin: 0 auto;
-  padding: 50px;
+  padding: 20px;
   max-width: 60em;
 }
 
@@ -19,13 +19,13 @@
 }
 
 .objective-name {
-  font-size: 26px;
+  font-size: 22px;
 	margin-bottom: 10px;
 }
 
 .objective-description {
   color: darkgrey;
-  font-size: 18px;
+  font-size: 15px;
 }
 
 .objective-description p:first-child {
@@ -38,6 +38,7 @@
 
 .chart {
   width: 100%;
+  height: 100px;
 }
 
 .name, .start, .end, .baseline, .target {
