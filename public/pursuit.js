@@ -29,6 +29,7 @@ class Objective {
 class Goal {
   constructor({id = 'goal',
                name = 'Goal',
+               unit = '',
                target = 1.0,
                baseline = 0.0,
                current = null,
@@ -36,6 +37,7 @@ class Goal {
                end = 0}) {
     this._id = id;
     this._name = name;
+    this._unit = unit;
     this._target = target;
     this._baseline = baseline;
     this._current = current ?? baseline;
@@ -49,6 +51,10 @@ class Goal {
 
   get name() {
     return this._name;
+  }
+
+  get unit() {
+    return this._unit;
   }
 
   get target() {
@@ -99,6 +105,7 @@ class ObjectiveConverter {
       goals: objective.goals.map((g) => (
         {
           name: g.name,
+          unit: g.unit,
           start: g.start,
           end: g.end,
           baseline: g.baseline,
@@ -117,6 +124,7 @@ class ObjectiveConverter {
       goals: (objective.goals ?? []).map((g) => 
         new Goal({
           name: g.name,
+          unit: g.unit,
           start: g.start,
           end: g.end,
           baseline: g.baseline,
@@ -300,13 +308,13 @@ class App {
      .attr('y', 80)
      .text((g) => `${g.baseline}`)
 
-   // Draw target as text
+   // Draw target/unit as text
    svg.append('text')
      .attr('class', 'target')
      .attr('style', 'font-size: 14px')
      .attr('text-anchor', 'end')
      .attr('x', '100%')
      .attr('y', 80)
-     .text((g) => `${g.target}`);
+     .text((g) => `${g.target} ${g.unit}`);
 	}
 }

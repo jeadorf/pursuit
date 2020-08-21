@@ -97,6 +97,7 @@ describe('objective', () => {
       goals: [
         new Goal({
           name: 'Shuttle Speed',
+          unit: 'km/h',
           target: 2300,
           baseline: 0,
           current: 0,
@@ -111,6 +112,7 @@ describe('objective', () => {
       goals: [
         {
           name: 'Shuttle Speed',
+          unit: 'km/h',
           target: 2300,
           baseline: 0,
           current: 0,
@@ -136,6 +138,12 @@ describe('goal', () => {
     let id = 'distance';
     let goal = new Goal({id});
     expect(goal.id).to.equal(id);
+  });
+
+  it('is constructed with a unit', () => {
+    let unit = 'km';
+    let goal = new Goal({unit});
+    expect(goal.unit).to.equal(unit);
   });
 
   it('is constructed with a target', () => {
@@ -287,11 +295,13 @@ describe('app', () => {
         goals: [
           new Goal({
             name: 'Foo',
+            unit: 'km/h',
             target: 1200,
             baseline: 200,
           }),
           new Goal({
             name: 'Bar',
+            unit: 'l/s',
             target: 90,
             baseline: 20,
           }),
@@ -304,6 +314,8 @@ describe('app', () => {
     let appText = document.querySelector('#app').innerHTML;
     expect(appText).to.have.string('Foo');
     expect(appText).to.have.string('Bar');
+    expect(appText).to.have.string('km/h');
+    expect(appText).to.have.string('l/s');
   });
 
   it('will render goals in alphabetical order', () => {
