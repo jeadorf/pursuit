@@ -91,6 +91,11 @@ class Goal {
     return total == 0 ? 1.0 : spent / total;
   }
 
+  days_left(by_date) {
+    let day = 24 * 60 * 60 * 1000;
+    return (this.end - by_date) / day;
+  }
+
   is_on_track(by_date) {
     return this.progress >= this.time_spent(by_date);
   }
@@ -265,6 +270,15 @@ class App {
       .attr('y', 80)
       .text((g) => `${(100 * g.progress).toFixed(1)}% complete`);
 
+    // Draw time left
+    let now = new Date().getTime();
+		svg.append('text')
+      .attr('class', 'days-left')
+      .attr('text-anchor', 'middle')
+      .attr('x', '50%')
+      .attr('y', 40)
+      .text((g) => `${g.days_left(now).toFixed(0)} days left`);
+
     // Draw progress bar wires
     svg.append('rect')
       .attr('width', '100%')
@@ -273,14 +287,13 @@ class App {
       .attr('y', 52);
  
    // Draw progress bars
-   let now = new Date();
    svg.append('rect')
      .attr('width', (g) => `${100 * g.progress}%`)
-     .attr('height', 26)
-     .attr('class', (g) => (g.is_on_track(now.getTime())
+     .attr('height', 18)
+     .attr('class', (g) => (g.is_on_track(now)
                               ? 'current ontrack'
                               : 'current offtrack'))
-     .attr('y', 42);
+     .attr('y', 46);
 
    // Draw current date 
    svg.append('rect')

@@ -229,6 +229,16 @@ describe('goal', () => {
     expect(goal.progress).to.equal(0.2);
   });
 
+  it('reports days left', () => {
+    let goal = new Goal({
+      start: 0,
+      end: 7.5 * 24 * 60 * 60 * 1000,
+    });
+    expect(goal.days_left(goal.start)).to.equal(7.5);
+    expect(goal.days_left(0.5 * (goal.end - goal.start))).to.equal(3.75);
+    expect(goal.days_left(goal.end)).to.equal(0.0);
+  });
+
   it('has time spent percentage', () => {
     let goal = new Goal({
       start: 637369200000,
@@ -346,7 +356,33 @@ describe('app', () => {
     expect(appText).to.have.string('52.2% complete');
   });
 
-  it('will render goals in alphabetical order', () => {
+  it('renders days left', () => {
+    let app = new App();
+    let now = new Date().getTime();
+    app.objectives = [
+      new Objective({
+        goals: [
+          new Goal({
+            start: now - 123456789,
+            end: now + 1000 * 60 * 60 * 24 * 17,
+          }),
+          new Goal({
+            start: now - 123456789,
+            end: now + 1000 * 60 * 60 * 24 * 31,
+          }),
+        ],
+      }),
+    ];
+
+    app.render();
+
+    let appText = document.querySelector('#app').innerHTML;
+    expect(appText).to.have.string('17 days left');
+    expect(appText).to.have.string('31 days left');
+  });
+
+
+  it('renders goals in alphabetical order', () => {
     let app = new App();
     app.objectives = [
       new Objective({
