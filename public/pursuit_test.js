@@ -37,6 +37,7 @@ describe('objective', () => {
         description: 'description',
         goals: [
           {
+						id: 'd66c24f7-a7fd-4760-95be-401dc7b53935',
             name: 'Shuttle Speed',
             target: 2300,
             baseline: 0,
@@ -53,6 +54,7 @@ describe('objective', () => {
       description: 'description',
       goals: [
         new Goal({
+				  id: 'd66c24f7-a7fd-4760-95be-401dc7b53935',
           name: 'Shuttle Speed',
           target: 2300,
           baseline: 0,
@@ -96,6 +98,7 @@ describe('objective', () => {
       description: 'description',
       goals: [
         new Goal({
+				  id: 'd66c24f7-a7fd-4760-95be-401dc7b53935',
           name: 'Shuttle Speed',
           unit: 'km/h',
           target: 2300,
@@ -111,6 +114,7 @@ describe('objective', () => {
       description: 'description',
       goals: [
         {
+				  id: 'd66c24f7-a7fd-4760-95be-401dc7b53935',
           name: 'Shuttle Speed',
           unit: 'km/h',
           target: 2300,

@@ -27,8 +27,8 @@ class Objective {
 
 
 class Goal {
-  constructor({id = 'goal',
-               name = 'Goal',
+  constructor({id,
+               name,
                unit = '',
                target = 1.0,
                baseline = 0.0,
@@ -104,6 +104,7 @@ class ObjectiveConverter {
       description: objective.description,
       goals: objective.goals.map((g) => (
         {
+          id: g.id,
           name: g.name,
           unit: g.unit,
           start: g.start,
@@ -123,6 +124,7 @@ class ObjectiveConverter {
       description: objective.description,
       goals: (objective.goals ?? []).map((g) => 
         new Goal({
+          id: g.id,
           name: g.name,
           unit: g.unit,
           start: g.start,
