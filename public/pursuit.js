@@ -256,6 +256,15 @@ class App {
       .attr('y', 20)
       .text((g) => g.name);
 
+    // Draw progress 
+		svg.append('text')
+      .attr('class', 'progress')
+      .attr('style', 'font-size: 14px')
+      .attr('text-anchor', 'middle')
+      .attr('x', '50%')
+      .attr('y', 80)
+      .text((g) => `${(100 * g.progress).toFixed(1)}% complete`);
+
     // Draw progress bar wires
     svg.append('rect')
       .attr('width', '100%')
@@ -266,7 +275,7 @@ class App {
    // Draw progress bars
    let now = new Date();
    svg.append('rect')
-     .attr('width', (g) => `${100*g.progress}%`)
+     .attr('width', (g) => `${100 * g.progress}%`)
      .attr('height', 26)
      .attr('class', (g) => (g.is_on_track(now.getTime())
                               ? 'current ontrack'

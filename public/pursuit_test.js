@@ -318,6 +318,30 @@ describe('app', () => {
     expect(appText).to.have.string('l/s');
   });
 
+  it('renders percentage complete', () => {
+    let app = new App();
+    app.objectives = [
+      new Objective({
+        goals: [
+          new Goal({
+            target: 1000,
+            current: 202.3,
+          }),
+          new Goal({
+            target: 1000,
+            current: 521.6,
+          }),
+        ],
+      }),
+    ];
+
+    app.render();
+
+    let appText = document.querySelector('#app').innerHTML;
+    expect(appText).to.have.string('20.2% complete');
+    expect(appText).to.have.string('52.2% complete');
+  });
+
   it('will render goals in alphabetical order', () => {
     let app = new App();
     app.objectives = [
