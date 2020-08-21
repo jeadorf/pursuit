@@ -251,7 +251,6 @@ class App {
     // Draw names
 		svg.append('text')
       .attr('class', 'name')
-      .attr('style', 'font-size: 16px')
       .attr('x', 0)
       .attr('y', 20)
       .text((g) => g.name);
@@ -259,7 +258,6 @@ class App {
     // Draw progress 
 		svg.append('text')
       .attr('class', 'progress')
-      .attr('style', 'font-size: 14px')
       .attr('text-anchor', 'middle')
       .attr('x', '50%')
       .attr('y', 80)
@@ -293,7 +291,6 @@ class App {
    // Draw start as text
    svg.append('text')
      .attr('class', 'start')
-     .attr('style', 'font-size: 14px')
      .attr('text-anchor', 'start')
      .attr('x', 0)
      .attr('y', 40)
@@ -302,7 +299,6 @@ class App {
    // Draw end as text
    svg.append('text')
      .attr('class', 'end')
-     .attr('style', 'font-size: 14px')
      .attr('text-anchor', 'end')
      .attr('x', '100%')
      .attr('y', 38)
@@ -311,7 +307,6 @@ class App {
    // Draw baseline as text
    svg.append('text')
      .attr('class', 'baseline')
-     .attr('style', 'font-size: 14px')
      .attr('text-anchor', 'start')
      .attr('x', 0)
      .attr('y', 80)
@@ -320,7 +315,6 @@ class App {
    // Draw target/unit as text
    svg.append('text')
      .attr('class', 'target')
-     .attr('style', 'font-size: 14px')
      .attr('text-anchor', 'end')
      .attr('x', '100%')
      .attr('y', 80)

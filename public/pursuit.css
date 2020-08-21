@@ -49,7 +49,12 @@
   font-family: "Mulish", sans-serif;
 }
 
+.name {
+   font-size: 16px;
+}
+
 .start, .end, .baseline, .target, .progress {
+  font-size: 14px;
   fill: darkgrey;
 }
 
