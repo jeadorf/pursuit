@@ -186,7 +186,7 @@ class App {
   run() {
     firebase.auth().onAuthStateChanged((user) => {
       if (user) {
-        this.fetchObjectives(user.uid);
+        this.listenToObjectives(user.uid);
       } else {
         let signIn = document.querySelector('#signin');
         signIn.style.display = 'block';
@@ -198,27 +198,30 @@ class App {
       }
     });
   }
- 
-  fetchObjectives(uid) {
-    (firebase
+
+  listenToObjectives(uid) {
+    firebase
       .firestore()
       .collection('users')
       .doc(uid)
       .collection('objectives')
       .withConverter(new ObjectiveConverter())
-      .get().then((docs) => {
+      .onSnapshot((snapshot) => {
         let objectives = [];
-        docs.forEach((d) => {
+        snapshot.forEach((d) => {
           objectives.push(d.data());
         });
         this.objectives = objectives;
         this.render();
-        document.querySelector('#app').style.display = 'flex';
-    }));
+      });
   }
-
+ 
 	render() {
     let markdown = new SafeMarkdownRenderer();
+	  
+    // TODO: Remove this hack, fix data join.
+    document.querySelector('#app').innerHTML = '';
+    document.querySelector('#app').style.display = 'flex';
 
 		let objective = (
 			d3.select('#app')
