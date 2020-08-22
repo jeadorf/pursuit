@@ -381,7 +381,6 @@ describe('app', () => {
     expect(appText).to.have.string('31 days left');
   });
 
-
   it('renders goals in alphabetical order', () => {
     let app = new App();
     app.objectives = [
@@ -408,6 +407,29 @@ describe('app', () => {
     expect(appText.indexOf('Alpha')).to.be.below(appText.indexOf('Beta'));
     expect(appText.indexOf('Beta')).to.be.below(appText.indexOf('Caesar'));
     expect(appText.indexOf('Caesar')).to.be.below(appText.indexOf('Delta'));
+  });
+
+  it('renders objectives and goals exactly once', () => {
+    let app = new App();
+    app.objectives = [
+      new Objective({
+        name: 'Alpha',
+        goals: [
+          new Goal({
+            name: 'Beta',
+          }),
+        ],
+      }),
+    ];
+
+    // Run twice, because we expect the render() function to be idempotent.
+    app.render();
+    app.render();
+
+    let alphas = document.querySelector('#app').innerHTML.match(/Alpha/g);
+    let betas = document.querySelector('#app').innerHTML.match(/Beta/g);
+    expect(alphas).to.have.lengthOf(1);
+    expect(betas).to.have.lengthOf(1);
   });
 
   it('can render bold markdown', () => {

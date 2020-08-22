@@ -212,6 +212,9 @@ class App {
           objectives.push(d.data());
         });
         this.objectives = objectives;
+        // Run twice just to reveal issues when the render function is not
+        // idempotent (as it should be).
+        this.render();
         this.render();
       });
   }
@@ -226,7 +229,7 @@ class App {
 		let objective = (
 			d3.select('#app')
 				.selectAll('div.objective')
-					.data(this.objectives)
+					.data(this.objectives, (o) => o.id)
 					.join('div')
 					.attr('class', 'objective'));
 		
@@ -249,7 +252,7 @@ class App {
 		let goal = (
 			objective
 				.selectAll('div.goal')
-					.data((o) => o.goals.sort(byName))
+					.data((o) => o.goals.sort(byName), (g) => g.id)
 					.join('div')
 					.attr('class', 'goal'));
 
