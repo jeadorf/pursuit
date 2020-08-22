@@ -68,7 +68,7 @@ class Goal {
   get current() {
     return this._current;
   }
-  
+
   set current(value) {
     return this._current = value;
   }
@@ -127,7 +127,7 @@ class ObjectiveConverter {
       id: snapshot.id,
       name: objective.name,
       description: objective.description,
-      goals: (objective.goals ?? []).map((g) => 
+      goals: (objective.goals ?? []).map((g) =>
         new Goal({
           id: g.id,
           name: g.name,
@@ -212,54 +212,69 @@ class App {
           objectives.push(d.data());
         });
         this.objectives = objectives;
-        // Run twice just to reveal issues when the render function is not
-        // idempotent (as it should be).
-        this.render();
         this.render();
       });
   }
- 
-	render() {
-    let markdown = new SafeMarkdownRenderer();
-	  
-    // TODO: Remove this hack, fix data join.
+
+  render() {
+    // TODO remove hack, need to make sure to create the
+    // whole DOM tree for each objective only once on
+    // entering and leaving it to the update function
+    // to alter attributes. For now, it's a bit stupid,
+    // though it's hardly noticeable for users.
     document.querySelector('#app').innerHTML = '';
-    document.querySelector('#app').style.display = 'flex';
 
-		let objective = (
-			d3.select('#app')
-				.selectAll('div.objective')
-					.data(this.objectives, (o) => o.id)
-					.join('div')
-					.attr('class', 'objective'));
-		
-		objective
-		  .append('div')
-			.attr('class', 'objective-name')
-			.text((o) => o.name);
+		let s = (
+      d3.select('#app')
+        .style('display', 'flex')
+			  .selectAll('div.objective')
+				  .data(this.objectives, (o) => o.id));
 
-		objective
-			.append('div')
-			.attr('class', 'objective-description')
-			.html((o) => markdown.render(o.description ?? ''));
-    
-		let byName = (a, b) => (a.name > b.name
+    let node = (
+      s.enter()
+        .append('div')
+        .attr('class', 'objective')
+        .merge(s));
+
+    this._renderObjective(node);
+
+    s.exit().remove();
+  }
+
+  _renderObjective(node) {
+   node.append('div')
+		 .attr('class', 'objective-name')
+		 .text((o) => o.name);
+
+   let markdown = new SafeMarkdownRenderer();
+   node.append('div')
+	  .attr('class', 'objective-description')
+		.html((o) => markdown.render(o.description ?? ''));
+
+	 let byName = (a, b) => (a.name > b.name
                                   ? 1
                                   : a.name < b.name
                                       ? -1
                                       : 0);
+   let s = (
+     node.selectAll('div.goal')
+       .data((o) => o.goals.sort(byName), (g) => g.id));
 
-		let goal = (
-			objective
-				.selectAll('div.goal')
-					.data((o) => o.goals.sort(byName), (g) => g.id)
-					.join('div')
-					.attr('class', 'goal'));
+   let goalNode = (
+     s.enter()
+       .append('div')
+       .attr('class', 'goal')
+       .merge(s));
 
-    let svg = (
-			goal.append('svg')
-        .attr('class', 'chart')
-        .attr('viewBox', `0 0 100% 100`));
+    this._renderGoal(goalNode);
+
+    s.exit().remove();
+  }
+
+  _renderGoal(node) {
+    let svg = node.append('svg')
+      .attr('class', 'chart')
+      .attr('viewBox', `0 0 100% 100`);
 
     // Draw names
 		svg.append('text')
@@ -268,7 +283,7 @@ class App {
       .attr('y', 20)
       .text((g) => g.name);
 
-    // Draw progress 
+    // Draw progress
 		svg.append('text')
       .attr('class', 'progress')
       .attr('text-anchor', 'middle')
@@ -291,7 +306,7 @@ class App {
       .attr('height', 6)
       .attr('fill', 'lightgrey')
       .attr('y', 52);
- 
+
    // Draw progress bars
    svg.append('rect')
      .attr('width', (g) => `${100 * g.progress}%`)
@@ -301,7 +316,7 @@ class App {
                               : 'current offtrack'))
      .attr('y', 46);
 
-   // Draw current date 
+   // Draw current date
    svg.append('rect')
      .attr('class', 'today')
      .attr('width', '0.5%')
@@ -340,5 +355,5 @@ class App {
      .attr('x', '100%')
      .attr('y', 80)
      .text((g) => `${g.target} ${g.unit}`);
-	}
+  }
 }
