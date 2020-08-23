@@ -27,6 +27,9 @@ describe('objective', () => {
     let objective = new Objective({goals});
     expect(objective.goals).to.equal(goals);
   });
+});
+
+describe('converter', () => {
 
   it('can convert from Firestore', () => {
     let converter = new ObjectiveConverter();
@@ -86,9 +89,6 @@ describe('objective', () => {
     expect(converter.fromFirestore(doc)).to.eql(expected);
   });
   
- 
-  // TODO add test case where goals is not defined in document
-
   it('can convert to Firestore', () => {
     let converter = new ObjectiveConverter();
     let objective = new Objective({
@@ -270,37 +270,39 @@ describe('goal', () => {
 });
 
 
-describe('app', () => {
+describe('model', () => {
   it('has no objectives initially', () => {
-    let app = new App();
-    expect(app.model.objectives).to.be.empty;
+    let model = new Model();
+    expect(model.objectives).to.be.empty;
+  });
+
+  it('has no user id initially', () => {
+    let model = new Model();
+    expect(model.user_id).to.be.null;
   });
 
   it('can set objectives', () => {
-    let app = new App();
+    let model = new Model();
     let objectives = [new Objective({}), new Objective({})]
-    expect(app.model.objectives).to.be.empty;
+    expect(model.objectives).to.be.empty;
 
-    app.model.objectives = objectives;
+    model.objectives = objectives;
 
-    expect(app.model.objectives).to.have.lengthOf(2);
+    expect(model.objectives).to.have.lengthOf(2);
   });
 
-  it('has no goals initially', () => {
-    let app = new App();
-    expect(app.goals).to.be.empty;
+  it('can set user id', () => {
+    let model = new Model();
+    expect(model.user_id).to.be.null;
+
+    model.user_id = 'foo-user';
+
+    expect(model.user_id).to.equal('foo-user');
   });
+});
 
-  it('can set goals', () => {
-    let app = new App();
-    let goals = [new Goal({}), new Goal({})]
-    expect(app.goals).to.be.empty;
 
-    app.goals = goals;
-
-    expect(app.goals).to.have.lengthOf(2);
-  });
-
+describe('view', () => {
   it('can render goals', () => {
     let app = new App();
     app.model.objectives = [
