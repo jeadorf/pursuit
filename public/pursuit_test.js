@@ -35,17 +35,16 @@ describe('objective', () => {
       data: () => ({
         name: 'name',
         description: 'description',
-        goals: [
-          {
-						id: 'd66c24f7-a7fd-4760-95be-401dc7b53935',
+        goals: {
+          'd66c24f7-a7fd-4760-95be-401dc7b53935': {
             name: 'Shuttle Speed',
             target: 2300,
             baseline: 0,
             current: 0,
             start: 2490,
-            end: 5439
+            end: 5439,
           }
-        ]
+        }
       })
     };
     let expected = new Objective({

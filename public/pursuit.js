@@ -123,21 +123,27 @@ class ObjectiveConverter {
 
   fromFirestore(snapshot, options) {
     const objective = snapshot.data(options);
+
+    let goals = [];
+    for (let id in objective.goals) {
+      let g = objective.goals[id];
+      goals.push(new Goal({
+        id: id,
+        name: g.name,
+        unit: g.unit,
+        start: g.start,
+        end: g.end,
+        baseline: g.baseline,
+        target: g.target,
+        current: g.current,
+      }));
+    }
+
     return new Objective({
       id: snapshot.id,
       name: objective.name,
       description: objective.description,
-      goals: (objective.goals ?? []).map((g) =>
-        new Goal({
-          id: g.id,
-          name: g.name,
-          unit: g.unit,
-          start: g.start,
-          end: g.end,
-          baseline: g.baseline,
-          target: g.target,
-          current: g.current,
-       }))
+      goals: goals,
     });
   }
 }
