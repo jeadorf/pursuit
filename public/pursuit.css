@@ -1,3 +1,7 @@
+* {
+  font-family: "Mulish", sans-serif;
+}
+
 #signin {
   display: none;
   font: 20px sans-serif;
@@ -10,12 +14,26 @@
   display: none;
   flex-direction: column;
   margin: 0 auto;
-  padding: 20px;
+  padding: 0 20px 20px 20px;
   max-width: 60em;
+}
+
+.toolbar {
+  padding: 10px;
+  text-align: center;
+}
+
+.toolbar a {
+  margin: 0 10px;
+  text-decoration: none;
+  font-weight: bold;
+  cursor: pointer;
+  color: navy;
 }
 
 .objective {
   font-family: "Mulish", sans-serif;
+  margin-bottom: 10px;
 }
 
 .objective-name {
@@ -42,7 +60,7 @@
 
 .chart {
   width: 100%;
-  height: 100px;
+  height: 85px;
 }
 
 .name, .start, .end, .baseline, .target, .progress, .days-left {
@@ -72,4 +90,29 @@
 
 .offtrack {
   fill: #bb6677;
+}
+
+.edit {
+  font-size: 14px;
+  border-left: 1px solid lightgrey;
+  margin-bottom: 45px;
+  padding: 5px 0;
+}
+
+.edit > div {
+  display: flex;
+  margin: 10px 0;
+}
+
+.edit > div > div {
+  min-width: 70px;
+  text-align: right;
+  margin-right: 10px;
+  padding: 5px;
+}
+
+.edit input {
+  padding: 5px;
+  border: solid lightsteelblue;
+  border-width: 0 0 1px 0;
 }

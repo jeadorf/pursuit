@@ -237,7 +237,7 @@ class Controller {
 
   updateGoal(goalId, current) {
     let objectiveId = null;
-    for (let o of this.objectives) {
+    for (let o of this._model.objectives) {
       for (let g of o.goals) {
         if (g.id == goalId) {
           objectiveId = o.id;
@@ -254,6 +254,13 @@ class Controller {
         [`goals.${goalId}.current`]: current
       });
   }
+
+  onEdit(edit) {
+    if (this._model.edit != edit) {
+      this._model.edit = edit;
+      this._view.render();
+    }
+  }
 }
 
 
@@ -265,6 +272,7 @@ class App {
 
     // Bind
     this._view.model = this._model;
+    this._view.controller = this._controller;
     this._controller.model = this._model;
     this._controller.view = this._view;
   }
@@ -289,6 +297,10 @@ class View {
     this._model = value;
   }
 
+  set controller(value) {
+    this._controller = value;
+  }
+
   render() {
     if (this._model.user_id) {
       // Technically, this is not necessary as the sign in
@@ -301,6 +313,22 @@ class View {
       // noticeable speed issue is it worthwhile to minimize DOM changes by
       // treating enter and update selections differently.
       document.querySelector('#app').innerHTML = '';
+
+      let toolbar = d3.select('#app')
+        .append('div')
+        .attr('class', 'toolbar');
+      toolbar
+        .append('a')
+        .text('View')
+        .on('click', () => {
+          this._controller.onEdit(false);
+        });
+      toolbar
+        .append('a')
+        .text('Edit')
+        .on('click', () => {
+          this._controller.onEdit(true);
+        });
 
       d3.select('#app')
         .style('display', 'flex')
@@ -340,7 +368,7 @@ class View {
     let svg =
       node.append('svg')
         .attr('class', 'chart')
-        .attr('viewBox', `0 0 100% 100`);
+        .attr('viewBox', `0 0 100% 85`);
 
     // Draw names
 		svg.append('text')
@@ -421,6 +449,29 @@ class View {
      .attr('x', '100%')
      .attr('y', 80)
      .text((g) => `${g.target} ${g.unit}`);
+
+    if (this._model.edit) {
+      let edit =
+        node.append('div')
+          .attr('class', 'edit');
+      let add_field = (form, name, getter) => {
+        let field = form.append('div');
+        field.append('div')
+          .text(name);
+        field.append('input')
+          .attr('value', getter)
+          .on('change', (g) => {
+            this._controller.updateGoal(g.id, d3.event.target.value);
+          });
+      };
+      // add_field(edit, 'Name', (g) => g.name);
+      // add_field(edit, 'Unit', (g) => g.unit);
+      // add_field(edit, 'Start', (g) => g.start);
+      // add_field(edit, 'End', (g) => g.end);
+      add_field(edit, 'Current', (g) => g.current);
+      // add_field(edit, 'Baseline', (g) => g.baseline);
+      // add_field(edit, 'Target', (g) => g.target);
+    }
   }
 
   _renderSignIn() {
