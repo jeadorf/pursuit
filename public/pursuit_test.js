@@ -31,7 +31,7 @@ describe('objective', () => {
   it('can convert from Firestore', () => {
     let converter = new ObjectiveConverter();
     let doc = {
-      id: 'id',
+      id: '11616568-c5f8-4e3f-9bc1-1c432bd361c2',
       data: () => ({
         name: 'name',
         description: 'description',
@@ -48,7 +48,7 @@ describe('objective', () => {
       })
     };
     let expected = new Objective({
-      id: 'id',
+      id: '11616568-c5f8-4e3f-9bc1-1c432bd361c2',
       name: 'name',
       description: 'description',
       goals: [
@@ -273,17 +273,17 @@ describe('goal', () => {
 describe('app', () => {
   it('has no objectives initially', () => {
     let app = new App();
-    expect(app.objectives).to.be.empty;
+    expect(app.model.objectives).to.be.empty;
   });
 
   it('can set objectives', () => {
     let app = new App();
     let objectives = [new Objective({}), new Objective({})]
-    expect(app.objectives).to.be.empty;
+    expect(app.model.objectives).to.be.empty;
 
-    app.objectives = objectives;
+    app.model.objectives = objectives;
 
-    expect(app.objectives).to.have.lengthOf(2);
+    expect(app.model.objectives).to.have.lengthOf(2);
   });
 
   it('has no goals initially', () => {
@@ -303,7 +303,7 @@ describe('app', () => {
 
   it('can render goals', () => {
     let app = new App();
-    app.objectives = [
+    app.model.objectives = [
       new Objective({
         goals: [
           new Goal({
@@ -322,7 +322,7 @@ describe('app', () => {
       }),
     ];
 
-    app.render();
+    app.view.render();
 
     let appText = document.querySelector('#app').innerHTML;
     expect(appText).to.have.string('Foo');
@@ -333,7 +333,7 @@ describe('app', () => {
 
   it('renders percentage complete', () => {
     let app = new App();
-    app.objectives = [
+    app.model.objectives = [
       new Objective({
         goals: [
           new Goal({
@@ -348,7 +348,7 @@ describe('app', () => {
       }),
     ];
 
-    app.render();
+    app.view.render();
 
     let appText = document.querySelector('#app').innerHTML;
     expect(appText).to.have.string('20.2% complete');
@@ -358,7 +358,7 @@ describe('app', () => {
   it('renders days left', () => {
     let app = new App();
     let now = new Date().getTime();
-    app.objectives = [
+    app.model.objectives = [
       new Objective({
         goals: [
           new Goal({
@@ -373,7 +373,7 @@ describe('app', () => {
       }),
     ];
 
-    app.render();
+    app.view.render();
 
     let appText = document.querySelector('#app').innerHTML;
     expect(appText).to.have.string('17 days left');
@@ -382,7 +382,7 @@ describe('app', () => {
 
   it('renders goals in alphabetical order', () => {
     let app = new App();
-    app.objectives = [
+    app.model.objectives = [
       new Objective({
         goals: [
           new Goal({
@@ -400,7 +400,7 @@ describe('app', () => {
         ]}),
     ];
 
-    app.render();
+    app.view.render();
 
     let appText = document.querySelector('#app').innerHTML;
     expect(appText.indexOf('Alpha')).to.be.below(appText.indexOf('Beta'));
@@ -410,7 +410,7 @@ describe('app', () => {
 
   it('renders objectives and goals exactly once', () => {
     let app = new App();
-    app.objectives = [
+    app.model.objectives = [
       new Objective({
         name: 'Alpha',
         goals: [
@@ -422,8 +422,8 @@ describe('app', () => {
     ];
 
     // Run twice, because we expect the render() function to be idempotent.
-    app.render();
-    app.render();
+    app.view.render();
+    app.view.render();
 
     let alphas = document.querySelector('#app').innerHTML.match(/Alpha/g);
     let betas = document.querySelector('#app').innerHTML.match(/Beta/g);

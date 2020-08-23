@@ -171,7 +171,7 @@ class SafeMarkdownRenderer {
 }
 
 
-class App {
+class Model {
   constructor() {
     this._objectives = [];
   }
@@ -183,6 +183,14 @@ class App {
   set objectives(value) {
     this._objectives = value;
   }
+}
+
+
+class Controller {
+  constructor(model, view) {
+    this._model = model;
+    this._view = view;
+  }
 
   signInWithGoogle() {
     let provider = new firebase.auth.GoogleAuthProvider();
@@ -192,6 +200,7 @@ class App {
   run() {
     firebase.auth().onAuthStateChanged((user) => {
       if (user) {
+        // TODO move the user id to the model
         this._uid = user.uid;
         this.listenToObjectives();
       } else {
@@ -217,8 +226,8 @@ class App {
         snapshot.forEach((d) => {
           objectives.push(d.data());
         });
-        this.objectives = objectives;
-        this.render();
+        this._model.objectives = objectives;
+        this._view.render();
       });
   }
 
@@ -241,6 +250,37 @@ class App {
         [`goals.${goalId}.current`]: current
       });
   }
+}
+
+
+class App {
+  constructor() {
+    this._model = new Model();
+    this._view = new View();
+    this._controller = new Controller(this._model, this._view);
+
+    this._view.model = this._model;
+  }
+
+  get model() {
+    return this._model;
+  }
+
+  get view() {
+    return this._view;
+  }
+
+  get controller() {
+    return this._controller;
+  }
+}
+
+
+class View {
+  
+  set model(value) {
+    this._model = value;
+  }
 
   render() {
     // Just clearing out everything leads to simpler code as we only need to
@@ -252,7 +292,7 @@ class App {
     d3.select('#app')
       .style('display', 'flex')
 		  .selectAll('div.objective')
-			.data(this.objectives)
+			.data(this._model.objectives)
       .enter()
       .append('div')
       .attr('class', 'objective')
