@@ -295,9 +295,9 @@ describe('model', () => {
     let model = new Model();
     expect(model.user_id).to.be.null;
 
-    model.user_id = 'foo-user';
+    model.user_id = 'test-user';
 
-    expect(model.user_id).to.equal('foo-user');
+    expect(model.user_id).to.equal('test-user');
   });
 });
 
@@ -305,6 +305,7 @@ describe('model', () => {
 describe('view', () => {
   it('can render goals', () => {
     let app = new App();
+    app.model.user_id = 'test-user';
     app.model.objectives = [
       new Objective({
         goals: [
@@ -335,6 +336,7 @@ describe('view', () => {
 
   it('renders percentage complete', () => {
     let app = new App();
+    app.model.user_id = 'test-user';
     app.model.objectives = [
       new Objective({
         goals: [
@@ -359,6 +361,7 @@ describe('view', () => {
 
   it('renders days left', () => {
     let app = new App();
+    app.model.user_id = 'test-user';
     let now = new Date().getTime();
     app.model.objectives = [
       new Objective({
@@ -384,6 +387,7 @@ describe('view', () => {
 
   it('renders goals in alphabetical order', () => {
     let app = new App();
+    app.model.user_id = 'test-user';
     app.model.objectives = [
       new Objective({
         goals: [
@@ -412,6 +416,7 @@ describe('view', () => {
 
   it('renders objectives and goals exactly once', () => {
     let app = new App();
+    app.model.user_id = 'test-user';
     app.model.objectives = [
       new Objective({
         name: 'Alpha',
@@ -431,6 +436,22 @@ describe('view', () => {
     let betas = document.querySelector('#app').innerHTML.match(/Beta/g);
     expect(alphas).to.have.lengthOf(1);
     expect(betas).to.have.lengthOf(1);
+  });
+
+  it('renders sign-in screen if not logged in', () => {
+    let app = new App();
+
+    app.view.render();
+
+    let signIn = document.querySelector('#signin');
+    expect(signIn.style.display).to.equal('block');
+    expect(signIn.innerText).to.have.string('Sign in with Google');
+
+    app.model.user_id = 'test-user';
+    app.view.render();
+
+    expect(signIn.style.display).to.be.empty;
+    expect(signIn.innerText).to.have.string('Sign in with Google');
   });
 
   it('can render bold markdown', () => {

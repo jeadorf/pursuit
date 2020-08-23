@@ -214,16 +214,9 @@ class Controller {
       if (user) {
         this._model.user_id = user.uid;
         this.listenToObjectives();
-      } else {
-        let signIn = document.querySelector('#signin');
-        signIn.style.display = 'block';
-        let signInLink = document.createElement('a');
-        signInLink.href = '#';
-        signInLink.innerText = 'Sign in with Google';
-        signInLink.onclick = () => this.signInWithGoogle();
-        signIn.appendChild(signInLink);
       }
     });
+    this._view.render();
   }
 
   listenToObjectives() {
@@ -297,20 +290,29 @@ class View {
   }
 
   render() {
-    // Just clearing out everything leads to simpler code as we only need to
-    // care about the enter selection in d3. Only when this becomes a
-    // noticeable speed issue is it worthwhile to minimize DOM changes by
-    // treating enter and update selections differently.
-    document.querySelector('#app').innerHTML = '';
+    if (this._model.user_id) {
+      // Technically, this is not necessary as the sign in
+      // will redirect.
+      let signIn = document.querySelector('#signin');
+      signIn.style.display = '';
 
-    d3.select('#app')
-      .style('display', 'flex')
-		  .selectAll('div.objective')
-			.data(this._model.objectives)
-      .enter()
-      .append('div')
-      .attr('class', 'objective')
-      .call((n) => this._renderObjective(n));
+      // Just clearing out everything leads to simpler code as we only need
+      // to care about the enter selection in d3. Only when this becomes a
+      // noticeable speed issue is it worthwhile to minimize DOM changes by
+      // treating enter and update selections differently.
+      document.querySelector('#app').innerHTML = '';
+
+      d3.select('#app')
+        .style('display', 'flex')
+        .selectAll('div.objective')
+        .data(this._model.objectives)
+        .enter()
+        .append('div')
+        .attr('class', 'objective')
+        .call((n) => this._renderObjective(n));
+    } else {
+      this._renderSignIn();
+    }
   }
 
   _renderObjective(node) {
@@ -420,4 +422,14 @@ class View {
      .attr('y', 80)
      .text((g) => `${g.target} ${g.unit}`);
   }
+
+  _renderSignIn() {
+    let signIn = document.querySelector('#signin');
+    signIn.style.display = 'block';
+    let signInLink = document.createElement('a');
+    signInLink.href = '#';
+    signInLink.innerText = 'Sign in with Google';
+    signInLink.onclick = () => this.signInWithGoogle();
+    signIn.appendChild(signInLink);
+  } 
 }
