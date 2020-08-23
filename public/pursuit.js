@@ -174,6 +174,7 @@ class SafeMarkdownRenderer {
 class Model {
   constructor() {
     this._objectives = [];
+    this._user_id = null;
   }
 
   get objectives() {
@@ -183,13 +184,24 @@ class Model {
   set objectives(value) {
     this._objectives = value;
   }
+
+  get user_id() {
+    return this._user_id;
+  }
+
+  set user_id(value) {
+    this._user_id = value;
+  }
 }
 
 
 class Controller {
-  constructor(model, view) {
-    this._model = model;
-    this._view = view;
+  set model(value) {
+    this._model = value;
+  }
+
+  set view(value) {
+    this._view = value;
   }
 
   signInWithGoogle() {
@@ -200,8 +212,7 @@ class Controller {
   run() {
     firebase.auth().onAuthStateChanged((user) => {
       if (user) {
-        // TODO move the user id to the model
-        this._uid = user.uid;
+        this._model.user_id = user.uid;
         this.listenToObjectives();
       } else {
         let signIn = document.querySelector('#signin');
@@ -218,7 +229,7 @@ class Controller {
   listenToObjectives() {
     firebase.firestore()
       .collection('users')
-      .doc(this._uid)
+      .doc(this._model.user_id)
       .collection('objectives')
       .withConverter(new ObjectiveConverter())
       .onSnapshot((snapshot) => {
@@ -243,7 +254,7 @@ class Controller {
 
     firebase.firestore()
       .collection('users')
-      .doc(this._uid)
+      .doc(this._model.user_id)
       .collection('objectives')
       .doc(objectiveId)
       .update({
@@ -257,9 +268,12 @@ class App {
   constructor() {
     this._model = new Model();
     this._view = new View();
-    this._controller = new Controller(this._model, this._view);
+    this._controller = new Controller();
 
+    // Bind
     this._view.model = this._model;
+    this._controller.model = this._model;
+    this._controller.view = this._view;
   }
 
   get model() {
