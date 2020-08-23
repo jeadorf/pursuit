@@ -217,64 +217,48 @@ class App {
   }
 
   render() {
-    // TODO remove hack, need to make sure to create the
-    // whole DOM tree for each objective only once on
-    // entering and leaving it to the update function
-    // to alter attributes. For now, it's a bit stupid,
-    // though it's hardly noticeable for users.
+    // Just clearing out everything leads to simpler code as we only need to
+    // care about the enter selection in d3. Only when this becomes a
+    // noticeable speed issue is it worthwhile to minimize DOM changes by
+    // treating enter and update selections differently.
     document.querySelector('#app').innerHTML = '';
 
-		let s = (
-      d3.select('#app')
-        .style('display', 'flex')
-			  .selectAll('div.objective')
-				  .data(this.objectives, (o) => o.id));
-
-    let node = (
-      s.enter()
-        .append('div')
-        .attr('class', 'objective')
-        .merge(s));
-
-    this._renderObjective(node);
-
-    s.exit().remove();
+    d3.select('#app')
+      .style('display', 'flex')
+		  .selectAll('div.objective')
+			.data(this.objectives)
+      .enter()
+      .append('div')
+      .attr('class', 'objective')
+      .call((n) => this._renderObjective(n));
   }
 
   _renderObjective(node) {
-   node.append('div')
-		 .attr('class', 'objective-name')
-		 .text((o) => o.name);
+    node.append('div')
+      .attr('class', 'objective-name')
+      .text((o) => o.name);
 
-   let markdown = new SafeMarkdownRenderer();
-   node.append('div')
-	  .attr('class', 'objective-description')
-		.html((o) => markdown.render(o.description ?? ''));
+    let markdown = new SafeMarkdownRenderer();
+    node.append('div')
+	    .attr('class', 'objective-description')
+      .html((o) => markdown.render(o.description ?? ''));
 
-	 let byName = (a, b) => (a.name > b.name
-                                  ? 1
-                                  : a.name < b.name
-                                      ? -1
-                                      : 0);
-   let s = (
-     node.selectAll('div.goal')
-       .data((o) => o.goals.sort(byName), (g) => g.id));
-
-   let goalNode = (
-     s.enter()
-       .append('div')
-       .attr('class', 'goal')
-       .merge(s));
-
-    this._renderGoal(goalNode);
-
-    s.exit().remove();
+	  let byName = (a, b) => (
+      a.name > b.name ? 1 : a.name < b.name ? -1 : 0
+    );
+    node.selectAll('div.goal')
+      .data((o) => o.goals.sort(byName))
+      .enter()
+      .append('div')
+      .attr('class', 'goal')
+      .call((n) => this._renderGoal(n));
   }
 
   _renderGoal(node) {
-    let svg = node.append('svg')
-      .attr('class', 'chart')
-      .attr('viewBox', `0 0 100% 100`);
+    let svg =
+      node.append('svg')
+        .attr('class', 'chart')
+        .attr('viewBox', `0 0 100% 100`);
 
     // Draw names
 		svg.append('text')
