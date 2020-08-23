@@ -192,7 +192,8 @@ class App {
   run() {
     firebase.auth().onAuthStateChanged((user) => {
       if (user) {
-        this.listenToObjectives(user.uid);
+        this._uid = user.uid;
+        this.listenToObjectives();
       } else {
         let signIn = document.querySelector('#signin');
         signIn.style.display = 'block';
@@ -205,11 +206,10 @@ class App {
     });
   }
 
-  listenToObjectives(uid) {
-    firebase
-      .firestore()
+  listenToObjectives() {
+    firebase.firestore()
       .collection('users')
-      .doc(uid)
+      .doc(this._uid)
       .collection('objectives')
       .withConverter(new ObjectiveConverter())
       .onSnapshot((snapshot) => {
@@ -219,6 +219,26 @@ class App {
         });
         this.objectives = objectives;
         this.render();
+      });
+  }
+
+  updateGoal(goalId, current) {
+    let objectiveId = null;
+    for (let o of this.objectives) {
+      for (let g of o.goals) {
+        if (g.id == goalId) {
+          objectiveId = o.id;
+        }
+      }
+    }
+
+    firebase.firestore()
+      .collection('users')
+      .doc(this._uid)
+      .collection('objectives')
+      .doc(objectiveId)
+      .update({
+        [`goals.${goalId}.current`]: current
       });
   }
 
