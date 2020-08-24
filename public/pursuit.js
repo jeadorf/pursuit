@@ -255,6 +255,24 @@ class Controller {
       });
   }
 
+  updateObjectiveName(objectiveId, name) {
+    firebase.firestore()
+      .collection('users')
+      .doc(this._model.user_id)
+      .collection('objectives')
+      .doc(objectiveId)
+      .update({name});
+  }
+
+  updateObjectiveDescription(objectiveId, description) {
+    firebase.firestore()
+      .collection('users')
+      .doc(this._model.user_id)
+      .collection('objectives')
+      .doc(objectiveId)
+      .update({description});
+  }
+
   onEdit(edit) {
     if (this._model.edit != edit) {
       this._model.edit = edit;
@@ -344,15 +362,35 @@ class View {
   }
 
   _renderObjective(node) {
-    node.append('div')
-      .attr('class', 'objective-name')
-      .text((o) => o.name);
+    if (this._model.edit) {
+      node.append('div')
+        .attr('class', 'objective-name')
+        .append('input')
+        .attr('value', (o) => o.name)
+        .on('change', (o) => {
+          this._controller.updateObjectiveName(o.id, d3.event.target.value);
+        });
+    } else {
+      node.append('div')
+        .attr('class', 'objective-name')
+        .text((o) => o.name);
+    }
 
-    let markdown = new SafeMarkdownRenderer();
-    node.append('div')
-	    .attr('class', 'objective-description')
-      .html((o) => markdown.render(o.description ?? ''));
-
+    if (this._model.edit) {
+      node.append('div')
+    	  .attr('class', 'objective-description')
+        .append('textarea')
+        .text((o) => o.description)
+        .on('change', (o) => {
+          this._controller.updateObjectiveDescription(o.id, d3.event.target.value);
+        });
+    } else {
+      let markdown = new SafeMarkdownRenderer();
+      node.append('div')
+    	  .attr('class', 'objective-description')
+        .html((o) => markdown.render(o.description ?? ''));
+    }
+ 
 	  let byName = (a, b) => (
       a.name > b.name ? 1 : a.name < b.name ? -1 : 0
     );
