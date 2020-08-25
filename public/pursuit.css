@@ -46,6 +46,7 @@
 }
 
 .objective-name input {
+  color: cadetblue;
   font-size: 22px;
   border: solid lightsteelblue;
   border-width: 0 0 1px 0;
@@ -59,10 +60,9 @@
 .objective-description textarea {
   width: 100%;
   height: 80px;
-  font-size: 22px;
   border: 1px solid lightsteelblue;
-  color: darkgrey;
-  font-size: 15px;
+  color: cadetblue;
+  font-size: 14px;
 }
 
 
@@ -133,6 +133,7 @@
 
 .edit input {
   padding: 5px;
+  color: cadetblue;
   border: solid lightsteelblue;
   border-width: 0 0 1px 0;
 }

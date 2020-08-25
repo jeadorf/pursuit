@@ -313,6 +313,36 @@ class Controller {
       });
   }
 
+  deleteGoal(goalId) {
+    let objectiveId = null;
+    for (let o of this._model.objectives) {
+      for (let g of o.goals) {
+        if (g.id == goalId) {
+          objectiveId = o.id;
+        }
+      }
+    }
+
+    firebase.firestore()
+      .collection('users')
+      .doc(this._model.user_id)
+      .collection('objectives')
+      .doc(objectiveId)
+      .update({
+        [`goals.${goalId}`]: firebase.firestore.FieldValue.delete()
+      });
+  }
+
+  deleteObjective(objectiveId) {
+    firebase.firestore()
+      .collection('users')
+      .doc(this._model.user_id)
+      .collection('objectives')
+      .doc(objectiveId)
+      .delete();
+  }
+
+
   onEdit(edit) {
     if (this._model.edit != edit) {
       this._model.edit = edit;
@@ -440,12 +470,21 @@ class View {
           this._controller.updateObjectiveDescription(o.id, d3.event.target.value);
         });
 
-      node.append('div')
-        .attr('class', 'toolbar')
+      let objectiveToolbar = node.append('div')
+        .attr('class', 'toolbar');
+      objectiveToolbar
         .append('a')
         .text('+Goal')
         .on('click', (o) => {
           this._controller.addGoal(o.id);
+        });
+      objectiveToolbar
+        .append('a')
+        .text('Delete')
+        .on('click', (o) => {
+          if (confirm(`Really delete the objective named "${o.name}"?`)) {
+            this._controller.deleteObjective(o.id);
+          }
         });
     } else {
       let markdown = new SafeMarkdownRenderer();
@@ -458,7 +497,7 @@ class View {
       a.name > b.name ? 1 : a.name < b.name ? -1 : 0
     );
     node.selectAll('div.goal')
-      .data((o) => o.goals.sort(byName))
+      .data((o) => this._model.edit ? o.goals : o.goals.sort(byName))
       .enter()
       .append('div')
       .attr('class', 'goal')
@@ -562,6 +601,7 @@ class View {
           .text(name);
         field.append('input')
           .attr('type', type)
+          .attr('placeholder', `Enter ${type}`)
           .attr('value', getter)
           .on('change', (g) => {
             this._controller.updateGoal(g.id, key, d3.event.target.value);
@@ -574,6 +614,16 @@ class View {
       add_field(edit, 'Baseline', 'baseline', 'number', (g) => g.baseline);
       add_field(edit, 'Target', 'target', 'number', (g) => g.target);
       add_field(edit, 'Current', 'current', 'number', (g) => g.current);
+
+      edit.append('div')
+        .attr('class', 'toolbar')
+        .append('a')
+        .text('Delete')
+        .on('click', (g) => {
+          if (confirm(`Really delete the goal named "${g.name}"?`)) {
+            this._controller.deleteGoal(g.id);
+          }
+        });
     }
   }
 
