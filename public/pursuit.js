@@ -104,20 +104,23 @@ class Goal {
 
 class ObjectiveConverter {
   toFirestore(objective) {
+    let goals = {};
+    for (let g of objective.goals) {
+      goals[g.id] = {
+        id: g.id,
+        name: g.name,
+        unit: g.unit,
+        start: g.start,
+        end: g.end,
+        baseline: g.baseline,
+        target: g.target,
+        current: g.current,
+      };
+    }
     return {
       name: objective.name,
       description: objective.description,
-      goals: objective.goals.map((g) => (
-        {
-          id: g.id,
-          name: g.name,
-          unit: g.unit,
-          start: g.start,
-          end: g.end,
-          baseline: g.baseline,
-          target: g.target,
-          current: g.current,
-        })),
+      goals: goals,
     };
   }
 
@@ -273,6 +276,23 @@ class Controller {
       .update({description});
   }
 
+  addObjective() {
+    let objective = new Objective({
+      id: uuidv4(),
+      name: '',
+      description: '',
+      goals: [],
+    });
+
+    firebase.firestore()
+      .collection('users')
+      .doc(this._model.user_id)
+      .collection('objectives')
+      .doc(objective.id)
+      .withConverter(new ObjectiveConverter())
+      .set(objective);
+  }
+
   onEdit(edit) {
     if (this._model.edit != edit) {
       this._model.edit = edit;
@@ -335,18 +355,31 @@ class View {
       let toolbar = d3.select('#app')
         .append('div')
         .attr('class', 'toolbar');
-      toolbar
+      
+      let toolbarPrimary = toolbar.append('div');
+      let toolbarSecondary = toolbar.append('div');
+
+      toolbarPrimary
         .append('a')
         .text('View')
         .on('click', () => {
           this._controller.onEdit(false);
         });
-      toolbar
+      toolbarPrimary
         .append('a')
         .text('Edit')
         .on('click', () => {
           this._controller.onEdit(true);
         });
+
+      if (this._model.edit) {
+        toolbarSecondary
+          .append('a')
+          .text('+Objective')
+          .on('click', () => {
+            this._controller.addObjective();
+          });
+      }
 
       d3.select('#app')
         .style('display', 'flex')
@@ -366,6 +399,7 @@ class View {
       node.append('div')
         .attr('class', 'objective-name')
         .append('input')
+        .attr('placeholder', 'Name the objective here...')
         .attr('value', (o) => o.name)
         .on('change', (o) => {
           this._controller.updateObjectiveName(o.id, d3.event.target.value);
@@ -380,6 +414,7 @@ class View {
       node.append('div')
     	  .attr('class', 'objective-description')
         .append('textarea')
+        .attr('placeholder', 'Describe the objective here...')
         .text((o) => o.description)
         .on('change', (o) => {
           this._controller.updateObjectiveDescription(o.id, d3.event.target.value);
