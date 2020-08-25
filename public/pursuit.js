@@ -293,6 +293,26 @@ class Controller {
       .set(objective);
   }
 
+  addGoal(objectiveId) {
+    let goalId = uuidv4();
+    let now = new Date().getTime();
+    firebase.firestore()
+      .collection('users')
+      .doc(this._model.user_id)
+      .collection('objectives')
+      .doc(objectiveId)
+      .update({
+        [`goals.${goalId}.name`]: '',
+        [`goals.${goalId}.current`]: 0.0,
+        [`goals.${goalId}.unit`]: '',
+        [`goals.${goalId}.start`]: now,
+        [`goals.${goalId}.end`]: now + 7 * 24 * 3600 * 1000,
+        [`goals.${goalId}.baseline`]: 0,
+        [`goals.${goalId}.target`]: 100,
+        [`goals.${goalId}.current`]: 0,
+      });
+  }
+
   onEdit(edit) {
     if (this._model.edit != edit) {
       this._model.edit = edit;
@@ -418,6 +438,14 @@ class View {
         .text((o) => o.description)
         .on('change', (o) => {
           this._controller.updateObjectiveDescription(o.id, d3.event.target.value);
+        });
+
+      node.append('div')
+        .attr('class', 'toolbar')
+        .append('a')
+        .text('+Goal')
+        .on('click', (o) => {
+          this._controller.addGoal(o.id);
         });
     } else {
       let markdown = new SafeMarkdownRenderer();
