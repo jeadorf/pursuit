@@ -238,7 +238,7 @@ class Controller {
       });
   }
 
-  updateGoal(goalId, current) {
+  updateGoal(goalId, key, value) {
     let objectiveId = null;
     for (let o of this._model.objectives) {
       for (let g of o.goals) {
@@ -254,7 +254,7 @@ class Controller {
       .collection('objectives')
       .doc(objectiveId)
       .update({
-        [`goals.${goalId}.current`]: current
+        [`goals.${goalId}.${key}`]: value
       });
   }
 
@@ -474,6 +474,7 @@ class View {
     // Draw names
 		svg.append('text')
       .attr('class', 'name')
+      .attr('contentEditable', 'on')
       .attr('x', 0)
       .attr('y', 20)
       .text((g) => g.name);
@@ -555,23 +556,24 @@ class View {
       let edit =
         node.append('div')
           .attr('class', 'edit');
-      let add_field = (form, name, getter) => {
+      let add_field = (form, name, key, type, getter) => {
         let field = form.append('div');
         field.append('div')
           .text(name);
         field.append('input')
+          .attr('type', type)
           .attr('value', getter)
           .on('change', (g) => {
-            this._controller.updateGoal(g.id, d3.event.target.value);
+            this._controller.updateGoal(g.id, key, d3.event.target.value);
           });
       };
-      // add_field(edit, 'Name', (g) => g.name);
-      // add_field(edit, 'Unit', (g) => g.unit);
-      // add_field(edit, 'Start', (g) => g.start);
-      // add_field(edit, 'End', (g) => g.end);
-      add_field(edit, 'Current', (g) => g.current);
-      // add_field(edit, 'Baseline', (g) => g.baseline);
-      // add_field(edit, 'Target', (g) => g.target);
+      add_field(edit, 'Name', 'name', 'text', (g) => g.name);
+      add_field(edit, 'Unit', 'unit', 'text', (g) => g.unit);
+      add_field(edit, 'Start', 'start', 'number', (g) => g.start);
+      add_field(edit, 'End', 'end', 'number', (g) => g.end);
+      add_field(edit, 'Baseline', 'baseline', 'number', (g) => g.baseline);
+      add_field(edit, 'Target', 'target', 'number', (g) => g.target);
+      add_field(edit, 'Current', 'current', 'number', (g) => g.current);
     }
   }
 
