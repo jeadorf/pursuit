@@ -342,10 +342,23 @@ class Controller {
       .delete();
   }
 
+  onView() {
+    if (this._model.mode != 'view') {
+      this._model.mode = 'view';
+      this._view.render();
+    }
+  }
 
-  onEdit(edit) {
-    if (this._model.edit != edit) {
-      this._model.edit = edit;
+  onPlan() {
+    if (this._model.mode != 'plan') {
+      this._model.mode = 'plan';
+      this._view.render();
+    }
+  }
+
+  onTrack() {
+    if (this._model.mode != 'track') {
+      this._model.mode = 'track';
       this._view.render();
     }
   }
@@ -380,7 +393,7 @@ class App {
 
 
 class View {
-  
+
   set model(value) {
     this._model = value;
   }
@@ -405,7 +418,7 @@ class View {
       let toolbar = d3.select('#app')
         .append('div')
         .attr('class', 'toolbar');
-      
+
       let toolbarPrimary = toolbar.append('div');
       let toolbarSecondary = toolbar.append('div');
 
@@ -413,16 +426,22 @@ class View {
         .append('a')
         .text('View')
         .on('click', () => {
-          this._controller.onEdit(false);
+          this._controller.onView();
         });
       toolbarPrimary
         .append('a')
-        .text('Edit')
+        .text('Plan')
         .on('click', () => {
-          this._controller.onEdit(true);
+          this._controller.onPlan();
+        });
+      toolbarPrimary
+        .append('a')
+        .text('Track')
+        .on('click', () => {
+          this._controller.onTrack();
         });
 
-      if (this._model.edit) {
+      if (this._model.mode == 'plan') {
         toolbarSecondary
           .append('a')
           .text('+Objective')
@@ -445,7 +464,7 @@ class View {
   }
 
   _renderObjective(node) {
-    if (this._model.edit) {
+    if (this._model.mode == 'plan') {
       node.append('div')
         .attr('class', 'objective-name')
         .append('input')
@@ -460,7 +479,7 @@ class View {
         .text((o) => o.name);
     }
 
-    if (this._model.edit) {
+    if (this._model.mode == 'plan') {
       node.append('div')
     	  .attr('class', 'objective-description')
         .append('textarea')
@@ -492,12 +511,12 @@ class View {
     	  .attr('class', 'objective-description')
         .html((o) => markdown.render(o.description ?? ''));
     }
- 
+
 	  let byName = (a, b) => (
       a.name > b.name ? 1 : a.name < b.name ? -1 : 0
     );
     node.selectAll('div.goal')
-      .data((o) => this._model.edit ? o.goals : o.goals.sort(byName))
+      .data((o) => this._model.mode == 'plan' ? o.goals : o.goals.sort(byName))
       .enter()
       .append('div')
       .attr('class', 'goal')
@@ -513,7 +532,6 @@ class View {
     // Draw names
 		svg.append('text')
       .attr('class', 'name')
-      .attr('contentEditable', 'on')
       .attr('x', 0)
       .attr('y', 20)
       .text((g) => g.name);
@@ -591,11 +609,11 @@ class View {
      .attr('y', 80)
      .text((g) => `${g.target} ${g.unit}`);
 
-    if (this._model.edit) {
-      let edit =
+    if (this._model.mode == 'plan' || this._model.mode == 'track') {
+      let form =
         node.append('div')
           .attr('class', 'edit');
-      let add_field = (form, name, key, type, getter) => {
+      let add_field = (name, key, type, getter) => {
         let field = form.append('div');
         field.append('div')
           .text(name);
@@ -607,23 +625,30 @@ class View {
             this._controller.updateGoal(g.id, key, d3.event.target.value);
           });
       };
-      add_field(edit, 'Name', 'name', 'text', (g) => g.name);
-      add_field(edit, 'Unit', 'unit', 'text', (g) => g.unit);
-      add_field(edit, 'Start', 'start', 'number', (g) => g.start);
-      add_field(edit, 'End', 'end', 'number', (g) => g.end);
-      add_field(edit, 'Baseline', 'baseline', 'number', (g) => g.baseline);
-      add_field(edit, 'Target', 'target', 'number', (g) => g.target);
-      add_field(edit, 'Current', 'current', 'number', (g) => g.current);
 
-      edit.append('div')
-        .attr('class', 'toolbar')
-        .append('a')
-        .text('Delete')
-        .on('click', (g) => {
-          if (confirm(`Really delete the goal named "${g.name}"?`)) {
-            this._controller.deleteGoal(g.id);
-          }
-        });
+      if (this._model.mode == 'plan') {
+        add_field('Name', 'name', 'text', (g) => g.name);
+        add_field('Unit', 'unit', 'text', (g) => g.unit);
+        add_field('Start', 'start', 'number', (g) => g.start);
+        add_field('End', 'end', 'number', (g) => g.end);
+        add_field('Baseline', 'baseline', 'number', (g) => g.baseline);
+        add_field('Target', 'target', 'number', (g) => g.target);
+        add_field('Current', 'current', 'number', (g) => g.current);
+
+        form.append('div')
+          .attr('class', 'toolbar')
+          .append('a')
+          .text('Delete')
+          .on('click', (g) => {
+            if (confirm(`Really delete the goal named "${g.name}"?`)) {
+              this._controller.deleteGoal(g.id);
+            }
+          });
+      }
+
+      if (this._model.mode == 'track') {
+        add_field('Current', 'current', 'number', (g) => g.current);
+      }
     }
   }
 
@@ -633,7 +658,7 @@ class View {
     let signInLink = document.createElement('a');
     signInLink.href = '#';
     signInLink.innerText = 'Sign in with Google';
-    signInLink.onclick = () => this.signInWithGoogle();
+    signInLink.onclick = () => this._controller.signInWithGoogle();
     signIn.appendChild(signInLink);
-  } 
+  }
 }

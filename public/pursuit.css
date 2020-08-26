@@ -46,7 +46,7 @@
 }
 
 .objective-name input {
-  color: cadetblue;
+  color: darksalmon;
   font-size: 22px;
   border: solid lightsteelblue;
   border-width: 0 0 1px 0;
@@ -61,7 +61,8 @@
   width: 100%;
   height: 80px;
   border: 1px solid lightsteelblue;
-  color: cadetblue;
+  color: darksalmon;
+  padding: 5px;
   font-size: 14px;
 }
 
@@ -133,7 +134,7 @@
 
 .edit input {
   padding: 5px;
-  color: cadetblue;
+  color: darksalmon;
   border: solid lightsteelblue;
   border-width: 0 0 1px 0;
 }
