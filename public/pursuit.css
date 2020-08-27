@@ -14,8 +14,18 @@
   display: none;
   flex-direction: column;
   margin: 0 auto;
-  padding: 0 20px 20px 20px;
+  padding: 50px 20px 20px 20px;
   max-width: 60em;
+}
+
+#app > .toolbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background-color: white;
+  justify-content: center;
+  border-bottom: 1px solid lightgrey;
 }
 
 .toolbar {
