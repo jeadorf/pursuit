@@ -92,7 +92,7 @@ describe('converter', () => {
   it('can convert to Firestore', () => {
     let converter = new ObjectiveConverter();
     let objective = new Objective({
-      id: 'id',
+      id: '11616568-c5f8-4e3f-9bc1-1c432bd361c2',
       name: 'name',
       description: 'description',
       goals: [
@@ -111,18 +111,19 @@ describe('converter', () => {
     let expected = {
       name: 'name',
       description: 'description',
-      goals: [
+      goals:
         {
-				  id: 'd66c24f7-a7fd-4760-95be-401dc7b53935',
-          name: 'Shuttle Speed',
-          unit: 'km/h',
-          target: 2300,
-          baseline: 0,
-          current: 0,
-          start: 2490,
-          end: 5439
+				  ['d66c24f7-a7fd-4760-95be-401dc7b53935']: {
+				    id: 'd66c24f7-a7fd-4760-95be-401dc7b53935',
+            name: 'Shuttle Speed',
+            unit: 'km/h',
+            target: 2300,
+            baseline: 0,
+            current: 0,
+            start: 2490,
+            end: 5439,
+          }
         }
-      ]
     };
 
     expect(converter.toFirestore(objective)).to.eql(expected);
@@ -470,6 +471,12 @@ describe('view', () => {
     let renderer = new SafeMarkdownRenderer();
     let html = renderer.render('this `code` abc.');
     expect(html).to.equal('<p>this <code>code</code> abc.</p>\n');
+  });
+
+  it('renders list markdown', () => {
+    let renderer = new SafeMarkdownRenderer();
+    let html = renderer.render('this <ul><li>code</li></ul> abc.');
+    expect(html).to.equal('<p>this </p><ul><li>code</li></ul> abc.<p></p>\n');
   });
 
   it('will render http: link markdown', () => {
