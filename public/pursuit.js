@@ -33,7 +33,6 @@ class Goal {
                target = 1.0,
                baseline = 0.0,
                current = 0.0,
-               history = new Map(),
                start = 0,
                end = 0}) {
     this._id = id;
@@ -42,7 +41,6 @@ class Goal {
     this._target = target;
     this._baseline = baseline;
     this._current = current;
-    this._history = history;
     this._start = start;
     this._end = end;
   }
@@ -73,14 +71,6 @@ class Goal {
 
   set current(value) {
     return this._current = value;
-  }
-
-  get history() {
-    return this._history;
-  }
-
-  history_add(value, time) {
-    this._history[time] = value;
   }
 
   get start() {

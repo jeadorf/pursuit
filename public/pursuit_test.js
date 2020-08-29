@@ -270,22 +270,6 @@ describe('goal', () => {
     expect(goal.is_on_track(660783600000)).to.be.false;
   });
 
-  it('has a history', () => {
-    let goal = new Goal({});
-    expect(goal.history).to.deep.equal(new Map());
-  });
-
-  it('can append to history', () => {
-    let goal = new Goal({});
-    let now = 660783600000;
-    let expected = new Map();
-    expected[now] = 0.25;
-
-    goal.history_add(0.25, now);
- 
-    expect(goal.history).to.deep.equal(expected);
-  });
-
   it('can compute mean velocity', () => {
     let goal = new Goal({
       baseline: 50,
