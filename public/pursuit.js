@@ -27,12 +27,13 @@ class Objective {
 
 
 class Goal {
-  constructor({id,
-               name,
+  constructor({id = '',
+               name = '',
                unit = '',
                target = 1.0,
                baseline = 0.0,
-               current = null,
+               current = 0.0,
+               history = new Map(),
                start = 0,
                end = 0}) {
     this._id = id;
@@ -40,7 +41,8 @@ class Goal {
     this._unit = unit;
     this._target = target;
     this._baseline = baseline;
-    this._current = current ?? baseline;
+    this._current = current;
+    this._history = history;
     this._start = start;
     this._end = end;
   }
@@ -73,6 +75,14 @@ class Goal {
     return this._current = value;
   }
 
+  get history() {
+    return this._history;
+  }
+
+  history_add(value, time) {
+    this._history[time] = value;
+  }
+
   get start() {
     return this._start;
   }
@@ -98,6 +108,15 @@ class Goal {
 
   is_on_track(by_date) {
     return this.progress >= this.time_spent(by_date);
+  }
+
+  mean_velocity(by_date) {
+    return (this.current - this.baseline) / (by_date - this.start);
+  }
+
+  mean_velocity_in_days(by_date) {
+    let day = 24 * 60 * 60 * 1000;
+    return this.mean_velocity(by_date) * day;
   }
 }
 
@@ -526,6 +545,10 @@ class View {
       .call((n) => this._renderGoal(n));
   }
 
+  _bound(number, min, max) {
+    return Math.max(Math.min(number, max), min);
+  }
+
   _renderGoal(node) {
     let svg =
       node.append('svg')
@@ -540,15 +563,15 @@ class View {
       .text((g) => g.name);
 
     // Draw progress
+    let now = new Date().getTime();
 		svg.append('text')
       .attr('class', 'progress')
       .attr('text-anchor', 'middle')
       .attr('x', '50%')
       .attr('y', 80)
-      .text((g) => `${(100 * g.progress).toFixed(1)}% complete`);
+      .text((g) => `${(100 * g.progress).toFixed(1)}% complete (${g.mean_velocity_in_days(now).toFixed(1)} ${g.unit}/d)`);
 
     // Draw time left
-    let now = new Date().getTime();
 		svg.append('text')
       .attr('class', 'days-left')
       .attr('text-anchor', 'middle')
@@ -565,7 +588,7 @@ class View {
 
    // Draw progress bars
    svg.append('rect')
-     .attr('width', (g) => `${100 * g.progress}%`)
+     .attr('width', (g) => `${100 * this._bound(g.progress, 0, 1)}%`)
      .attr('height', 18)
      .attr('class', (g) => (g.is_on_track(now)
                               ? 'current ontrack'

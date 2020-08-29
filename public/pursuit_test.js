@@ -29,6 +29,7 @@ describe('objective', () => {
   });
 });
 
+
 describe('converter', () => {
 
   it('can convert from Firestore', () => {
@@ -202,7 +203,7 @@ describe('goal', () => {
   });
 
   it('has progress depending on target, baseline, current', () => {
-    let goal = new Goal({target: 1200, baseline: 200});
+    let goal = new Goal({target: 1200, baseline: 200, current: 200});
     expect(goal.progress).to.equal(0.0);
     goal.current = 600;
     expect(goal.progress).to.equal(0.4);
@@ -216,14 +217,14 @@ describe('goal', () => {
   });
 
   it('supports ascending towards a target', () => {
-    let goal = new Goal({target: 800, baseline: -200});
+    let goal = new Goal({target: 800, baseline: -200, current: -200});
     expect(goal.progress).to.equal(0.0);
     goal.current = 200;
     expect(goal.progress).to.equal(0.4);
   });
 
   it('supports descending towards a target', () => {
-    let goal = new Goal({target: -200, baseline: 800});
+    let goal = new Goal({target: -200, baseline: 800, current: 800});
     expect(goal.progress).to.equal(0.0);
     goal.current = 600;
     expect(goal.progress).to.equal(0.2);
@@ -267,6 +268,37 @@ describe('goal', () => {
     goal.current = 110;
     expect(goal.is_on_track(660697200000)).to.be.true;
     expect(goal.is_on_track(660783600000)).to.be.false;
+  });
+
+  it('has a history', () => {
+    let goal = new Goal({});
+    expect(goal.history).to.deep.equal(new Map());
+  });
+
+  it('can append to history', () => {
+    let goal = new Goal({});
+    let now = 660783600000;
+    let expected = new Map();
+    expected[now] = 0.25;
+
+    goal.history_add(0.25, now);
+ 
+    expect(goal.history).to.deep.equal(expected);
+  });
+
+  it('can compute mean velocity', () => {
+    let goal = new Goal({
+      baseline: 50,
+      target: 150,
+      current: 75,
+      start: 0,
+      end: 1000,
+    });
+
+    expect(goal.mean_velocity(0)).to.equal(Infinity);
+    expect(goal.mean_velocity(250)).to.equal(0.1);
+    expect(goal.mean_velocity(500)).to.equal(0.05);
+    expect(goal.mean_velocity(1000)).to.equal(0.025);
   });
 });
 
@@ -315,12 +347,14 @@ describe('view', () => {
             unit: 'km/h',
             target: 1200,
             baseline: 200,
+            current: 250,
           }),
           new Goal({
             name: 'Bar',
             unit: 'l/s',
             target: 90,
             baseline: 20,
+            current: 30,
           }),
         ],
       }),
@@ -454,7 +488,10 @@ describe('view', () => {
     expect(signIn.style.display).to.be.empty;
     expect(signIn.innerText).to.have.string('Sign in with Google');
   });
+});
 
+
+describe('safe markdown renderer', () => {
   it('can render bold markdown', () => {
     let renderer = new SafeMarkdownRenderer();
     let html = renderer.render('this **bold** abc.');
@@ -473,19 +510,19 @@ describe('view', () => {
     expect(html).to.equal('<p>this <code>code</code> abc.</p>\n');
   });
 
-  it('renders list markdown', () => {
+  it('renders lists', () => {
     let renderer = new SafeMarkdownRenderer();
     let html = renderer.render('this <ul><li>code</li></ul> abc.');
     expect(html).to.equal('<p>this </p><ul><li>code</li></ul> abc.<p></p>\n');
   });
 
-  it('will render http: link markdown', () => {
+  it('renders links with schema http', () => {
     let renderer = new SafeMarkdownRenderer();
     let html = renderer.render('this [link](http://www.example.org/) abc.');
     expect(html).to.equal('<p>this <a href="http://www.example.org/">link</a> abc.</p>\n');
   });
 
-  it('will not render mailto: link markdown', () => {
+  it('does not render links with schema mailto', () => {
     let renderer = new SafeMarkdownRenderer();
     let html = renderer.render('this [link](mailto:bert@example.org/) abc.');
     expect(html).to.equal('<p>this <a>link</a> abc.</p>\n');
