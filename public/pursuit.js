@@ -540,17 +540,26 @@ class View {
   }
 
   _renderGoal(node) {
+    // Draw names
+    if (this._model.mode == 'plan') {
+      node.append('div')
+        .attr('class', 'name')
+        .append('input')
+        .attr('placeholder', 'Name the goal here...')
+        .attr('value', (g) => g.name)
+        .on('change', (g) => {
+          this._controller.updateGoal(g.id, 'name', d3.event.target.value);
+        });
+    } else {
+		  node.append('div')
+        .attr('class', 'name')
+        .text((g) => g.name);
+    }
+
     let svg =
       node.append('svg')
         .attr('class', 'chart')
-        .attr('viewBox', `0 0 100% 85`);
-
-    // Draw names
-		svg.append('text')
-      .attr('class', 'name')
-      .attr('x', 0)
-      .attr('y', 20)
-      .text((g) => g.name);
+        .attr('viewBox', `0 0 100% 65`);
 
     // Draw progress
     let now = new Date().getTime();
@@ -558,7 +567,7 @@ class View {
       .attr('class', 'progress')
       .attr('text-anchor', 'middle')
       .attr('x', '50%')
-      .attr('y', 80)
+      .attr('y', 60)
       .text((g) => `${(100 * g.progress).toFixed(1)}% complete (${g.mean_velocity_in_days(now).toFixed(1)} ${g.unit}/d)`);
 
     // Draw time left
@@ -566,7 +575,7 @@ class View {
       .attr('class', 'days-left')
       .attr('text-anchor', 'middle')
       .attr('x', '50%')
-      .attr('y', 40)
+      .attr('y', 20)
       .text((g) => `${g.days_left(now).toFixed(0)} days left`);
 
     // Draw progress bar wires
@@ -574,7 +583,7 @@ class View {
       .attr('width', '100%')
       .attr('height', 6)
       .attr('fill', 'lightgrey')
-      .attr('y', 52);
+      .attr('y', 32);
 
    // Draw progress bars
    svg.append('rect')
@@ -583,7 +592,7 @@ class View {
      .attr('class', (g) => (g.is_on_track(now)
                               ? 'current ontrack'
                               : 'current offtrack'))
-     .attr('y', 46);
+     .attr('y', 26);
 
    // Draw current date
    svg.append('rect')
@@ -591,14 +600,14 @@ class View {
      .attr('width', '0.5%')
      .attr('height', 26)
      .attr('x', (g) => `${100 * g.time_spent(now) - 0.25}%`)
-     .attr('y', 42);
+     .attr('y', 22);
 
    // Draw start as text
    svg.append('text')
      .attr('class', 'start')
      .attr('text-anchor', 'start')
      .attr('x', 0)
-     .attr('y', 40)
+     .attr('y', 20)
      .text((g) => `${new Date(g.start).toISOString().slice(0, 10)}`);
 
    // Draw end as text
@@ -606,7 +615,7 @@ class View {
      .attr('class', 'end')
      .attr('text-anchor', 'end')
      .attr('x', '100%')
-     .attr('y', 38)
+     .attr('y', 18)
      .text((g) => `${new Date(g.end).toISOString().slice(0, 10)}`);
 
    // Draw baseline as text
@@ -614,7 +623,7 @@ class View {
      .attr('class', 'baseline')
      .attr('text-anchor', 'start')
      .attr('x', 0)
-     .attr('y', 80)
+     .attr('y', 60)
      .text((g) => `${g.baseline}`)
 
    // Draw target/unit as text
@@ -622,7 +631,7 @@ class View {
      .attr('class', 'target')
      .attr('text-anchor', 'end')
      .attr('x', '100%')
-     .attr('y', 80)
+     .attr('y', 60)
      .text((g) => `${g.target} ${g.unit}`);
 
     if (this._model.mode == 'plan' || this._model.mode == 'track') {
@@ -643,13 +652,12 @@ class View {
       };
 
       if (this._model.mode == 'plan') {
-        add_field('Name', 'name', 'text', (g) => g.name);
-        add_field('Unit', 'unit', 'text', (g) => g.unit);
         add_field('Start', 'start', 'number', (g) => g.start);
         add_field('End', 'end', 'number', (g) => g.end);
         add_field('Baseline', 'baseline', 'number', (g) => g.baseline);
         add_field('Target', 'target', 'number', (g) => g.target);
         add_field('Current', 'current', 'number', (g) => g.current);
+        add_field('Unit', 'unit', 'text', (g) => g.unit);
 
         form.append('div')
           .attr('class', 'toolbar')

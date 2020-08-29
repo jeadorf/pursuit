@@ -91,7 +91,7 @@
 
 .chart {
   width: 100%;
-  height: 85px;
+  height: 65px;
 }
 
 .name, .start, .end, .baseline, .target, .progress, .days-left {
@@ -101,6 +101,15 @@
 .name {
    font-size: 16px;
 }
+
+.name input {
+  color: darksalmon;
+  font-size: 16px;
+  border: solid lightsteelblue;
+  border-width: 0 0 1px 0;
+}
+
+
 
 .start, .end, .baseline, .target, .progress, .days-left {
   font-size: 14px;
