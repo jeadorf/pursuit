@@ -100,8 +100,16 @@ class Goal {
     return this.progress >= this.time_spent(by_date);
   }
 
-  mean_velocity(by_date) {
+  velocity(by_date) {
     return this.trajectory.velocity(this.start, by_date);
+  }
+
+  velocity_14d(by_date) {
+    return this.trajectory.velocity(by_date - 14 * DAY, by_date);
+  }
+
+  velocity_30d(by_date) {
+    return this.trajectory.velocity(by_date - 30 * DAY, by_date);
   }
 }
 
@@ -147,6 +155,15 @@ class Trajectory {
     let m0 = this._line[i0].value;
     let m2 = this._line[i2].value;
     return m0 + (date - t0) * (m2 - m0) / (t2 - t0);
+  }
+
+  remove(date) {
+    for (let i = 0; i < this._line.length; i++) {
+      if (this._line[i].date == date) {
+        this._line.splice(i, 1);
+        return;
+      }
+		}
   }
 
   velocity(a, b) {
@@ -322,12 +339,41 @@ class Controller {
 
   updateGoal(goalId, key, value) {
     let objectiveId = null;
+    let goal = null;
     for (let o of this._model.objectives) {
       for (let g of o.goals) {
         if (g.id == goalId) {
           objectiveId = o.id;
+          goal = g;
         }
       }
+    }
+    
+    let update = null;
+    if (key == 'baseline') {
+      if (value == goal.baseline) {
+        return;
+      }
+      goal.trajectory.insert(goal.start, value);
+      update = {
+        [`goals.${goalId}.trajectory`]: Array.from(goal.trajectory)
+      };
+    } else if (key == 'start') {
+      if (value == goal.start) {
+        return;
+      }
+
+      let baseline = goal.baseline;
+      goal.trajectory.remove(goal.start);
+      goal.trajectory.insert(value, baseline);
+      update = {
+        [`goals.${goalId}.start`]: value,
+        [`goals.${goalId}.trajectory`]: Array.from(goal.trajectory)
+      };
+    } else {
+      update = {
+        [`goals.${goalId}.${key}`]: value
+      };
     }
 
     firebase.firestore()
@@ -335,9 +381,7 @@ class Controller {
       .doc(this._model.user_id)
       .collection('objectives')
       .doc(objectiveId)
-      .update({
-        [`goals.${goalId}.${key}`]: value
-      });
+      .update(update);
   }
 
   updateTrajectory(goalId, value) {
@@ -656,12 +700,18 @@ class View {
 
     // Draw progress
     let now = new Date().getTime();
+    let v_14d = (g) => (DAY * g.velocity_14d(now)).toFixed(1);
+    let v_30d = (g) => (DAY * g.velocity_30d(now)).toFixed(1);
+    let v_all = (g) => (DAY * g.velocity(now)).toFixed(1);
 		svg.append('text')
       .attr('class', 'progress')
       .attr('text-anchor', 'middle')
       .attr('x', '50%')
       .attr('y', 60)
-      .text((g) => `@ ${(100 * g.progress).toFixed(1)}% (${(DAY * g.mean_velocity(now)).toFixed(1)} ${g.unit}/d)`);
+      .text((g) => {
+        return `@ ${(100 * g.progress).toFixed(1)}% `
+        + `(${v_14d(g)} | ${v_30d(g)} | ${v_all(g)} ${g.unit}/d)`
+      });
 
     // Draw time left
 		svg.append('text')
@@ -731,7 +781,7 @@ class View {
       let form =
         node.append('div')
           .attr('class', 'edit');
-      let add_field = (name, key, type, getter) => {
+      let add_field = (name, type, getter, setter, detail) => {
         let field = form.append('div');
         field.append('div')
           .text(name);
@@ -739,19 +789,42 @@ class View {
           .attr('type', type)
           .attr('placeholder', `Enter ${type}`)
           .attr('value', getter)
-          .on('change', (g) => {
-            this._controller.updateGoal(g.id, key, d3.event.target.value);
+          .on('focusout', (g) => {
+            setter(g, d3.event.target.value);
           });
+        if (detail) {
+          field.append('div')
+            .text(detail);
+        }
       };
 
       if (this._model.mode == 'plan') {
-        // add_field('Start', 'start', 'number', (g) => g.start);
-        add_field('End', 'end', 'number', (g) => g.end);
-        // add_field('Baseline', 'baseline', 'number', (g) => g.baseline);
-        add_field('Target', 'target', 'number', (g) => g.target);
-        // add_field('Current', 'current', 'number', (g) => g.current);
-        add_field('Unit', 'unit', 'text', (g) => g.unit);
-
+        add_field(
+          'Unit',
+          'text',
+          (g) => g.unit,
+          (g, v) => this._controller.updateGoal(g.id, 'unit', v));
+        add_field(
+          'Start',
+          'number',
+          (g) => g.start,
+          (g, v) => this._controller.updateGoal(g.id, 'start', parseFloat(v)));
+        add_field(
+          'Baseline',
+          'number',
+          (g) => g.baseline,
+          (g, v) => this._controller.updateGoal(g.id, 'baseline', parseFloat(v)));
+        add_field(
+          'End',
+          'number',
+          (g) => g.end,
+          (g, v) => this._controller.updateGoal(g.id, 'end', parseFloat(v)));
+        add_field(
+          'Target',
+          'number',
+          (g) => g.target,
+          (g, v) => this._controller.updateGoal(g.id, 'target', parseFloat(v)));
+ 
         form.append('div')
           .attr('class', 'toolbar')
           .append('a')
@@ -764,21 +837,15 @@ class View {
       }
 
       if (this._model.mode == 'track') {
-        let field = form.append('div');
-        field.append('div')
-          .text('Current');
-        let handler = (g, e) => {
-        };
-        field.append('input')
-          .attr('type', 'number')
-          .attr('placeholder', `Enter current value`)
-          .attr('value', (g) => g.trajectory.latest.value)
-          .on('focusout', (g) => {
-            let value = parseFloat(d3.event.target.value);
+        add_field(
+          'Current',
+          'number',
+          (g) => g.trajectory.latest.value,
+          (g, v) => {
+            let value = parseFloat(v);
             this._controller.updateTrajectory(g.id, value);
-          });
-        field.append('div')
-          .text((g) => `last updated on ${new Date(g.trajectory.latest.date).toLocaleString()}`);
+          },
+          (g) => `last updated on ${new Date(g.trajectory.latest.date).toLocaleString()}`);
       }
     }
   }

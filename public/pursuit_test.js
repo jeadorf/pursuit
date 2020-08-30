@@ -185,9 +185,9 @@ describe('goal', () => {
           .insert(1000, 300)),
     });
 
-    expect(goal.mean_velocity(100)).to.equal(0.1);
-    expect(goal.mean_velocity(500)).to.equal(0.2);
-    expect(goal.mean_velocity(1000)).to.equal(0.25);
+    expect(goal.velocity(100)).to.equal(0.1);
+    expect(goal.velocity(500)).to.equal(0.2);
+    expect(goal.velocity(1000)).to.equal(0.25);
   });
 });
 
@@ -251,6 +251,20 @@ describe('trajectory', () => {
     expect(trajectory.latest.date).to.equal(date);
     expect(trajectory.latest.value).to.equal(246);
   });
+
+  it('removes values', () => {
+    let trajectory = new Trajectory();
+    trajectory.insert(314, 123);
+    trajectory.insert(144, 666);
+    expect(trajectory.length).to.equal(2);
+
+    trajectory.remove(314);
+    
+    expect(trajectory.length).to.equal(1);
+    expect(trajectory.at(144)).to.equal(666);
+    expect(trajectory.at(314)).to.equal(666);
+  });
+
 
   it('returns value at given time', () => {
     let trajectory = new Trajectory();
