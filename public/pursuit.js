@@ -33,8 +33,6 @@ class Goal {
                name = '',
                unit = '',
                target = 1.0,
-               baseline = 0.0,
-               current = 0.0,
                start = 0,
                end = 0,
                trajectory = new Trajectory()}) {
@@ -42,8 +40,6 @@ class Goal {
     this._name = name;
     this._unit = unit;
     this._target = target;
-    this._baseline = baseline;
-    this._current = current;
     this._start = start;
     this._end = end;
     this._trajectory = trajectory;
@@ -65,18 +61,6 @@ class Goal {
     return this._target;
   }
 
-  get baseline() {
-    return this._baseline;
-  }
-
-  get current() {
-    return this._current;
-  }
-
-  set current(value) {
-    return this._current = value;
-  }
-
   get start() {
     return this._start;
   }
@@ -85,8 +69,21 @@ class Goal {
     return this._end;
   }
 
+  get trajectory() {
+    return this._trajectory;
+  }
+
+  get baseline() {
+    return this.trajectory.at(this.start);
+  }
+
   get progress() {
-    return (this._current - this._baseline) / (this._target - this._baseline);
+    if (!this.trajectory.length) {
+      return NaN;
+    }
+    
+    return (this.trajectory.latest.value - this.trajectory.at(this.start)) /
+      (this.target - this.trajectory.at(this.start));
   }
 
   time_spent(by_date) {
@@ -104,11 +101,7 @@ class Goal {
   }
 
   mean_velocity(by_date) {
-    return (this.current - this.baseline) / (by_date - this.start);
-  }
-
-  mean_velocity_in_days(by_date) {
-    return this.mean_velocity(by_date) * DAY;
+    return this.trajectory.velocity(this.start, by_date);
   }
 }
 
@@ -118,7 +111,7 @@ class Trajectory {
     this._line = [];
   }
 
-  insert(date, measurement) {
+  insert(date, value) {
     let p = this._line.length;
     while (p > 0 && this._line[p-1].date >= date) {
       --p;
@@ -126,7 +119,8 @@ class Trajectory {
     this._line.splice(
       p,
       p < this._line.length && this._line[p].date == date ? 1 : 0,
-			{date, measurement});
+			{date, value});
+    return this;
   }
 
   at(date) {
@@ -136,12 +130,12 @@ class Trajectory {
 
     // extrapolate on the left
     if (this.earliest.date >= date) {
-      return this.earliest.measurement;
+      return this.earliest.value;
     }
 
     // extrapolate on the right
     if (this.latest.date <= date) {
-      return this.latest.measurement;
+      return this.latest.value;
     }
 
     // interpolate
@@ -150,8 +144,8 @@ class Trajectory {
     let i2 = i0 + 1;
     let t0 = this._line[i0].date;
     let t2 = this._line[i2].date;
-    let m0 = this._line[i0].measurement;
-    let m2 = this._line[i2].measurement;
+    let m0 = this._line[i0].value;
+    let m2 = this._line[i2].value;
     return m0 + (date - t0) * (m2 - m0) / (t2 - t0);
   }
 
@@ -176,6 +170,10 @@ class Trajectory {
   get length() {
     return this._line.length;
   }
+
+  [Symbol.iterator]() {
+    return this._line[Symbol.iterator]();
+  }
 };
 
 
@@ -189,9 +187,8 @@ class ObjectiveConverter {
         unit: g.unit,
         start: g.start,
         end: g.end,
-        baseline: g.baseline,
         target: g.target,
-        current: g.current,
+        trajectory: Array.from(g.trajectory),
       };
     }
     return {
@@ -207,15 +204,20 @@ class ObjectiveConverter {
     let goals = [];
     for (let id in objective.goals) {
       let g = objective.goals[id];
+      let t = new Trajectory();
+      if (g.trajectory) {
+        for (let {date, value} of g.trajectory) {
+          t.insert(date, value);
+        }
+      }
       goals.push(new Goal({
         id: id,
         name: g.name,
         unit: g.unit,
         start: g.start,
         end: g.end,
-        baseline: g.baseline,
         target: g.target,
-        current: g.current,
+        trajectory: t,
       }));
     }
 
@@ -383,13 +385,13 @@ class Controller {
       .doc(objectiveId)
       .update({
         [`goals.${goalId}.name`]: '',
-        [`goals.${goalId}.current`]: 0.0,
         [`goals.${goalId}.unit`]: '',
         [`goals.${goalId}.start`]: now,
         [`goals.${goalId}.end`]: now + 7 * DAY,
-        [`goals.${goalId}.baseline`]: 0,
         [`goals.${goalId}.target`]: 100,
-        [`goals.${goalId}.current`]: 0,
+        [`goals.${goalId}.trajectory`]: [
+          {date: now, value: 0},
+        ],
       });
   }
 
@@ -636,7 +638,7 @@ class View {
       .attr('text-anchor', 'middle')
       .attr('x', '50%')
       .attr('y', 60)
-      .text((g) => `${(100 * g.progress).toFixed(1)}% complete (${g.mean_velocity_in_days(now).toFixed(1)} ${g.unit}/d)`);
+      .text((g) => `@ ${(100 * g.progress).toFixed(1)}% (${(DAY * g.mean_velocity(now)).toFixed(1)} ${g.unit}/d)`);
 
     // Draw time left
 		svg.append('text')
@@ -720,11 +722,11 @@ class View {
       };
 
       if (this._model.mode == 'plan') {
-        add_field('Start', 'start', 'number', (g) => g.start);
+        // add_field('Start', 'start', 'number', (g) => g.start);
         add_field('End', 'end', 'number', (g) => g.end);
-        add_field('Baseline', 'baseline', 'number', (g) => g.baseline);
+        // add_field('Baseline', 'baseline', 'number', (g) => g.baseline);
         add_field('Target', 'target', 'number', (g) => g.target);
-        add_field('Current', 'current', 'number', (g) => g.current);
+        // add_field('Current', 'current', 'number', (g) => g.current);
         add_field('Unit', 'unit', 'text', (g) => g.unit);
 
         form.append('div')
@@ -739,7 +741,7 @@ class View {
       }
 
       if (this._model.mode == 'track') {
-        add_field('Current', 'current', 'number', (g) => g.current);
+        // add_field('Current', 'current', 'number', (g) => g.current);
       }
     }
   }

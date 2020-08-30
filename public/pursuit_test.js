@@ -55,12 +55,6 @@ describe('goal', () => {
     expect(goal.target).to.equal(target);
   });
 
-  it('is constructed with a baseline', () => {
-    let baseline = 0.747;
-    let goal = new Goal({baseline});
-    expect(goal.baseline).to.equal(baseline);
-  });
-
   it('is constructed with a start date', () => {
     let start = 31536000000;
     let goal = new Goal({start});
@@ -78,53 +72,61 @@ describe('goal', () => {
     expect(goal.target).to.equal(1.0);
   });
 
-  it('has a baseline of zero by default', () => {
+  it('has a current progress of NaN by default', () => {
     let goal = new Goal({});
-    expect(goal.baseline).to.equal(0.0);
-  });
-
-  it('has a current value of zero by default', () => {
-    let goal = new Goal({});
-    expect(goal.current).to.equal(0.0);
-  });
-
-  it('has a current value that can be modified', () => {
-    let goal = new Goal({});
-    expect(goal.current).to.equal(0.0);
-    goal.current = 25;
-    expect(goal.current).to.equal(25);
+    expect(goal.progress).to.be.NaN;
   });
 
   it('has progress', () => {
-    let goal = new Goal({});
-    expect(goal.progress).to.equal(0.0);
-  });
-
-  it('has progress depending on target, baseline, current', () => {
-    let goal = new Goal({target: 1200, baseline: 200, current: 200});
-    expect(goal.progress).to.equal(0.0);
-    goal.current = 600;
-    expect(goal.progress).to.equal(0.4);
+    let goal = new Goal({
+      start: 0,
+      end: 10,
+      target: 100,
+      trajectory: (
+        new Trajectory()
+          .insert(0, 0)
+          .insert(5, 12)),
+    });
+    expect(goal.progress).to.equal(0.12);
   });
 
   it('can be completed', () => {
-    let goal = new Goal({target: 25});
-    expect(goal.progress).to.equal(0.0);
-    goal.current = 25;
+    let goal = new Goal({
+      start: 0,
+      end: 10,
+      target: 100,
+      trajectory: (
+        new Trajectory()
+          .insert(0, 0)
+          .insert(5, 100)),
+    });
+
     expect(goal.progress).to.equal(1.0);
   });
 
   it('supports ascending towards a target', () => {
-    let goal = new Goal({target: 800, baseline: -200, current: -200});
-    expect(goal.progress).to.equal(0.0);
-    goal.current = 200;
+    let goal = new Goal({
+      start: 0,
+      end: 10,
+      target: 800,
+      trajectory: (
+        new Trajectory()
+          .insert(0, -200)
+          .insert(5, 200)),
+    });
     expect(goal.progress).to.equal(0.4);
   });
 
   it('supports descending towards a target', () => {
-    let goal = new Goal({target: -200, baseline: 800, current: 800});
-    expect(goal.progress).to.equal(0.0);
-    goal.current = 600;
+    let goal = new Goal({
+      start: 0,
+      end: 10,
+      target: -200,
+      trajectory: (
+        new Trajectory()
+          .insert(0, 800)
+          .insert(5, 600)),
+    });
     expect(goal.progress).to.equal(0.2);
   });
 
@@ -158,29 +160,34 @@ describe('goal', () => {
 
   it('can determine whether on track', () => {
     let goal = new Goal({
-      start: 660006000000,
-      end: 660783600000,
+      start: 5000,
+      end: 15000,
       target: 120,
-      baseline: 20,
+      trajectory: (
+        new Trajectory()
+          .insert(5000, 20)
+          .insert(6000, 30)),
     });
-    goal.current = 110;
-    expect(goal.is_on_track(660697200000)).to.be.true;
-    expect(goal.is_on_track(660783600000)).to.be.false;
+    expect(goal.is_on_track(6000)).to.be.true;
+    expect(goal.is_on_track(6001)).to.be.false;
   });
 
   it('can compute mean velocity', () => {
     let goal = new Goal({
-      baseline: 50,
-      target: 150,
-      current: 75,
+      target: 300,
       start: 0,
       end: 1000,
+      trajectory: (
+        new Trajectory()
+          .insert(0, 50)
+          .insert(100, 60)
+          .insert(500, 150)
+          .insert(1000, 300)),
     });
 
-    expect(goal.mean_velocity(100)).to.equal(0.25);
-    expect(goal.mean_velocity(250)).to.equal(0.1);
-    expect(goal.mean_velocity(500)).to.equal(0.05);
-    expect(goal.mean_velocity(1000)).to.equal(0.025);
+    expect(goal.mean_velocity(100)).to.equal(0.1);
+    expect(goal.mean_velocity(500)).to.equal(0.2);
+    expect(goal.mean_velocity(1000)).to.equal(0.25);
   });
 });
 
@@ -191,7 +198,7 @@ describe('trajectory', () => {
     expect(trajectory.length).to.equal(0);
   });
 
-  it('has length one after adding one measurement', () => {
+  it('has length one after adding one value', () => {
     let trajectory = new Trajectory();
 
     trajectory.insert(660697200000, 123);
@@ -199,20 +206,20 @@ describe('trajectory', () => {
     expect(trajectory.length).to.equal(1);
   });
 
-  it('has earliest measurement undefined if empty', () => {
+  it('has earliest value undefined if empty', () => {
     let trajectory = new Trajectory();
     
     expect(trajectory.earliest).to.be.undefined;
   });
 
-  it('has latest measurement undefined if empty', () => {
+  it('has latest value undefined if empty', () => {
     let trajectory = new Trajectory();
     
     expect(trajectory.latest).to.be.undefined;
   });
 
 
-  it('has earliest measurement', () => {
+  it('has earliest value', () => {
     let trajectory = new Trajectory();
 
     trajectory.insert(0, 12);
@@ -220,10 +227,10 @@ describe('trajectory', () => {
     trajectory.insert(2, 24);
     
     expect(trajectory.earliest.date).to.equal(0);
-    expect(trajectory.earliest.measurement).to.equal(12);
+    expect(trajectory.earliest.value).to.equal(12);
   });
 
-  it('has latest measurement', () => {
+  it('has latest value', () => {
     let trajectory = new Trajectory();
 
     trajectory.insert(0, 12);
@@ -231,10 +238,10 @@ describe('trajectory', () => {
     trajectory.insert(2, 24);
     
     expect(trajectory.latest.date).to.equal(2);
-    expect(trajectory.latest.measurement).to.equal(24);
+    expect(trajectory.latest.value).to.equal(24);
   });
 
-  it('replaces measurements', () => {
+  it('replaces values', () => {
     let trajectory = new Trajectory();
     let date = 660697200000;
 
@@ -242,10 +249,10 @@ describe('trajectory', () => {
     trajectory.insert(date, 246);
     
     expect(trajectory.latest.date).to.equal(date);
-    expect(trajectory.latest.measurement).to.equal(246);
+    expect(trajectory.latest.value).to.equal(246);
   });
 
-  it('returns measurement at given time', () => {
+  it('returns value at given time', () => {
     let trajectory = new Trajectory();
 
     trajectory.insert(0, 12);
@@ -330,10 +337,12 @@ describe('objective converter', () => {
           'd66c24f7-a7fd-4760-95be-401dc7b53935': {
             name: 'Shuttle Speed',
             target: 2300,
-            baseline: 0,
-            current: 0,
             start: 2490,
             end: 5439,
+            trajectory: [
+              {date: 2490, value: 0},
+              {date: 3622, value: 110},
+            ],
           }
         }
       })
@@ -347,10 +356,12 @@ describe('objective converter', () => {
 				  id: 'd66c24f7-a7fd-4760-95be-401dc7b53935',
           name: 'Shuttle Speed',
           target: 2300,
-          baseline: 0,
-          current: 0,
           start: 2490,
-          end: 5439
+          end: 5439,
+          trajectory: (
+            new Trajectory()
+              .insert(2490, 0)
+              .insert(3622, 110))
         })
       ]
     });
@@ -389,10 +400,12 @@ describe('objective converter', () => {
           name: 'Shuttle Speed',
           unit: 'km/h',
           target: 2300,
-          baseline: 0,
-          current: 0,
           start: 2490,
-          end: 5439
+          end: 5439,
+          trajectory: (
+            new Trajectory()
+              .insert(2490, 0)
+              .insert(3622, 110)),
         })
       ]
     });
@@ -406,10 +419,12 @@ describe('objective converter', () => {
             name: 'Shuttle Speed',
             unit: 'km/h',
             target: 2300,
-            baseline: 0,
-            current: 0,
             start: 2490,
             end: 5439,
+            trajectory: [
+              {date: 2490, value: 0},
+              {date: 3622, value: 110},
+            ],
           }
         }
     };
@@ -462,15 +477,11 @@ describe('view', () => {
             name: 'Foo',
             unit: 'km/h',
             target: 1200,
-            baseline: 200,
-            current: 250,
           }),
           new Goal({
             name: 'Bar',
             unit: 'l/s',
             target: 90,
-            baseline: 20,
-            current: 30,
           }),
         ],
       }),
@@ -493,11 +504,21 @@ describe('view', () => {
         goals: [
           new Goal({
             target: 1000,
-            current: 202.3,
+            start: 0,
+            end: 10,
+            trajectory: (
+              new Trajectory()
+                .insert(0, 0)
+                .insert(1, 202.3)),
           }),
           new Goal({
             target: 1000,
-            current: 521.6,
+            start: 0,
+            end: 10,
+            trajectory: (
+              new Trajectory()
+                .insert(0, 0)
+                .insert(1, 521.6))
           }),
         ],
       }),
@@ -506,8 +527,8 @@ describe('view', () => {
     app.view.render();
 
     let appText = document.querySelector('#app').innerHTML;
-    expect(appText).to.have.string('20.2% complete');
-    expect(appText).to.have.string('52.2% complete');
+    expect(appText).to.have.string('@ 20.2%');
+    expect(appText).to.have.string('@ 52.2%');
   });
 
   it('renders days left', () => {
