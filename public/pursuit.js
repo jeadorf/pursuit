@@ -1,5 +1,7 @@
 'use strict'
 
+let DAY = 24 * 60 * 60 * 1000;
+
 class Objective {
   constructor({id, name, description, goals}) {
     this._id = id;
@@ -92,8 +94,7 @@ class Goal {
   }
 
   days_left(by_date) {
-    let day = 24 * 60 * 60 * 1000;
-    return (this.end - by_date) / day;
+    return (this.end - by_date) / DAY;
   }
 
   is_on_track(by_date) {
@@ -105,10 +106,75 @@ class Goal {
   }
 
   mean_velocity_in_days(by_date) {
-    let day = 24 * 60 * 60 * 1000;
-    return this.mean_velocity(by_date) * day;
+    return this.mean_velocity(by_date) * DAY;
   }
 }
+
+
+class Trajectory {
+  constructor() {
+    this._line = [];
+  }
+
+  insert(date, measurement) {
+    let p = this._line.length;
+    while (p > 0 && this._line[p-1].date >= date) {
+      --p;
+		}
+    this._line.splice(
+      p,
+      p < this._line.length && this._line[p].date == date ? 1 : 0,
+			{date, measurement});
+  }
+
+  at(date) {
+    if (!this._line.length) {
+      return undefined;
+    }
+
+    // extrapolate on the left
+    if (this.earliest.date >= date) {
+      return this.earliest.measurement;
+    }
+
+    // extrapolate on the right
+    if (this.latest.date <= date) {
+      return this.latest.measurement;
+    }
+
+    // interpolate
+    let i0;
+    for (i0 = 0; i0 < this._line.length - 1 && this._line[i0 + 1].date <= date; i0++) {}
+    let i2 = i0 + 1;
+    let t0 = this._line[i0].date;
+    let t2 = this._line[i2].date;
+    let m0 = this._line[i0].measurement;
+    let m2 = this._line[i2].measurement;
+    return m0 + (date - t0) * (m2 - m0) / (t2 - t0);
+  }
+
+  velocity(a, b) {
+    return (this.at(b) - this.at(a)) / (b - a);
+  }
+
+  get earliest() {
+    if (!this._line) {
+      return NaN;
+    }
+    return this._line[0];
+  }
+
+  get latest() {
+    if (!this._line) {
+      return NaN;
+    }
+    return this._line[this._line.length - 1];
+  }
+
+  get length() {
+    return this._line.length;
+  }
+};
 
 
 class ObjectiveConverter {
@@ -318,7 +384,7 @@ class Controller {
         [`goals.${goalId}.current`]: 0.0,
         [`goals.${goalId}.unit`]: '',
         [`goals.${goalId}.start`]: now,
-        [`goals.${goalId}.end`]: now + 7 * 24 * 3600 * 1000,
+        [`goals.${goalId}.end`]: now + 7 * DAY,
         [`goals.${goalId}.baseline`]: 0,
         [`goals.${goalId}.target`]: 100,
         [`goals.${goalId}.current`]: 0,

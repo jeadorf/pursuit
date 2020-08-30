@@ -279,11 +279,146 @@ describe('goal', () => {
       end: 1000,
     });
 
-    expect(goal.mean_velocity(0)).to.equal(Infinity);
+    expect(goal.mean_velocity(100)).to.equal(0.25);
     expect(goal.mean_velocity(250)).to.equal(0.1);
     expect(goal.mean_velocity(500)).to.equal(0.05);
     expect(goal.mean_velocity(1000)).to.equal(0.025);
   });
+});
+
+
+describe('trajectory', () => {
+  it('has length zero if empty', () => {
+    let trajectory = new Trajectory();
+    expect(trajectory.length).to.equal(0);
+  });
+
+  it('has length one after adding one measurement', () => {
+    let trajectory = new Trajectory();
+
+    trajectory.insert(660697200000, 123);
+
+    expect(trajectory.length).to.equal(1);
+  });
+
+  it('has earliest measurement undefined if empty', () => {
+    let trajectory = new Trajectory();
+    
+    expect(trajectory.earliest).to.be.undefined;
+  });
+
+  it('has latest measurement undefined if empty', () => {
+    let trajectory = new Trajectory();
+    
+    expect(trajectory.latest).to.be.undefined;
+  });
+
+
+  it('has earliest measurement', () => {
+    let trajectory = new Trajectory();
+
+    trajectory.insert(0, 12);
+    trajectory.insert(1, 18);
+    trajectory.insert(2, 24);
+    
+    expect(trajectory.earliest.date).to.equal(0);
+    expect(trajectory.earliest.measurement).to.equal(12);
+  });
+
+  it('has latest measurement', () => {
+    let trajectory = new Trajectory();
+
+    trajectory.insert(0, 12);
+    trajectory.insert(1, 18);
+    trajectory.insert(2, 24);
+    
+    expect(trajectory.latest.date).to.equal(2);
+    expect(trajectory.latest.measurement).to.equal(24);
+  });
+
+  it('replaces measurements', () => {
+    let trajectory = new Trajectory();
+    let date = 660697200000;
+
+    trajectory.insert(date, 123);
+    trajectory.insert(date, 246);
+    
+    expect(trajectory.latest.date).to.equal(date);
+    expect(trajectory.latest.measurement).to.equal(246);
+  });
+
+  it('returns measurement at given time', () => {
+    let trajectory = new Trajectory();
+
+    trajectory.insert(0, 12);
+    trajectory.insert(1, 18);
+    trajectory.insert(2, 24);
+    
+    expect(trajectory.at(0)).to.equal(12);
+    expect(trajectory.at(1)).to.equal(18);
+    expect(trajectory.at(2)).to.equal(24);
+  });
+
+  it('interpolates at given time', () => {
+    let trajectory = new Trajectory();
+
+    trajectory.insert(0, 0);
+    trajectory.insert(4, 100);
+    
+    expect(trajectory.at(1)).to.equal(25);
+    expect(trajectory.at(2)).to.equal(50);
+    expect(trajectory.at(3)).to.equal(75);
+  });
+
+  it('extrapolates on the left', () => {
+    let trajectory = new Trajectory();
+
+    trajectory.insert(0, 0);
+    trajectory.insert(2, 100);
+    
+    expect(trajectory.at(-1)).to.equal(0);
+  });
+
+  it('extrapolates on the right', () => {
+    let trajectory = new Trajectory();
+
+    trajectory.insert(0, 0);
+    trajectory.insert(2, 100);
+
+    expect(trajectory.at(3)).to.equal(100);
+  });
+
+  it('reports mean velocity', () => {
+    let trajectory = new Trajectory();
+
+    trajectory.insert(31, 10);
+    trajectory.insert(41, 200);
+
+    expect(trajectory.velocity(31, 41)).to.equal(19);
+  });
+
+  it('reports mean velocity over past 7 days', () => {
+    let trajectory = new Trajectory();
+
+    trajectory.insert(31, 10);
+    trajectory.insert(34, 130);
+    trajectory.insert(41, 200);
+
+    expect(trajectory.velocity(34, 41)).to.equal(10);
+  });
+
+  it('reports mean velocity over past 30 days', () => {
+    let trajectory = new Trajectory();
+
+    trajectory.insert(11, 20);
+    trajectory.insert(31, 10);
+    trajectory.insert(34, 130);
+    trajectory.insert(41, 200);
+
+    expect(trajectory.velocity(11, 41)).to.equal(6);
+  });
+
+
 });
 
 
