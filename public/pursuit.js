@@ -340,6 +340,29 @@ class Controller {
       });
   }
 
+  updateTrajectory(goalId, value) {
+    let objectiveId = null;
+    let trajectory = null;
+    for (let o of this._model.objectives) {
+      for (let g of o.goals) {
+        if (g.id == goalId) {
+          objectiveId = o.id;
+          g.trajectory.insert(new Date().getTime(), value);
+          trajectory = Array.from(g.trajectory);
+        }
+      }
+    }
+
+    firebase.firestore()
+      .collection('users')
+      .doc(this._model.user_id)
+      .collection('objectives')
+      .doc(objectiveId)
+      .update({
+        [`goals.${goalId}.trajectory`]: trajectory,
+      });
+  }
+
   updateObjectiveName(objectiveId, name) {
     firebase.firestore()
       .collection('users')
@@ -741,7 +764,21 @@ class View {
       }
 
       if (this._model.mode == 'track') {
-        // add_field('Current', 'current', 'number', (g) => g.current);
+        let field = form.append('div');
+        field.append('div')
+          .text('Current');
+        let handler = (g, e) => {
+        };
+        field.append('input')
+          .attr('type', 'number')
+          .attr('placeholder', `Enter current value`)
+          .attr('value', (g) => g.trajectory.latest.value)
+          .on('focusout', (g) => {
+            let value = parseFloat(d3.event.target.value);
+            this._controller.updateTrajectory(g.id, value);
+          });
+        field.append('div')
+          .text((g) => `last updated on ${new Date(g.trajectory.latest.date).toLocaleString()}`);
       }
     }
   }
