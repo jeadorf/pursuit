@@ -1,6 +1,7 @@
 'use strict'
 
-let DAY = 24 * 60 * 60 * 1000;
+let HOUR = 60 * 60 * 1000;
+let DAY = 24 * HOUR;
 
 class Objective {
   constructor({id, name, description, goals}) {
@@ -164,6 +165,19 @@ class Trajectory {
         return;
       }
 		}
+  }
+
+  /** Removes entries from the timeline that happened within a day of the
+   * latest entry. Never removes the earliest or latest entry from the
+   * trajectory. */
+  compact_head() {
+    let head = this._line.pop();
+    for (let i = this._line.length - 1;
+         i > 0 && head.date - this._line[i].date <= DAY;
+         i--) {
+      this._line.pop(); 
+    }
+    this._line.splice(this._line.length, 0, head);
   }
 
   velocity(a, b) {
@@ -392,6 +406,7 @@ class Controller {
         if (g.id == goalId) {
           objectiveId = o.id;
           g.trajectory.insert(new Date().getTime(), value);
+          g.trajectory.compact_head(HOUR);
           trajectory = Array.from(g.trajectory);
         }
       }

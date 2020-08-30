@@ -265,6 +265,22 @@ describe('trajectory', () => {
     expect(trajectory.at(314)).to.equal(666);
   });
 
+  it('can compact timeline', () => {
+    let trajectory = new Trajectory()
+      .insert(0, 10)
+      .insert(DAY, 12)
+      .insert(DAY + 1, 24)
+      .insert(DAY + HOUR, 36)
+      .insert(2 * DAY + 1, 48)
+    expect(trajectory.length).to.equal(5);
+
+    trajectory.compact_head(DAY);
+    
+    expect(trajectory.at(0)).to.equal(10);
+    expect(trajectory.at(DAY)).to.equal(12);
+    expect(trajectory.at(2 * DAY + 1)).to.equal(48);
+    expect(trajectory.length).to.equal(3);
+  });
 
   it('returns value at given time', () => {
     let trajectory = new Trajectory();
