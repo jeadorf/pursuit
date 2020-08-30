@@ -30,108 +30,6 @@ describe('objective', () => {
 });
 
 
-describe('converter', () => {
-
-  it('can convert from Firestore', () => {
-    let converter = new ObjectiveConverter();
-    let doc = {
-      id: '11616568-c5f8-4e3f-9bc1-1c432bd361c2',
-      data: () => ({
-        name: 'name',
-        description: 'description',
-        goals: {
-          'd66c24f7-a7fd-4760-95be-401dc7b53935': {
-            name: 'Shuttle Speed',
-            target: 2300,
-            baseline: 0,
-            current: 0,
-            start: 2490,
-            end: 5439,
-          }
-        }
-      })
-    };
-    let expected = new Objective({
-      id: '11616568-c5f8-4e3f-9bc1-1c432bd361c2',
-      name: 'name',
-      description: 'description',
-      goals: [
-        new Goal({
-				  id: 'd66c24f7-a7fd-4760-95be-401dc7b53935',
-          name: 'Shuttle Speed',
-          target: 2300,
-          baseline: 0,
-          current: 0,
-          start: 2490,
-          end: 5439
-        })
-      ]
-    });
-
-    expect(converter.fromFirestore(doc)).to.eql(expected);
-  });
- 
-  it('can convert objectives without goals from Firestore', () => {
-    let converter = new ObjectiveConverter();
-    let doc = {
-      id: 'id',
-      data: () => ({
-        name: 'name',
-        description: 'description',
-      })
-    };
-    let expected = new Objective({
-      id: 'id',
-      name: 'name',
-      description: 'description',
-      goals: [],
-    });
-
-    expect(converter.fromFirestore(doc)).to.eql(expected);
-  });
-  
-  it('can convert to Firestore', () => {
-    let converter = new ObjectiveConverter();
-    let objective = new Objective({
-      id: '11616568-c5f8-4e3f-9bc1-1c432bd361c2',
-      name: 'name',
-      description: 'description',
-      goals: [
-        new Goal({
-				  id: 'd66c24f7-a7fd-4760-95be-401dc7b53935',
-          name: 'Shuttle Speed',
-          unit: 'km/h',
-          target: 2300,
-          baseline: 0,
-          current: 0,
-          start: 2490,
-          end: 5439
-        })
-      ]
-    });
-    let expected = {
-      name: 'name',
-      description: 'description',
-      goals:
-        {
-				  ['d66c24f7-a7fd-4760-95be-401dc7b53935']: {
-				    id: 'd66c24f7-a7fd-4760-95be-401dc7b53935',
-            name: 'Shuttle Speed',
-            unit: 'km/h',
-            target: 2300,
-            baseline: 0,
-            current: 0,
-            start: 2490,
-            end: 5439,
-          }
-        }
-    };
-
-    expect(converter.toFirestore(objective)).to.eql(expected);
-  });
-});
-
-
 describe('goal', () => {
   it('is constructed with a name', () => {
     let name = 'Distance';
@@ -417,8 +315,107 @@ describe('trajectory', () => {
 
     expect(trajectory.velocity(11, 41)).to.equal(6);
   });
+});
 
 
+describe('objective converter', () => {
+  it('can convert from Firestore', () => {
+    let converter = new ObjectiveConverter();
+    let doc = {
+      id: '11616568-c5f8-4e3f-9bc1-1c432bd361c2',
+      data: () => ({
+        name: 'name',
+        description: 'description',
+        goals: {
+          'd66c24f7-a7fd-4760-95be-401dc7b53935': {
+            name: 'Shuttle Speed',
+            target: 2300,
+            baseline: 0,
+            current: 0,
+            start: 2490,
+            end: 5439,
+          }
+        }
+      })
+    };
+    let expected = new Objective({
+      id: '11616568-c5f8-4e3f-9bc1-1c432bd361c2',
+      name: 'name',
+      description: 'description',
+      goals: [
+        new Goal({
+				  id: 'd66c24f7-a7fd-4760-95be-401dc7b53935',
+          name: 'Shuttle Speed',
+          target: 2300,
+          baseline: 0,
+          current: 0,
+          start: 2490,
+          end: 5439
+        })
+      ]
+    });
+
+    expect(converter.fromFirestore(doc)).to.eql(expected);
+  });
+ 
+  it('can convert objectives without goals from Firestore', () => {
+    let converter = new ObjectiveConverter();
+    let doc = {
+      id: 'id',
+      data: () => ({
+        name: 'name',
+        description: 'description',
+      })
+    };
+    let expected = new Objective({
+      id: 'id',
+      name: 'name',
+      description: 'description',
+      goals: [],
+    });
+
+    expect(converter.fromFirestore(doc)).to.eql(expected);
+  });
+  
+  it('can convert to Firestore', () => {
+    let converter = new ObjectiveConverter();
+    let objective = new Objective({
+      id: '11616568-c5f8-4e3f-9bc1-1c432bd361c2',
+      name: 'name',
+      description: 'description',
+      goals: [
+        new Goal({
+				  id: 'd66c24f7-a7fd-4760-95be-401dc7b53935',
+          name: 'Shuttle Speed',
+          unit: 'km/h',
+          target: 2300,
+          baseline: 0,
+          current: 0,
+          start: 2490,
+          end: 5439
+        })
+      ]
+    });
+    let expected = {
+      name: 'name',
+      description: 'description',
+      goals:
+        {
+				  ['d66c24f7-a7fd-4760-95be-401dc7b53935']: {
+				    id: 'd66c24f7-a7fd-4760-95be-401dc7b53935',
+            name: 'Shuttle Speed',
+            unit: 'km/h',
+            target: 2300,
+            baseline: 0,
+            current: 0,
+            start: 2490,
+            end: 5439,
+          }
+        }
+    };
+
+    expect(converter.toFirestore(objective)).to.eql(expected);
+  });
 });
 
 

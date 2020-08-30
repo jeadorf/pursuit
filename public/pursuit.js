@@ -36,7 +36,8 @@ class Goal {
                baseline = 0.0,
                current = 0.0,
                start = 0,
-               end = 0}) {
+               end = 0,
+               trajectory = new Trajectory()}) {
     this._id = id;
     this._name = name;
     this._unit = unit;
@@ -45,6 +46,7 @@ class Goal {
     this._current = current;
     this._start = start;
     this._end = end;
+    this._trajectory = trajectory;
   }
 
   get id() {
