@@ -167,13 +167,19 @@ class Trajectory {
 		}
   }
 
-  /** Removes entries from the timeline that happened within a day of the
+  /**
+   * Removes entries from the timeline that happened within an hour of the
    * latest entry. Never removes the earliest or latest entry from the
-   * trajectory. */
+   * trajectory.
+   *
+   * Calling compact_head() after insertions into the trajectory helps reducing
+   * the rate of changes recorded and ensures that transient states while the
+   * user is editing the goal are discarded.
+   */
   compact_head() {
     let head = this._line.pop();
     for (let i = this._line.length - 1;
-         i > 0 && head.date - this._line[i].date <= DAY;
+         i > 0 && head.date - this._line[i].date <= HOUR;
          i--) {
       this._line.pop(); 
     }
