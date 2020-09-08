@@ -176,10 +176,10 @@ class Trajectory {
    * the rate of changes recorded and ensures that transient states while the
    * user is editing the goal are discarded.
    */
-  compact_head() {
+  compact_head(duration = HOUR) {
     let head = this._line.pop();
     for (let i = this._line.length - 1;
-         i > 0 && head.date - this._line[i].date <= HOUR;
+         i > 0 && head.date - this._line[i].date <= DAY;
          i--) {
       this._line.pop(); 
     }
