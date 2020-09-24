@@ -686,7 +686,7 @@ class View {
       a.name > b.name ? 1 : a.name < b.name ? -1 : 0
     );
     node.selectAll('div.goal')
-      .data((o) => this._model.mode == 'plan' ? o.goals : o.goals.sort(byName))
+      .data((o) => o.goals.sort(byName))
       .enter()
       .append('div')
       .attr('class', 'goal')
