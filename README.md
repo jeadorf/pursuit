@@ -1,5 +1,7 @@
 # README
 
+**This is not an officially supported Google product**.
+
 ## Overview
 
 A web application that permits users to plan, track, view and thus help the
