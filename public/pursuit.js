@@ -411,9 +411,15 @@ class Controller {
       for (let g of o.goals) {
         if (g.id == goalId) {
           objectiveId = o.id;
+          if (g.trajectory.latest.value == value) {
+            // This avoids updates when one of the input fields for progress
+            // loses focus, but when the user did not change the value.
+            return;
+          }
           g.trajectory.insert(new Date().getTime(), value);
           g.trajectory.compact_head(HOUR);
           trajectory = Array.from(g.trajectory);
+          break;
         }
       }
     }
