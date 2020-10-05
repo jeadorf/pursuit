@@ -94,11 +94,11 @@ class Goal {
   }
 
   days_left(by_date) {
-    return (this.end - by_date) / DAY;
+    return Math.max(0, (this.end - by_date) / DAY);
   }
 
   is_on_track(by_date) {
-    return this.progress >= this.time_spent(by_date);
+    return this.progress >= this.time_spent(Math.min(this.end, by_date));
   }
 
   velocity(by_date) {

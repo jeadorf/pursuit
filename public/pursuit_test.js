@@ -133,11 +133,19 @@ describe('goal', () => {
   it('reports days left', () => {
     let goal = new Goal({
       start: 0,
-      end: 7.5 * 24 * 60 * 60 * 1000,
+      end: 7.5 * DAY,
     });
     expect(goal.days_left(goal.start)).to.equal(7.5);
     expect(goal.days_left(0.5 * (goal.end - goal.start))).to.equal(3.75);
     expect(goal.days_left(goal.end)).to.equal(0.0);
+  });
+
+  it('never reports negative days left', () => {
+    let goal = new Goal({
+      start: 0,
+      end: 3 * DAY,
+    });
+    expect(goal.days_left(goal.end + DAY)).to.equal(0.0);
   });
 
   it('has time spent percentage', () => {
@@ -170,6 +178,20 @@ describe('goal', () => {
     });
     expect(goal.is_on_track(6000)).to.be.true;
     expect(goal.is_on_track(6001)).to.be.false;
+  });
+
+  it('compares progress against end date in the past', () => {
+    let goal = new Goal({
+      start: 5000,
+      end: 15000,
+      target: 120,
+      trajectory: (
+        new Trajectory()
+          .insert(5000, 20)
+          .insert(15000, 120)),
+    });
+    expect(goal.is_on_track(15000)).to.be.true;
+    expect(goal.is_on_track(20000)).to.be.true;
   });
 
   it('can compute mean velocity', () => {
