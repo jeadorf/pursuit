@@ -77,6 +77,11 @@ describe('goal', () => {
     expect(goal.progress).to.be.NaN;
   });
 
+  it('is not archived by default', () => {
+    let goal = new Goal({});
+    expect(goal.archived).to.equal(false);
+  });
+
   it('has progress', () => {
     let goal = new Goal({
       start: 0,
@@ -391,6 +396,7 @@ describe('objective converter', () => {
             target: 2300,
             start: 2490,
             end: 5439,
+            archived: true,
             trajectory: [
               {date: 2490, value: 0},
               {date: 3622, value: 110},
@@ -410,6 +416,7 @@ describe('objective converter', () => {
           target: 2300,
           start: 2490,
           end: 5439,
+          archived: true,
           trajectory: (
             new Trajectory()
               .insert(2490, 0)
@@ -454,6 +461,7 @@ describe('objective converter', () => {
           target: 2300,
           start: 2490,
           end: 5439,
+          archived: true,
           trajectory: (
             new Trajectory()
               .insert(2490, 0)
@@ -473,6 +481,7 @@ describe('objective converter', () => {
             target: 2300,
             start: 2490,
             end: 5439,
+            archived: true,
             trajectory: [
               {date: 2490, value: 0},
               {date: 3622, value: 110},

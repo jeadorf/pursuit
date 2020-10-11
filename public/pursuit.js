@@ -36,6 +36,7 @@ class Goal {
                target = 1.0,
                start = 0,
                end = 0,
+               archived = false,
                trajectory = new Trajectory()}) {
     this._id = id;
     this._name = name;
@@ -43,6 +44,7 @@ class Goal {
     this._target = target;
     this._start = start;
     this._end = end;
+    this._archived = archived;
     this._trajectory = trajectory;
   }
 
@@ -68,6 +70,10 @@ class Goal {
 
   get end() {
     return this._end;
+  }
+
+  get archived() {
+    return this._archived;
   }
 
   get trajectory() {
@@ -225,6 +231,7 @@ class ObjectiveConverter {
         start: g.start,
         end: g.end,
         target: g.target,
+        archived: g.archived,
         trajectory: Array.from(g.trajectory),
       };
     }
@@ -254,6 +261,7 @@ class ObjectiveConverter {
         start: g.start,
         end: g.end,
         target: g.target,
+        archived: g.archived,
         trajectory: t,
       }));
     }
@@ -297,6 +305,8 @@ class Model {
   constructor() {
     this._objectives = [];
     this._user_id = null;
+    this._mode = 'view';
+    this._show_archived = false;
   }
 
   get objectives() {
@@ -313,6 +323,22 @@ class Model {
 
   set user_id(value) {
     this._user_id = value;
+  }
+
+  get mode() {
+    return this._mode;
+  }
+
+  set mode(mode) {
+    this._mode = mode;
+  }
+
+  get show_archived() {
+    return this._show_archived;
+  }
+
+  set show_archived(value) {
+    this._show_archived = value;
   }
 }
 
@@ -489,6 +515,46 @@ class Controller {
       });
   }
 
+  archiveGoal(goalId) {
+    let objectiveId = null;
+    for (let o of this._model.objectives) {
+      for (let g of o.goals) {
+        if (g.id == goalId) {
+          objectiveId = o.id;
+        }
+      }
+    }
+
+    firebase.firestore()
+      .collection('users')
+      .doc(this._model.user_id)
+      .collection('objectives')
+      .doc(objectiveId)
+      .update({
+        [`goals.${goalId}.archived`]: true,
+      });
+  }
+
+  unarchiveGoal(goalId) {
+    let objectiveId = null;
+    for (let o of this._model.objectives) {
+      for (let g of o.goals) {
+        if (g.id == goalId) {
+          objectiveId = o.id;
+        }
+      }
+    }
+
+    firebase.firestore()
+      .collection('users')
+      .doc(this._model.user_id)
+      .collection('objectives')
+      .doc(objectiveId)
+      .update({
+        [`goals.${goalId}.archived`]: false,
+      });
+  }
+
   deleteGoal(goalId) {
     let objectiveId = null;
     for (let o of this._model.objectives) {
@@ -626,6 +692,16 @@ class View {
           });
       }
 
+      if (this._model.mode != 'plan') {
+        toolbarSecondary
+          .append('a')
+          .text((this._model.show_archived ? 'Hide' : 'Show') + ' archived')
+          .on('click', () => {
+            this._model.show_archived = !this._model.show_archived;
+            this.render();
+          });
+      }
+
       d3.select('#app')
         .style('display', 'flex')
         .selectAll('div.objective')
@@ -691,8 +767,9 @@ class View {
 	  let byName = (a, b) => (
       a.name > b.name ? 1 : a.name < b.name ? -1 : 0
     );
+    let byStatus = (g) => this._model.mode == 'plan' || this._model.show_archived || !g.archived;
     node.selectAll('div.goal')
-      .data((o) => o.goals.sort(byName))
+      .data((o) => o.goals.filter(byStatus).sort(byName))
       .enter()
       .append('div')
       .attr('class', 'goal')
@@ -717,7 +794,7 @@ class View {
     } else {
 		  node.append('div')
         .attr('class', 'name')
-        .text((g) => g.name);
+        .text((g) => g.name + (g.archived ? ' [archived]' : ''));
     }
 
     let svg =
@@ -852,14 +929,21 @@ class View {
           (g) => g.target,
           (g, v) => this._controller.updateGoal(g.id, 'target', parseFloat(v)));
  
-        form.append('div')
-          .attr('class', 'toolbar')
+        let toolbar = form.append('div')
+          .attr('class', 'toolbar');
+        toolbar
           .append('a')
           .text('Delete')
           .on('click', (g) => {
             if (confirm(`Really delete the goal named "${g.name}"?`)) {
               this._controller.deleteGoal(g.id);
             }
+          });
+        toolbar
+          .append('a')
+          .text((g) => g.archived ? 'Unarchive' : 'Archive')
+          .on('click', (g) => {
+              this._controller.archiveGoal(g.id);
           });
       }
 
