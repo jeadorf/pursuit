@@ -773,7 +773,9 @@ class View {
             this._controller.deleteObjective(o.id);
           }
         });
-    } else {
+    }
+    
+    if (this._model.mode == 'view') {
       let markdown = new SafeMarkdownRenderer();
       node.append('div')
     	  .attr('class', 'objective-description')

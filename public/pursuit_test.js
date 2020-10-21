@@ -687,6 +687,24 @@ describe('view', () => {
     expect(betas).to.have.lengthOf(1);
   });
 
+  it('does not render objective description in tracking mode', () => {
+    let app = new App();
+    app.model.user_id = 'test-user';
+    app.model.mode = 'track';
+    app.model.objectives = [
+      new Objective({
+        name: 'Alpha',
+        description: 'Practice handwriting.',
+        goals: [],
+      }),
+    ];
+
+    app.view.render();
+
+    let appText = document.querySelector('#app').innerHTML;
+    expect(appText).to.not.have.string('Practice handwriting.');
+  });
+
   it('renders sign-in screen if not logged in', () => {
     let app = new App();
 
