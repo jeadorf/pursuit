@@ -920,6 +920,18 @@ class View {
         }
       };
 
+      let add_current_field = () => {
+        add_field(
+          'Current',
+          'number',
+          (g) => g.trajectory.latest.value,
+          (g, v) => {
+            let value = parseFloat(v);
+            this._controller.updateTrajectory(g.id, value);
+          },
+          (g) => `last updated on ${new Date(g.trajectory.latest.date).toLocaleString()}`);
+      };
+
       if (this._model.mode == 'plan') {
         add_field(
           'Unit',
@@ -931,6 +943,7 @@ class View {
           'number',
           (g) => g.start,
           (g, v) => this._controller.updateGoal(g.id, 'start', parseFloat(v)));
+        add_current_field();
         add_field(
           'Baseline',
           'number',
@@ -966,15 +979,7 @@ class View {
       }
 
       if (this._model.mode == 'track') {
-        add_field(
-          'Current',
-          'number',
-          (g) => g.trajectory.latest.value,
-          (g, v) => {
-            let value = parseFloat(v);
-            this._controller.updateTrajectory(g.id, value);
-          },
-          (g) => `last updated on ${new Date(g.trajectory.latest.date).toLocaleString()}`);
+        add_current_field();
       }
     }
   }
