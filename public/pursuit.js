@@ -920,6 +920,26 @@ class View {
         }
       };
 
+      let format_date = (millis) => {
+				let is = (a, b) => {
+					return (
+						a.getDate() == b.getDate() &&
+						a.getMonth() == b.getMonth() &&
+						a.getFullYear() == b.getFullYear());
+				};
+        let date = new Date(millis);
+        let today = new Date();
+        let yesterday = new Date(today.getTime() - DAY);
+				let suffix = '';
+				if (is(date, today)) {
+					suffix = ' (today)';
+				}
+				if (is(date, yesterday)) {
+					suffix = ' (yesterday)';
+				}
+        return new Date(date).toLocaleString() + suffix;
+      };
+
       let add_current_field = () => {
         add_field(
           'Current',
@@ -929,7 +949,7 @@ class View {
             let value = parseFloat(v);
             this._controller.updateTrajectory(g.id, value);
           },
-          (g) => `last updated on ${new Date(g.trajectory.latest.date).toLocaleString()}`);
+          (g) => `last updated ${format_date(g.trajectory.latest.date)}`);
       };
 
       if (this._model.mode == 'plan') {
