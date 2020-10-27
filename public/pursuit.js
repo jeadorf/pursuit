@@ -105,8 +105,9 @@ class Goal {
       return NaN;
     }
     
-    return (this.trajectory.latest.value - this.trajectory.at(this.start)) /
-      (this.target - this.trajectory.at(this.start));
+    return (
+      (this.trajectory.latest.value - this.baseline) /
+      (this.target - this.baseline));
   }
 
   time_spent(by_date) {
