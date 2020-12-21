@@ -76,6 +76,7 @@
   font-size: 22px;
   border: solid lightsteelblue;
   border-width: 0 0 1px 0;
+  width: 100%;
 }
 
 .objective-description {
@@ -119,6 +120,7 @@
   font-size: 16px;
   border: solid lightsteelblue;
   border-width: 0 0 1px 0;
+  width: 100%;
 }
 
 
