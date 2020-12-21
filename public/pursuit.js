@@ -961,9 +961,10 @@ class View {
           (g, v) => this._controller.updateGoal(g.id, 'unit', v));
         add_field(
           'Start',
-          'number',
-          (g) => g.start,
-          (g, v) => this._controller.updateGoal(g.id, 'start', parseFloat(v)));
+          'date',
+          // TODO: fix timezone logic; error handling
+          (g) => new Date(g.start).toISOString().slice(0, -14),
+          (g, v) => this._controller.updateGoal(g.id, 'start', new Date(v).getTime()));
         add_current_field();
         add_field(
           'Baseline',
@@ -972,9 +973,10 @@ class View {
           (g, v) => this._controller.updateGoal(g.id, 'baseline', parseFloat(v)));
         add_field(
           'End',
-          'number',
-          (g) => g.end,
-          (g, v) => this._controller.updateGoal(g.id, 'end', parseFloat(v)));
+          'date',
+          // TODO: fix timezone logic; error handling
+          (g) => new Date(g.end).toISOString().slice(0, -14),
+          (g, v) => this._controller.updateGoal(g.id, 'end', new Date(v).getTime()));
         add_field(
           'Target',
           'number',
