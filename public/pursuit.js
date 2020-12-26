@@ -116,8 +116,12 @@ class Goal {
     return total == 0 ? 1.0 : spent / total;
   }
 
-  days_left(by_date) {
-    return Math.max(0, (this.end - by_date) / DAY);
+  days_until_start(by_date) {
+    return (this.start - by_date) / DAY;
+  }
+
+  days_until_end(by_date) {
+    return (this.end - by_date) / DAY;
   }
 
   is_on_track(by_date) {
@@ -836,13 +840,35 @@ class View {
         + `(${v_14d(g)} | ${v_30d(g)} | ${v_all(g)} ${g.unit}/d)`
       });
 
-    // Draw time left
+    // Draw status
 		svg.append('text')
-      .attr('class', 'days-left')
+      .attr('class', 'status')
       .attr('text-anchor', 'middle')
       .attr('x', '50%')
       .attr('y', 20)
-      .text((g) => `${g.days_left(now).toFixed(0)} days left`);
+      .text((g) => {
+        let days_until_start = g.days_until_start(now);
+        let days_until_end = g.days_until_end(now);
+        if (now < g.start) {
+          return `${days_until_start.toFixed(0)} days until start, nothing to do`;
+        } else if (g.progress >= 1.0) {
+          if (now < g.end) {
+            return 'complete, ahead';
+          } else {
+            return 'complete';
+          }
+        } else {
+          if (now >= g.end) {
+            return 'incomplete';
+          } else {
+            if (g.is_on_track(now)) {
+              return `${days_until_end.toFixed(0)} days left, on track`;
+            } else {
+              return `${days_until_end.toFixed(0)} days left, behind`;
+            }
+          }
+        }
+      });
 
     // Draw progress bar wires
     svg.append('rect')

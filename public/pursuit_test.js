@@ -151,22 +151,52 @@ describe('goal', () => {
     expect(goal.progress).to.equal(0.2);
   });
 
-  it('reports days left', () => {
+  it('reports days until start as zero for start date', () => {
+    let goal = new Goal({
+      start: 3 * DAY,
+      end: 6 * DAY,
+    });
+    expect(goal.days_until_start(goal.start)).to.equal(0.0);
+  });
+
+  it('reports days until start from now until start of goal', () => {
+    let goal = new Goal({
+      start: 3 * DAY,
+      end: 7 * DAY,
+    });
+    expect(goal.days_until_start(DAY)).to.equal(2);
+  });
+
+  it('reports days until start as negative for dates past start date', () => {
+    let goal = new Goal({
+      start: 3 * DAY,
+      end: 7 * DAY,
+    });
+    expect(goal.days_until_start(goal.start + DAY)).to.equal(-1.0);
+  });
+
+  it('reports days until end as zero for end date', () => {
     let goal = new Goal({
       start: 0,
       end: 7.5 * DAY,
     });
-    expect(goal.days_left(goal.start)).to.equal(7.5);
-    expect(goal.days_left(0.5 * (goal.end - goal.start))).to.equal(3.75);
-    expect(goal.days_left(goal.end)).to.equal(0.0);
+    expect(goal.days_until_end(goal.end)).to.equal(0.0);
   });
 
-  it('never reports negative days left', () => {
+  it('reports days until end from now until end of goal', () => {
+    let goal = new Goal({
+      start: 3 * DAY,
+      end: 7 * DAY,
+    });
+    expect(goal.days_until_end(DAY)).to.equal(6);
+  });
+
+  it('reports days until end as negative for dates past end date', () => {
     let goal = new Goal({
       start: 0,
       end: 3 * DAY,
     });
-    expect(goal.days_left(goal.end + DAY)).to.equal(0.0);
+    expect(goal.days_until_end(goal.end + DAY)).to.equal(-1.0);
   });
 
   it('has time spent percentage', () => {
@@ -608,7 +638,7 @@ describe('view', () => {
     expect(appText).to.have.string('@ 52.2%');
   });
 
-  it('renders days left', () => {
+  it('renders days until end', () => {
     let app = new App();
     app.model.user_id = 'test-user';
     let now = new Date().getTime();
