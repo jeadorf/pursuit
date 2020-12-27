@@ -107,7 +107,7 @@
   height: 65px;
 }
 
-.name, .start, .end, .baseline, .target, .progress, .status {
+.name, .start, .end, .baseline, .target, .velocity, .status {
   font-family: "Mulish", sans-serif;
 }
 
@@ -123,7 +123,7 @@
   width: 100%;
 }
 
-.start, .end, .baseline, .target, .progress, .status {
+.start, .end, .baseline, .target, .velocity, .status {
   font-size: 14px;
   fill: darkgrey;
 }

@@ -603,41 +603,6 @@ describe('view', () => {
     expect(appText).to.have.string('l/s');
   });
 
-  it('renders percentage complete', () => {
-    let app = new App();
-    app.model.user_id = 'test-user';
-    app.model.objectives = [
-      new Objective({
-        goals: [
-          new Goal({
-            target: 1000,
-            start: 0,
-            end: 10,
-            trajectory: (
-              new Trajectory()
-                .insert(0, 0)
-                .insert(1, 202.3)),
-          }),
-          new Goal({
-            target: 1000,
-            start: 0,
-            end: 10,
-            trajectory: (
-              new Trajectory()
-                .insert(0, 0)
-                .insert(1, 521.6))
-          }),
-        ],
-      }),
-    ];
-
-    app.view.render();
-
-    let appText = document.querySelector('#app').innerHTML;
-    expect(appText).to.have.string('@ 20.2%');
-    expect(appText).to.have.string('@ 52.2%');
-  });
-
   it('renders days until end', () => {
     let app = new App();
     app.model.user_id = 'test-user';
@@ -749,6 +714,57 @@ describe('view', () => {
 
     expect(signIn.style.display).to.be.empty;
     expect(signIn.innerText).to.have.string('Sign in with Google');
+  });
+});
+
+
+describe('velocity report', () => {
+  it('shows 30d-velocity in unit / day', () => {
+    let goal = new Goal({
+      start: 0,
+      end: 60 * DAY,
+      baseline: 0,
+      target: 180,
+      unit: 'sessions',
+      trajectory: (
+        new Trajectory()
+          .insert(0, 0)
+          .insert(30 * DAY, 135))
+    });
+    let velocity = new VelocityReport();
+    expect(velocity.report(goal, 30 * DAY)).to.be.equal('30d: 4.5 sessions per day');
+  });
+
+  it('shows 30d-velocity in unit / week', () => {
+    let goal = new Goal({
+      start: 0,
+      end: 60 * DAY,
+      baseline: 0,
+      target: 30,
+      unit: 'sessions',
+      trajectory: (
+        new Trajectory()
+          .insert(0, 0)
+          .insert(35 * DAY, 20))
+    });
+    let velocity = new VelocityReport();
+    expect(velocity.report(goal, 5 * 7 * DAY)).to.be.equal('30d: 4.0 sessions per week');
+  });
+
+  it('shows 30d-velocity in unit / month', () => {
+    let goal = new Goal({
+      start: 0,
+      end: 180 * DAY,
+      baseline: 0,
+      target: 12,
+      unit: 'sessions',
+      trajectory: (
+        new Trajectory()
+          .insert(0, 0)
+          .insert(90 * DAY, 9))
+    });
+    let velocity = new VelocityReport();
+    expect(velocity.report(goal, 90 * DAY)).to.be.equal('30d: 3.0 sessions per month');
   });
 });
 

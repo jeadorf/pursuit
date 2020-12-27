@@ -132,10 +132,6 @@ class Goal {
     return this.trajectory.velocity(this.start, by_date);
   }
 
-  velocity_14d(by_date) {
-    return this.trajectory.velocity(by_date - 14 * DAY, by_date);
-  }
-
   velocity_30d(by_date) {
     return this.trajectory.velocity(by_date - 30 * DAY, by_date);
   }
@@ -825,19 +821,16 @@ class View {
         .attr('class', 'chart')
         .attr('viewBox', `0 0 100% 65`);
 
-    // Draw progress
+    // Draw velocity
     let now = new Date().getTime();
-    let v_14d = (g) => (DAY * g.velocity_14d(now)).toFixed(1);
-    let v_30d = (g) => (DAY * g.velocity_30d(now)).toFixed(1);
-    let v_all = (g) => (DAY * g.velocity(now)).toFixed(1);
 		svg.append('text')
-      .attr('class', 'progress')
+      .attr('class', 'velocity')
       .attr('text-anchor', 'middle')
       .attr('x', '50%')
       .attr('y', 60)
       .text((g) => {
-        return `@ ${(100 * g.progress).toFixed(1)}% `
-        + `(${v_14d(g)} | ${v_30d(g)} | ${v_all(g)} ${g.unit}/d)`
+        let velocity = new VelocityReport();
+        return velocity.report(g, now);
       });
 
     // Draw status
@@ -862,9 +855,9 @@ class View {
             return 'incomplete';
           } else {
             if (g.is_on_track(now)) {
-              return `${days_until_end.toFixed(0)} days left, on track`;
+              return `${days_until_end.toFixed(0)} days left, on track @ ${(100 * g.progress).toFixed(1)}%`;
             } else {
-              return `${days_until_end.toFixed(0)} days left, behind`;
+              return `${days_until_end.toFixed(0)} days left, behind @ ${(100 * g.progress).toFixed(1)}%`;
             }
           }
         }
@@ -1041,5 +1034,21 @@ class View {
     signInLink.innerText = 'Sign in with Google';
     signInLink.onclick = () => this._controller.signInWithGoogle();
     signIn.appendChild(signInLink);
+  }
+}
+
+class VelocityReport {
+  report(goal, by_date) {
+    let v = goal.velocity_30d(by_date);
+    // Attempt to choose a time period where there was at least one unit of
+    // progress. There are alternative ways of choosing a sensible period of
+    // time, e.g. based on the rate (target - baseline) / (end - start).
+    if (v * DAY >= 1) {
+      return `30d: ${(v * DAY).toFixed(1)} ${goal.unit} per day`;
+    } else if (v * DAY * 7 >= 1) {
+      return `30d: ${(v * DAY * 7).toFixed(1)} ${goal.unit} per week`;
+    } else {
+      return `30d: ${(v * DAY * 30).toFixed(1)} ${goal.unit} per month`;
+    }
   }
 }
