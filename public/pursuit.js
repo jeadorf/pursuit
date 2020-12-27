@@ -44,15 +44,21 @@ class Objective {
   }
 }
 
+const Stage = {
+  DRAFT: 'draft',
+  PLEDGED: 'pledged',
+  ARCHIVED: 'archived',
+};
 
 class Goal {
+
   constructor({id = '',
                name = '',
                unit = '',
                target = 1.0,
                start = 0,
                end = 0,
-               archived = false,
+               stage = Stage.PLEDGED,
                trajectory = new Trajectory()}) {
     this._id = id;
     this._name = name;
@@ -60,7 +66,7 @@ class Goal {
     this._target = target;
     this._start = start;
     this._end = end;
-    this._archived = archived;
+    this._stage = stage;
     this._trajectory = trajectory;
   }
 
@@ -88,8 +94,8 @@ class Goal {
     return this._end;
   }
 
-  get archived() {
-    return this._archived;
+  get stage() {
+    return this._stage;
   }
 
   get trajectory() {
@@ -255,7 +261,7 @@ class ObjectiveConverter {
         start: g.start,
         end: g.end,
         target: g.target,
-        archived: g.archived,
+        stage: g.stage,
         trajectory: Array.from(g.trajectory),
       };
     }
@@ -285,7 +291,7 @@ class ObjectiveConverter {
         start: g.start,
         end: g.end,
         target: g.target,
-        archived: g.archived,
+        stage: g.stage,
         trajectory: t,
       }));
     }
@@ -555,7 +561,7 @@ class Controller {
       .collection('objectives')
       .doc(objectiveId)
       .update({
-        [`goals.${goalId}.archived`]: true,
+        [`goals.${goalId}.stage`]: Stage.PLEDGED,
       });
   }
 
@@ -575,7 +581,7 @@ class Controller {
       .collection('objectives')
       .doc(objectiveId)
       .update({
-        [`goals.${goalId}.archived`]: false,
+        [`goals.${goalId}.stage`]: Stage.PLEDGED,
       });
   }
 
@@ -793,7 +799,7 @@ class View {
 	  let byName = (a, b) => (
       a.name > b.name ? 1 : a.name < b.name ? -1 : 0
     );
-    let byStatus = (g) => this._model.mode == 'plan' || this._model.show_archived || !g.archived;
+    let byStatus = (g) => this._model.mode == 'plan' || this._model.show_archived || g.stage != Stage.ARCHIVED;
     node.selectAll('div.goal')
       .data((o) => o.goals.filter(byStatus).sort(byName))
       .enter()
@@ -820,7 +826,7 @@ class View {
     } else {
 		  node.append('div')
         .attr('class', 'name')
-        .text((g) => g.name + (g.archived ? ' [archived]' : ''));
+        .text((g) => g.name + (g.stage != Stage.PLEDGED ? ` [${g.stage}]` : ''));
     }
 
     let svg =
@@ -1010,6 +1016,11 @@ class View {
           'number',
           (g) => g.target,
           (g, v) => this._controller.updateGoal(g.id, 'target', parseFloat(v)));
+        add_field(
+          'Stage',
+          'text',
+          (g) => g.stage,
+          (g, v) => this._controller.updateGoal(g.id, 'stage', v));
  
         let toolbar = form.append('div')
           .attr('class', 'toolbar');
@@ -1020,12 +1031,6 @@ class View {
             if (confirm(`Really delete the goal named "${g.name}"?`)) {
               this._controller.deleteGoal(g.id);
             }
-          });
-        toolbar
-          .append('a')
-          .text((g) => g.archived ? 'Unarchive' : 'Archive')
-          .on('click', (g) => {
-              this._controller.archiveGoal(g.id);
           });
       }
 
