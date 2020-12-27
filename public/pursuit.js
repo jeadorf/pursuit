@@ -124,6 +124,13 @@ class Goal {
     return (this.end - by_date) / DAY;
   }
 
+  relative_progress(by_date) {
+    if (by_date <= this.start) { return 1.0; }
+    let p = this.trajectory.at(by_date) / (this.target - this.baseline);
+    let t = this.time_spent(Math.min(this.end, by_date));
+    return p / t;
+  }
+
   is_on_track(by_date) {
     return this.progress >= this.time_spent(Math.min(this.end, by_date));
   }
@@ -870,14 +877,16 @@ class View {
       .attr('fill', 'lightgrey')
       .attr('y', 32);
 
-   // Draw progress bars
-   svg.append('rect')
-     .attr('width', (g) => `${100 * this._bound(g.progress, 0, 1)}%`)
-     .attr('height', 18)
-     .attr('class', (g) => (g.is_on_track(now)
-                              ? 'current ontrack'
-                              : 'current offtrack'))
-     .attr('y', 26);
+    // Draw progress bars
+    svg.append('rect')
+      .attr('width', (g) => `${100 * this._bound(g.progress, 0, 1)}%`)
+      .attr('height', 18)
+      .attr('class', 'current')
+      .attr('fill', (g) => {
+        let progressReport = new ProgressReport();
+        return progressReport.progressFillColor(g, now);
+      })
+      .attr('y', 26);
 
    // Draw current date
    svg.append('rect')
@@ -1050,5 +1059,18 @@ class VelocityReport {
     } else {
       return `30d: ${(v * DAY * 30).toFixed(1)} ${goal.unit} per month`;
     }
+  }
+}
+
+class ProgressReport {
+  progressFillColor(goal, by_date) {
+    let s = 0.8;
+    let w = (goal.relative_progress(by_date) - s) / (1.0 - s);
+    w = Math.min(1.0, w);
+    w = Math.max(0.0, w);
+    let r = (1.0 - w) * 187 + w * 136;
+    let g = (1.0 - w) * 102 + w * 187;
+    let b = 77;
+    return `rgb(${r},${g},${b})`;
   }
 }

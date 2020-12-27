@@ -151,6 +151,84 @@ describe('goal', () => {
     expect(goal.progress).to.equal(0.2);
   });
 
+  it('reports relative progress when exactly on track', () => {
+    let goal = new Goal({
+      start: 0,
+      end: 10,
+      target: 100,
+      trajectory: (
+        new Trajectory()
+          .insert(0, 0)
+          .insert(5, 50)),
+    });
+    expect(goal.relative_progress(5)).to.equal(1.0);
+  });
+
+  it('reports relative progress when 20% behind', () => {
+    let goal = new Goal({
+      start: 0,
+      end: 10,
+      target: 100,
+      trajectory: (
+        new Trajectory()
+          .insert(0, 0)
+          .insert(5, 40)),
+    });
+    expect(goal.relative_progress(5)).to.equal(0.8);
+  });
+
+  it('reports relative progress when 20% ahead', () => {
+    let goal = new Goal({
+      start: 0,
+      end: 10,
+      target: 100,
+      trajectory: (
+        new Trajectory()
+          .insert(0, 0)
+          .insert(5, 60)),
+    });
+    expect(goal.relative_progress(5)).to.equal(1.2);
+  });
+
+  it('reports relative progress as 100% before start date', () => {
+    let goal = new Goal({
+      start: 1,
+      end: 10,
+      target: 100,
+      trajectory: (
+        new Trajectory()
+          .insert(1, 0)
+          .insert(5, 60)),
+    });
+    expect(goal.relative_progress(0)).to.equal(1.0);
+  });
+
+  it('reports relative progress as 100% when complete after end date', () => {
+    let goal = new Goal({
+      start: 1,
+      end: 10,
+      target: 100,
+      trajectory: (
+        new Trajectory()
+          .insert(1, 0)
+          .insert(9, 100)),
+    });
+    expect(goal.relative_progress(11)).to.equal(1.0);
+  });
+
+  it('reports relative progress as 90% when incomplete after end date', () => {
+    let goal = new Goal({
+      start: 1,
+      end: 10,
+      target: 100,
+      trajectory: (
+        new Trajectory()
+          .insert(1, 0)
+          .insert(5, 90)),
+    });
+    expect(goal.relative_progress(11)).to.equal(0.9);
+  });
+
   it('reports days until start as zero for start date', () => {
     let goal = new Goal({
       start: 3 * DAY,
@@ -768,6 +846,51 @@ describe('velocity report', () => {
   });
 });
 
+describe('progress report', () => {
+  it('chooses green if relative progress is 100%', () => {
+    let goal = new Goal({
+      start: 0,
+      end: 10,
+      baseline: 0,
+      target: 100,
+      trajectory: (
+        new Trajectory()
+          .insert(0, 0)
+          .insert(3, 30))
+    });
+    let progressReport = new ProgressReport();
+    expect(progressReport.progressFillColor(goal, 3)).to.be.equal('rgb(136,187,77)');
+  });
+
+  it('chooses green if relative progress is greater than 100%', () => {
+    let goal = new Goal({
+      start: 0,
+      end: 10,
+      baseline: 0,
+      target: 100,
+      trajectory: (
+        new Trajectory()
+          .insert(0, 0)
+          .insert(3, 60))
+    });
+    let progressReport = new ProgressReport();
+    expect(progressReport.progressFillColor(goal, 3)).to.be.equal('rgb(136,187,77)');
+  });
+
+  it('chooses red if relative progress is 0%', () => {
+    let goal = new Goal({
+      start: 0,
+      end: 10,
+      baseline: 0,
+      target: 100,
+      trajectory: (
+        new Trajectory()
+          .insert(0, 0))
+    });
+    let progressReport = new ProgressReport();
+    expect(progressReport.progressFillColor(goal, 3)).to.be.equal('rgb(187,102,77)');
+  });
+});
 
 describe('safe markdown renderer', () => {
   it('can render bold markdown', () => {

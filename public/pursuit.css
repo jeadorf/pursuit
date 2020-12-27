@@ -136,14 +136,6 @@
   fill-opacity: 0.75;
 }
 
-.ontrack {
-  fill: #88bb77;
-}
-
-.offtrack {
-  fill: #bb6677;
-}
-
 .edit {
   font-size: 14px;
   border-left: 1px solid lightgrey;
