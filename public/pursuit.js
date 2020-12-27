@@ -337,6 +337,7 @@ class Model {
     this._user_id = null;
     this._mode = 'view';
     this._show_archived = false;
+    this._show_drafts = false;
   }
 
   get objectives() {
@@ -369,6 +370,14 @@ class Model {
 
   set show_archived(value) {
     this._show_archived = value;
+  }
+
+  get show_drafts() {
+    return this._show_drafts;
+  }
+
+  set show_drafts(value) {
+    this._show_drafts = value;
   }
 }
 
@@ -730,6 +739,13 @@ class View {
             this._model.show_archived = !this._model.show_archived;
             this.render();
           });
+        toolbarSecondary
+          .append('a')
+          .text((this._model.show_drafts ? 'Hide' : 'Show') + ' drafts')
+          .on('click', () => {
+            this._model.show_drafts = !this._model.show_drafts;
+            this.render();
+          });
       }
 
       d3.select('#app')
@@ -799,7 +815,11 @@ class View {
 	  let byName = (a, b) => (
       a.name > b.name ? 1 : a.name < b.name ? -1 : 0
     );
-    let byStatus = (g) => this._model.mode == 'plan' || this._model.show_archived || g.stage != Stage.ARCHIVED;
+    let byStatus = (g) => (
+      this._model.mode == 'plan'
+        || g.stage == Stage.PLEDGED
+        || (g.stage == Stage.DRAFT && this._model.show_drafts)
+        || (g.stage == Stage.ARCHIVED && this._model.show_archived));
     node.selectAll('div.goal')
       .data((o) => o.goals.filter(byStatus).sort(byName))
       .enter()
