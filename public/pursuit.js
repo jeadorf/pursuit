@@ -554,7 +554,7 @@ class Controller {
       });
   }
 
-  archiveGoal(goalId) {
+  updateGoalStage(goalId, stage) {
     let objectiveId = null;
     for (let o of this._model.objectives) {
       for (let g of o.goals) {
@@ -570,27 +570,7 @@ class Controller {
       .collection('objectives')
       .doc(objectiveId)
       .update({
-        [`goals.${goalId}.stage`]: Stage.PLEDGED,
-      });
-  }
-
-  unarchiveGoal(goalId) {
-    let objectiveId = null;
-    for (let o of this._model.objectives) {
-      for (let g of o.goals) {
-        if (g.id == goalId) {
-          objectiveId = o.id;
-        }
-      }
-    }
-
-    firebase.firestore()
-      .collection('users')
-      .doc(this._model.user_id)
-      .collection('objectives')
-      .doc(objectiveId)
-      .update({
-        [`goals.${goalId}.stage`]: Stage.PLEDGED,
+        [`goals.${goalId}.stage`]: stage,
       });
   }
 
@@ -1041,9 +1021,27 @@ class View {
           'text',
           (g) => g.stage,
           (g, v) => this._controller.updateGoal(g.id, 'stage', v));
- 
+
         let toolbar = form.append('div')
           .attr('class', 'toolbar');
+        toolbar
+          .append('a')
+          .text('Draft')
+          .on('click', (g) => {
+            this._controller.updateGoalStage(g.id, Stage.DRAFT);
+          });
+        toolbar
+          .append('a')
+          .text('Pledge')
+          .on('click', (g) => {
+            this._controller.updateGoalStage(g.id, Stage.PLEDGED);
+          });
+        toolbar
+          .append('a')
+          .text('Archive')
+          .on('click', (g) => {
+            this._controller.updateGoalStage(g.id, Stage.ARCHIVED);
+          });
         toolbar
           .append('a')
           .text('Delete')
