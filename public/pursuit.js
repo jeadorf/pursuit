@@ -915,7 +915,7 @@ class View {
      .attr('class', 'end')
      .attr('text-anchor', 'end')
      .attr('x', '100%')
-     .attr('y', 18)
+     .attr('y', 20)
      .text((g) => `${new Date(g.end).toISOString().slice(0, 10)}`);
 
    // Draw baseline as text
