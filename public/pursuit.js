@@ -548,6 +548,7 @@ class Controller {
         [`goals.${goalId}.start`]: now,
         [`goals.${goalId}.end`]: now + 7 * DAY,
         [`goals.${goalId}.target`]: 100,
+        [`goals.${goalId}.stage`]: Stage.PLEDGED,
         [`goals.${goalId}.trajectory`]: [
           {date: now, value: 0},
         ],
