@@ -712,14 +712,14 @@ class View {
           });
       }
 
+      toolbarSecondary
+        .append('a')
+        .text((this._model.show_archived ? 'Hide' : 'Show') + ' archived')
+        .on('click', () => {
+          this._model.show_archived = !this._model.show_archived;
+          this.render();
+        });
       if (this._model.mode != 'plan') {
-        toolbarSecondary
-          .append('a')
-          .text((this._model.show_archived ? 'Hide' : 'Show') + ' archived')
-          .on('click', () => {
-            this._model.show_archived = !this._model.show_archived;
-            this.render();
-          });
         toolbarSecondary
           .append('a')
           .text((this._model.show_drafts ? 'Hide' : 'Show') + ' drafts')
@@ -797,8 +797,7 @@ class View {
       a.name > b.name ? 1 : a.name < b.name ? -1 : 0
     );
     let byStatus = (g) => (
-      this._model.mode == 'plan'
-        || g.stage == Stage.PLEDGED
+      g.stage == Stage.PLEDGED
         || (g.stage == Stage.DRAFT && this._model.show_drafts)
         || (g.stage == Stage.ARCHIVED && this._model.show_archived));
     node.selectAll('div.goal')
