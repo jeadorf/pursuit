@@ -793,7 +793,7 @@ class View {
         .html((o) => markdown.render(o.description ?? ''));
     }
 
-	  let byName = (a, b) => (
+	let byName = (a, b) => (
       a.name > b.name ? 1 : a.name < b.name ? -1 : 0
     );
     let byStatus = (g) => (
@@ -836,7 +836,7 @@ class View {
 
     // Draw velocity
     let now = new Date().getTime();
-		svg.append('text')
+	svg.append('text')
       .attr('class', 'velocity')
       .attr('text-anchor', 'middle')
       .attr('x', '50%')
@@ -847,7 +847,7 @@ class View {
       });
 
     // Draw status
-		svg.append('text')
+	svg.append('text')
       .attr('class', 'status')
       .attr('text-anchor', 'middle')
       .attr('x', '50%')
