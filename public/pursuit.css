@@ -137,7 +137,7 @@
 }
 
 @media (max-width: 600px) {
-    .status {
+    .status, .velocity {
         visibility: hidden;
     }
 }

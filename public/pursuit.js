@@ -148,6 +148,10 @@ class Goal {
   velocity_30d(by_date) {
     return this.trajectory.velocity(Math.max(this.start, by_date - 30 * DAY), by_date);
   }
+  
+  velocity_required(by_date) {
+    return (this.target - this.trajectory.at(by_date)) / (this.end - by_date);
+  }
 }
 
 
@@ -200,7 +204,7 @@ class Trajectory {
         this._line.splice(i, 1);
         return;
       }
-		}
+    }
   }
 
   /**
@@ -842,9 +846,15 @@ class View {
       .attr('x', '50%')
       .attr('y', 60)
       .text((g) => {
-        let velocity = new VelocityReport();
-        return velocity.report(g, now);
+        if (g.stage != Stage.ARCHIVED) {
+            let velocity = new VelocityReport();
+            return velocity.report(g, now);
+        } else {
+            return 'archived';
+        }
       });
+
+    let progressReport = new ProgressReport();
 
     // Draw status
 	svg.append('text')
@@ -852,29 +862,7 @@ class View {
       .attr('text-anchor', 'middle')
       .attr('x', '50%')
       .attr('y', 20)
-      .text((g) => {
-        let days_until_start = g.days_until_start(now);
-        let days_until_end = g.days_until_end(now);
-        if (now < g.start) {
-          return `${days_until_start.toFixed(0)} days until start, nothing to do`;
-        } else if (g.progress >= 1.0) {
-          if (now < g.end) {
-            return 'complete, ahead';
-          } else {
-            return 'complete';
-          }
-        } else {
-          if (now >= g.end) {
-            return 'incomplete';
-          } else {
-            if (g.is_on_track(now)) {
-              return `${days_until_end.toFixed(0)} days left, on track @ ${(100 * g.progress).toFixed(1)}%`;
-            } else {
-              return `${days_until_end.toFixed(0)} days left, behind @ ${(100 * g.progress).toFixed(1)}%`;
-            }
-          }
-        }
-      });
+      .text((g) => progressReport.progressStatus(g, now));
 
     // Draw progress bar wires
     svg.append('rect')
@@ -888,10 +876,7 @@ class View {
       .attr('width', (g) => `${100 * this._bound(g.progress, 0, 1)}%`)
       .attr('height', 18)
       .attr('class', 'current')
-      .attr('fill', (g) => {
-        let progressReport = new ProgressReport();
-        return progressReport.progressFillColor(g, now);
-      })
+      .attr('fill', (g) => progressReport.progressFillColor(g, now))
       .attr('y', 26);
 
    // Draw current date
@@ -1071,16 +1056,18 @@ class View {
 
 class VelocityReport {
   report(goal, by_date) {
-    let v = goal.velocity_30d(by_date);
+    let v = goal.velocity_30d(by_date) * DAY;
+    let rv = goal.velocity_required(by_date) * DAY;
+    let round = (f) => f.toFixed(1);
     // Attempt to choose a time period where there was at least one unit of
     // progress. There are alternative ways of choosing a sensible period of
     // time, e.g. based on the rate (target - baseline) / (end - start).
-    if (v * DAY >= 1) {
-      return `30d: ${(v * DAY).toFixed(1)} ${goal.unit} per day`;
-    } else if (v * DAY * 7 >= 1) {
-      return `30d: ${(v * DAY * 7).toFixed(1)} ${goal.unit} per week`;
+    if (v >= 1) {
+      return `30d: ${round(v)} ${goal.unit} per day; in future need: ${round(rv)} ${goal.unit} per day`;
+    } else if (v * 7 >= 1) {
+      return `30d: ${round(v * 7)} ${goal.unit} per week; in future need: ${round(rv * 7)} ${goal.unit} per week`;
     } else {
-      return `30d: ${(v * DAY * 30).toFixed(1)} ${goal.unit} per month`;
+      return `30d: ${round(v * 30)} ${goal.unit} per month; in future need: ${round(rv * 30)} ${goal.unit} per month`;
     }
   }
 }
@@ -1095,5 +1082,29 @@ class ProgressReport {
     let g = (1.0 - w) * 102 + w * 187;
     let b = 77;
     return `rgb(${r},${g},${b})`;
+  }
+
+  progressStatus(goal, by_date) {
+    let days_until_start = goal.days_until_start(by_date);
+    let days_until_end = goal.days_until_end(by_date);
+    if (by_date < goal.start) {
+        return `${days_until_start.toFixed(0)} days until start, nothing to do`;
+    } else if (goal.progress >= 1.0) {
+        if (by_date < goal.end) {
+        return 'complete, ahead';
+        } else {
+        return 'complete';
+        }
+    } else {
+        if (by_date >= goal.end) {
+            return 'incomplete';
+        } else {
+            if (goal.is_on_track(by_date)) {
+                return `${days_until_end.toFixed(0)} days left, on track @ ${(100 * goal.progress).toFixed(1)}%`;
+            } else {
+                return `${days_until_end.toFixed(0)} days left, behind @ ${(100 * goal.progress).toFixed(1)}%`;
+            }
+        }
+    }
   }
 }

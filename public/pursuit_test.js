@@ -810,7 +810,7 @@ describe('velocity report', () => {
           .insert(30 * DAY, 135))
     });
     let velocity = new VelocityReport();
-    expect(velocity.report(goal, 30 * DAY)).to.be.equal('30d: 4.5 sessions per day');
+    expect(velocity.report(goal, 30 * DAY)).to.be.equal('30d: 4.5 sessions per day; in future need sessions 1.5 per day');
   });
 
   it('shows 30d-velocity in unit / week', () => {
@@ -826,7 +826,7 @@ describe('velocity report', () => {
           .insert(35 * DAY, 20))
     });
     let velocity = new VelocityReport();
-    expect(velocity.report(goal, 5 * 7 * DAY)).to.be.equal('30d: 4.0 sessions per week');
+    expect(velocity.report(goal, 5 * 7 * DAY)).to.be.equal('30d: 4.0 sessions per week; in future need 2.8 sessions per week');
   });
 
   it('shows 30d-velocity in unit / month', () => {
@@ -842,7 +842,7 @@ describe('velocity report', () => {
           .insert(90 * DAY, 9))
     });
     let velocity = new VelocityReport();
-    expect(velocity.report(goal, 90 * DAY)).to.be.equal('30d: 3.0 sessions per month');
+    expect(velocity.report(goal, 90 * DAY)).to.be.equal('30d: 3.0 sessions per month; in future need 1.0 sessions per month');
   });
 });
 
