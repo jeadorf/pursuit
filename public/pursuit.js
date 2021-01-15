@@ -1063,11 +1063,11 @@ class VelocityReport {
     // progress. There are alternative ways of choosing a sensible period of
     // time, e.g. based on the rate (target - baseline) / (end - start).
     if (v >= 1) {
-      return `30d: ${round(v)} ${goal.unit} per day; in future need: ${round(rv)} ${goal.unit} per day`;
+      return `30d: ${round(v)} ${goal.unit} per day; now need ${round(rv)} ${goal.unit} per day`;
     } else if (v * 7 >= 1) {
-      return `30d: ${round(v * 7)} ${goal.unit} per week; in future need: ${round(rv * 7)} ${goal.unit} per week`;
+      return `30d: ${round(v * 7)} ${goal.unit} per week; now need ${round(rv * 7)} ${goal.unit} per week`;
     } else {
-      return `30d: ${round(v * 30)} ${goal.unit} per month; in future need: ${round(rv * 30)} ${goal.unit} per month`;
+      return `30d: ${round(v * 30)} ${goal.unit} per month; now need ${round(rv * 30)} ${goal.unit} per month`;
     }
   }
 }
