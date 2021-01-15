@@ -146,7 +146,7 @@ class Goal {
   }
 
   velocity_30d(by_date) {
-    return this.trajectory.velocity(by_date - 30 * DAY, by_date);
+    return this.trajectory.velocity(Math.max(this.start, by_date - 30 * DAY), by_date);
   }
 }
 
