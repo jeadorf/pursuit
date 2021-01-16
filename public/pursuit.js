@@ -723,15 +723,13 @@ class View {
           this._model.show_archived = !this._model.show_archived;
           this.render();
         });
-      if (this._model.mode != 'plan') {
-        toolbarSecondary
-          .append('a')
-          .text((this._model.show_drafts ? 'Hide' : 'Show') + ' drafts')
-          .on('click', () => {
-            this._model.show_drafts = !this._model.show_drafts;
-            this.render();
-          });
-      }
+      toolbarSecondary
+        .append('a')
+        .text((this._model.show_drafts ? 'Hide' : 'Show') + ' drafts')
+        .on('click', () => {
+        this._model.show_drafts = !this._model.show_drafts;
+        this.render();
+        });
 
       d3.select('#app')
         .style('display', 'flex')
