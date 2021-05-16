@@ -1060,9 +1060,9 @@ class VelocityReport {
     // Attempt to choose a time period where there was at least one unit of
     // progress. There are alternative ways of choosing a sensible period of
     // time, e.g. based on the rate (target - baseline) / (end - start).
-    if (v >= 1) {
+    if (v >= 1 || rv >= 1) {
       return `30d: ${round(v)} ${goal.unit} per day; now need ${round(rv)} ${goal.unit} per day`;
-    } else if (v * 7 >= 1) {
+    } else if (v * 7 >= 1 || rv * 7 >= 1) {
       return `30d: ${round(v * 7)} ${goal.unit} per week; now need ${round(rv * 7)} ${goal.unit} per week`;
     } else {
       return `30d: ${round(v * 30)} ${goal.unit} per month; now need ${round(rv * 30)} ${goal.unit} per month`;
