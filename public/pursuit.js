@@ -838,17 +838,20 @@ class View {
 
     // Draw velocity
     let now = new Date().getTime();
-	svg.append('text')
+    svg.append('text')
       .attr('class', 'velocity')
       .attr('text-anchor', 'middle')
       .attr('x', '50%')
       .attr('y', 60)
       .text((g) => {
         if (g.stage != Stage.ARCHIVED) {
+            if (g.end < now) {
+              return '';
+            }
             let velocity = new VelocityReport();
             return velocity.report(g, now);
         } else {
-            return 'archived';
+            return '';
         }
       });
 
