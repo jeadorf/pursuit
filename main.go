@@ -39,6 +39,13 @@ type setGoalValueRequest struct {
 	Value     float32 `json:"value"`
 }
 
+type incrementGoalValueRequest struct {
+	User      string  `json:"user"`
+	Objective string  `json:"objective"`
+	Goal      string  `json:"goal"`
+	Delta     float32 `json:"delta"`
+}
+
 func setGoalValue(w http.ResponseWriter, r *http.Request) {
 	p := setGoalValueRequest{}
 
@@ -48,7 +55,7 @@ func setGoalValue(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if p.User == "" {
-		http.Error(w, "missing 'goal' parameter", http.StatusBadRequest)
+		http.Error(w, "missing 'user' parameter", http.StatusBadRequest)
 		return
 	}
 
@@ -81,9 +88,52 @@ func setGoalValue(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func incrementGoalValue(w http.ResponseWriter, r *http.Request) {
+	p := incrementGoalValueRequest{}
+
+	if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
+		http.Error(w, "Error parsing request", http.StatusBadRequest)
+		return
+	}
+
+	if p.User == "" {
+		http.Error(w, "missing 'user' parameter", http.StatusBadRequest)
+		return
+	}
+
+	if p.Objective == "" {
+		http.Error(w, "missing 'objective' parameter", http.StatusBadRequest)
+		return
+	}
+
+	if p.Goal == "" {
+		http.Error(w, "missing 'goal' parameter", http.StatusBadRequest)
+		return
+	}
+
+	ref := client.Collection("users").Doc(p.User).Collection("objectives").Doc(p.Objective)
+	doc, err := ref.Get(ctx)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error reading value: %v", err), http.StatusServiceUnavailable)
+		return
+	}
+
+	var objective document.Objective
+	doc.DataTo(&objective)
+
+	objective.IncrementGoal(p.Goal, p.Delta)
+
+	_, err = ref.Set(ctx, objective)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error writing value: %v", err), http.StatusServiceUnavailable)
+		return
+	}
+}
+
 func main() {
 	log.Print("starting server...")
-	http.HandleFunc("/setgoalvalue", setGoalValue)
+	http.HandleFunc("/goals/set", setGoalValue)
+	http.HandleFunc("/goals/increment", incrementGoalValue)
 
 	port := os.Getenv("PORT")
 	if port == "" {

@@ -44,12 +44,35 @@ func (o *Objective) UpdateGoal(goalID string, value float32) error {
 	return nil
 }
 
+// IncrementGoal adds a new value to the trajectory of the goal,
+// using the current timestamp.
+func (o *Objective) IncrementGoal(goalID string, value float32) error {
+	g, ok := o.Goals[goalID]
+	if !ok {
+		return fmt.Errorf("No such goal: %q", goalID)
+	}
+	g.Increment(value)
+	o.Goals[goalID] = g
+	return nil
+}
+
 // Update adds a new value to the trajectory of the goal,
 // using the current timestamp.
 func (g *Goal) Update(value float32) {
 	p := DateValue{
 		Date:  time.Now().UnixNano() / 1000 / 1000,
 		Value: value,
+	}
+	g.Trajectory = append(g.Trajectory, p)
+}
+
+// Increment adds a delta to the latest value on the trajectory
+// of a goal, using the current timestamp.
+func (g *Goal) Increment(delta float32) {
+	previous := g.Trajectory[len(g.Trajectory)-1]
+	p := DateValue{
+		Date:  time.Now().UnixNano() / 1000 / 1000,
+		Value: previous.Value + delta,
 	}
 	g.Trajectory = append(g.Trajectory, p)
 }
