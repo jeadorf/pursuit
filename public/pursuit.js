@@ -984,7 +984,24 @@ class View {
           'date',
           // TODO: fix timezone logic; error handling
           (g) => new Date(g.start).toISOString().slice(0, -14),
-          (g, v) => this._controller.updateGoal(g.id, 'start', new Date(v).getTime()));
+          (g, v) => {
+              let t = Date.parse(v);
+              if (isNaN(t)) {
+                this._controller._view.render();
+                return;
+              }
+              t = new Date(t).getTime();
+              if (isNaN(t)) {
+                this._controller._view.render();
+                return;
+              }
+              // 01/01/9999 hack
+              if (t >= 253370764800000) {
+                this._controller._view.render();
+                return;
+              }
+              this._controller.updateGoal(g.id, 'start', t);
+          });
         add_current_field();
         add_field(
           'Baseline',
@@ -996,7 +1013,24 @@ class View {
           'date',
           // TODO: fix timezone logic; error handling
           (g) => new Date(g.end).toISOString().slice(0, -14),
-          (g, v) => this._controller.updateGoal(g.id, 'end', new Date(v).getTime()));
+          (g, v) => {
+              let t = Date.parse(v);
+              if (isNaN(t)) {
+                this._controller._view.render();
+                return;
+              }
+              t = new Date(t).getTime();
+              if (isNaN(t)) {
+                this._controller._view.render();
+                return;
+              }
+              // 01/01/9999 hack
+              if (t >= 253370764800000) {
+                this._controller._view.render();
+                return;
+              }
+              this._controller.updateGoal(g.id, 'end', t);
+          });
         add_field(
           'Target',
           'number',
