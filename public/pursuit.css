@@ -107,7 +107,7 @@
   height: 65px;
 }
 
-.name, .start, .end, .baseline, .target, .velocity, .status {
+.name, .start, .end, .baseline, .target, .velocity, .status, .out-of-budget, .within-budget, .window {
   font-family: "Mulish", sans-serif;
 }
 
@@ -123,9 +123,21 @@
   width: 100%;
 }
 
-.start, .end, .baseline, .target, .velocity, .status {
+.start, .end, .baseline, .target, .velocity, .status, .out-of-budget, .within-budget, .window {
   font-size: 14px;
   fill: darkgrey;
+}
+
+.out-of-budget, .within-budget {
+  font-weight: bold;
+}
+
+.out-of-budget {
+  color: rgb(187, 102, 77);
+}
+
+.within-budget {
+  color: darkgreen;
 }
 
 .today {
@@ -173,3 +185,7 @@
   border-width: 0 0 1px 0;
 }
 
+.budget_remaining {
+      font-size: 14px;
+    fill: darkgrey;
+}

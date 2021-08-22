@@ -20,11 +20,12 @@ let HOUR = 60 * 60 * 1000;
 let DAY = 24 * HOUR;
 
 class Objective {
-  constructor({id, name, description, goals}) {
+  constructor({id, name, description, goals, regular_goals}) {
     this._id = id;
     this._name = name;
     this._description = description;
     this._goals = goals;
+    this._regular_goals = regular_goals;
   }
 
   get id() {
@@ -41,6 +42,10 @@ class Objective {
 
   get goals() {
     return this._goals;
+  }
+
+  get regular_goals() {
+    return this._regular_goals;
   }
 }
 
@@ -151,6 +156,53 @@ class Goal {
   
   velocity_required(by_date) {
     return (this.target - this.trajectory.at(by_date)) / (this.end - by_date);
+  }
+}
+
+
+class RegularGoal {
+
+  constructor({id = '',
+               name = '',
+               window = 28,
+               target = 0.0,
+               total = 0.0,
+               trajectory = new Trajectory()}) {
+    this._id = id;
+    this._name = name;
+    this._window = window;
+    this._target = target;
+    this._total = total;
+    this._trajectory = trajectory;
+  }
+
+  get id() {
+    return this._id;
+  }
+
+  get name() {
+    return this._name;
+  }
+
+  get window() {
+    return this._window;
+  }
+
+  get target() {
+    return this._target;
+  }
+
+  get total() {
+    return this._total;
+  }
+
+  get trajectory() {
+    return this._trajectory;
+  }
+
+  budget_remaining(by_date) {
+    let actual = (this.trajectory.at(by_date) - this.trajectory.at(by_date - this.window * DAY)) / this.total;
+    return (actual - this.target) / (1.0 - this.target);
   }
 }
 
@@ -269,10 +321,22 @@ class ObjectiveConverter {
         trajectory: Array.from(g.trajectory),
       };
     }
+    let regular_goals = {};
+    for (let g of objective.regular_goals) {
+      regular_goals[g.id] = {
+        id: g.id,
+        name: g.name,
+        window: g.window,
+        target: g.target,
+        total: g.total,
+        trajectory: Array.from(g.trajectory),
+      };
+    }
     return {
       name: objective.name,
       description: objective.description,
       goals: goals,
+      regular_goals: regular_goals,
     };
   }
 
@@ -300,11 +364,31 @@ class ObjectiveConverter {
       }));
     }
 
+    let regular_goals = [];
+    for (let id in objective.regular_goals) {
+      let g = objective.regular_goals[id];
+      let t = new Trajectory();
+      if (g.trajectory) {
+        for (let {date, value} of g.trajectory) {
+          t.insert(date, value);
+        }
+      }
+      regular_goals.push(new RegularGoal({
+        id: id,
+        name: g.name,
+        window: g.window,
+        target: g.target,
+        total: g.total,
+        trajectory: t,
+      }));
+    }
+
     return new Objective({
       id: snapshot.id,
       name: objective.name,
       description: objective.description,
       goals: goals,
+      regular_goals: regular_goals,
     });
   }
 }
@@ -808,6 +892,12 @@ class View {
       .append('div')
       .attr('class', 'goal')
       .call((n) => this._renderGoal(n));
+    node.selectAll('div.regular_goal')
+      .data((o) => o.regular_goals.sort(byName))
+      .enter()
+      .append('div')
+      .attr('class', 'regular_goal')
+      .call((n) => this._renderRegularGoal(n));
   }
 
   _bound(number, min, max) {
@@ -1076,6 +1166,22 @@ class View {
         add_current_field();
       }
     }
+  }
+
+  _renderRegularGoal(node) {
+    node.append('div')
+      .attr('class', 'name')
+      .text((g) => g.name);
+
+    let b = node.append('div')
+                .attr('class', 'level');
+    let now = new Date().getTime();
+    b.append('span')
+      .attr('class', (g) => g.budget_remaining(now) >= 0 ? 'within-budget' : 'out-of-budget')
+      .text((g) => `${(100 * g.budget_remaining(now)).toFixed(1)}%`);
+    b.append('span')
+      .attr('class', 'window')
+      .text((g) => ` of ${g.window}-day budget remaining`);
   }
 
   _renderSignIn() {

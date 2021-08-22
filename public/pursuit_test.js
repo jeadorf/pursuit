@@ -43,6 +43,12 @@ describe('objective', () => {
     let objective = new Objective({goals});
     expect(objective.goals).to.equal(goals);
   });
+
+  it('is constructed with regular goals', () => {
+    let regular_goals = [new RegularGoal({})];
+    let objective = new Objective({regular_goals});
+    expect(objective.regular_goals).to.equal(regular_goals);
+  });
 });
 
 
@@ -343,6 +349,92 @@ describe('goal', () => {
 });
 
 
+describe('regular goal', () => {
+  it('is constructed with a name', () => {
+    let name = 'Regular sleep';
+    let goal = new RegularGoal({name});
+    expect(goal.name).to.equal(name);
+  });
+
+  it('is constructed with an identifier', () => {
+    let id = 'e156d27b-1182-433e-9ax3-f29c78b1a113';
+    let goal = new RegularGoal({id});
+    expect(goal.id).to.equal(id);
+  });
+
+  it('is constructed with a window', () => {
+    let window = 90;
+    let goal = new RegularGoal({window});
+    expect(goal.window).to.equal(window);
+  });
+
+  it('is constructed with a target', () => {
+    let target = 0.7;
+    let goal = new RegularGoal({target});
+    expect(goal.target).to.equal(target);
+  });
+
+  it('is constructed with a total', () => {
+    let total = 28;
+    let goal = new RegularGoal({total});
+    expect(goal.total).to.equal(total);
+  });
+
+  it('has all budget remaining', () => {
+    let goal = new RegularGoal({
+      window: 10,
+      target: 0.75,
+      total: 10,
+      trajectory: (
+        new Trajectory()
+          .insert(0, 0)
+          .insert(10, 10)),
+    });
+    expect(goal.budget_remaining(10)).to.be.approximately(1, 0.000001);
+  });
+
+  it('has 20% budget remaining', () => {
+    let goal = new RegularGoal({
+      window: 10,
+      target: 0.75,
+      total: 10,
+      trajectory: (
+        new Trajectory()
+          .insert(0, 0)
+          .insert(10, 8)),
+    });
+    expect(goal.budget_remaining(10)).to.be.approximately(0.20, 0.000001);
+  });
+
+  it('has zero budget remaining', () => {
+    let goal = new RegularGoal({
+      window: 10,
+      target: 0.75,
+      total: 10,
+      trajectory: (
+        new Trajectory()
+          .insert(0, 0)
+          .insert(10, 7.5)),
+    });
+    expect(goal.budget_remaining(10)).to.be.approximately(0, 0.000001);
+  });
+
+  it('has -20% budget remaining', () => {
+    let goal = new RegularGoal({
+      window: 10,
+      target: 0.75,
+      total: 10,
+      trajectory: (
+        new Trajectory()
+          .insert(0, 0)
+          .insert(10, 7)),
+    });
+    expect(goal.budget_remaining(10)).to.be.approximately(-0.20, 0.000001);
+  });
+
+});
+
+
 describe('trajectory', () => {
   it('has length zero if empty', () => {
     let trajectory = new Trajectory();
@@ -526,7 +618,19 @@ describe('objective converter', () => {
               {date: 3622, value: 110},
             ],
           }
-        }
+        },
+        regular_goals: {
+          'e156d27b-1182-433e-9ax3-f29c78b1a113': {
+            name: 'name',
+            window: 10,
+            target: 0.75,
+            total: 10,
+            trajectory: (
+              new Trajectory()
+                .insert(0, 0)
+                .insert(10, 10)),
+          },
+        },
       })
     };
     let expected = new Objective({
@@ -546,7 +650,20 @@ describe('objective converter', () => {
               .insert(2490, 0)
               .insert(3622, 110))
         })
-      ]
+      ],
+      regular_goals: [
+        new RegularGoal({
+          id: 'e156d27b-1182-433e-9ax3-f29c78b1a113',
+          name: 'name',
+          window: 10,
+          target: 0.75,
+          total: 10,
+          trajectory: (
+            new Trajectory()
+              .insert(0, 0)
+              .insert(10, 10)),
+        }),
+      ],
     });
 
     expect(converter.fromFirestore(doc)).to.eql(expected);
@@ -566,6 +683,7 @@ describe('objective converter', () => {
       name: 'name',
       description: 'description',
       goals: [],
+      regular_goals: [],
     });
 
     expect(converter.fromFirestore(doc)).to.eql(expected);
@@ -591,7 +709,20 @@ describe('objective converter', () => {
               .insert(2490, 0)
               .insert(3622, 110)),
         })
-      ]
+      ],
+      regular_goals: [
+        new RegularGoal({
+          id: 'e156d27b-1182-433e-9ax3-f29c78b1a113',
+          name: 'name',
+          window: 10,
+          target: 0.75,
+          total: 10,
+          trajectory: (
+            new Trajectory()
+              .insert(0, 0)
+              .insert(10, 10)),
+        }),
+      ],
     });
     let expected = {
       name: 'name',
@@ -611,7 +742,21 @@ describe('objective converter', () => {
               {date: 3622, value: 110},
             ],
           }
+        },
+      regular_goals:
+        {
+          ['e156d27b-1182-433e-9ax3-f29c78b1a113']: {
+            id: 'e156d27b-1182-433e-9ax3-f29c78b1a113',
+            name: 'name',
+            window: 10,
+            target: 0.75,
+            total: 10,
+            trajectory: [
+              {date: 0, value: 0},
+              {date: 10, value: 10},
+            ],
         }
+      },
     };
 
     expect(converter.toFirestore(objective)).to.eql(expected);
