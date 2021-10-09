@@ -342,6 +342,8 @@ class ObjectiveConverter {
       regular_goals[g.id] = {
         id: g.id,
         name: g.name,
+        description: g.description,
+        unit: g.unit,
         window: g.window,
         target: g.target,
         total: g.total,
@@ -392,6 +394,8 @@ class ObjectiveConverter {
       regular_goals.push(new RegularGoal({
         id: id,
         name: g.name,
+        description: g.description,
+        unit: g.unit,
         window: g.window,
         target: g.target,
         total: g.total,
@@ -669,6 +673,8 @@ class Controller {
       .doc(objectiveId)
       .update({
         [`regular_goals.${goalId}.name`]: '',
+        [`regular_goals.${goalId}.description`]: '',
+        [`regular_goals.${goalId}.unit`]: '',
         [`regular_goals.${goalId}.total`]: 100,
         [`regular_goals.${goalId}.target`]: 0.9,
         [`regular_goals.${goalId}.window`]: 28,
@@ -1214,6 +1220,11 @@ class View {
       .attr('class', 'name')
       .text((g) => g.name);
 
+    let markdown = new SafeMarkdownRenderer();
+    node.append('div')
+      .attr('class', 'goal-description')
+      .html((g) => markdown.render(g.description ?? ''));
+
     let b = node.append('div')
                 .attr('class', 'level');
     let now = new Date().getTime();
@@ -1225,7 +1236,7 @@ class View {
       .text((g) => ` of ${g.window}-day budget remaining`);
     b.append('span')
       .attr('class', 'value')
-      .text((g) => `@ ${g.value(now)} of ${g.total}, target is ${(g.target * g.total).toFixed(2)}`);
+      .text((g) => `@ ${g.value(now)} of ${g.total} ${g.unit}, target is ${(g.target * g.total).toFixed(2)} ${g.unit}`);
   }
 
   _renderSignIn() {

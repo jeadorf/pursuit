@@ -194,3 +194,13 @@
   color: darkgrey;
   margin-left: 20px;
 }
+
+.goal-description {
+  color: darkgrey;
+  font-size: 14px;
+  margin: 2px 0;
+}
+
+.goal-description p:first-child {
+	margin: 0;
+}

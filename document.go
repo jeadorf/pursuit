@@ -26,11 +26,13 @@ type Goal struct {
 
 // RegularGoal for Firestore serialization/deserialization.
 type RegularGoal struct {
-	Name       string     `firestore:"name,omitempty"`
-	Window     int64      `firestore:"window,omitempty"`
-	Target     float32    `firestore:"target,omitempty"`
-	Total      float32    `firestore:"total,omitempty"`
-	Trajectory Trajectory `firestore:"trajectory,omitempty"`
+	Name        string     `firestore:"name,omitempty"`
+	Description string     `firestore:"description,omitempty"`
+	Unit        string     `firestore:"unit,omitempty"`
+	Window      int64      `firestore:"window,omitempty"`
+	Target      float32    `firestore:"target,omitempty"`
+	Total       float32    `firestore:"total,omitempty"`
+	Trajectory  Trajectory `firestore:"trajectory,omitempty"`
 }
 
 // Trajectory for Firestore serialization/deserialization.

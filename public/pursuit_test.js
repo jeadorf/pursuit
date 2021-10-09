@@ -638,6 +638,8 @@ describe('objective converter', () => {
         regular_goals: {
           'e156d27b-1182-433e-9ax3-f29c78b1a113': {
             name: 'name',
+            description: 'description',
+            unit: 'unit',
             window: 10,
             target: 0.75,
             total: 10,
@@ -671,6 +673,8 @@ describe('objective converter', () => {
         new RegularGoal({
           id: 'e156d27b-1182-433e-9ax3-f29c78b1a113',
           name: 'name',
+          description: 'description',
+          unit: 'unit',
           window: 10,
           target: 0.75,
           total: 10,
@@ -730,6 +734,8 @@ describe('objective converter', () => {
         new RegularGoal({
           id: 'e156d27b-1182-433e-9ax3-f29c78b1a113',
           name: 'name',
+          description: 'description',
+          unit: 'unit',
           window: 10,
           target: 0.75,
           total: 10,
@@ -764,6 +770,8 @@ describe('objective converter', () => {
           ['e156d27b-1182-433e-9ax3-f29c78b1a113']: {
             id: 'e156d27b-1182-433e-9ax3-f29c78b1a113',
             name: 'name',
+            description: 'description',
+            unit: 'unit',
             window: 10,
             target: 0.75,
             total: 10,
