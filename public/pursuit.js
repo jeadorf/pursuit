@@ -164,12 +164,16 @@ class RegularGoal {
 
   constructor({id = '',
                name = '',
+               description = '',
+               unit = '',
                window = 28,
                target = 0.0,
                total = 0.0,
                trajectory = new Trajectory()}) {
     this._id = id;
     this._name = name;
+    this._description = description,
+    this._unit = unit,
     this._window = window;
     this._target = target;
     this._total = total;
@@ -182,6 +186,14 @@ class RegularGoal {
 
   get name() {
     return this._name;
+  }
+
+  get description() {
+    return this._description;
+  }
+
+  get unit() {
+    return this._unit;
   }
 
   get window() {

@@ -362,6 +362,12 @@ describe('regular goal', () => {
     expect(goal.id).to.equal(id);
   });
 
+  it('is constructed with a description', () => {
+    let description = 'Get high-quality sleep on most days of the week.';
+    let goal = new RegularGoal({description});
+    expect(goal.description).to.equal(description);
+  });
+
   it('is constructed with a window', () => {
     let window = 90;
     let goal = new RegularGoal({window});
@@ -378,6 +384,12 @@ describe('regular goal', () => {
     let total = 28;
     let goal = new RegularGoal({total});
     expect(goal.total).to.equal(total);
+  });
+
+  it('is constructed with a unit', () => {
+    let unit = 'km';
+    let goal = new RegularGoal({unit});
+    expect(goal.unit).to.equal(unit);
   });
 
   it('has all budget remaining', () => {
