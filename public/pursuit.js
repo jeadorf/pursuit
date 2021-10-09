@@ -200,8 +200,12 @@ class RegularGoal {
     return this._trajectory;
   }
 
+  value(by_date) {
+    return (this.trajectory.at(by_date) - this.trajectory.at(by_date - this.window * DAY));
+  }
+
   budget_remaining(by_date) {
-    let actual = (this.trajectory.at(by_date) - this.trajectory.at(by_date - this.window * DAY)) / this.total;
+    let actual = this.value(by_date) / this.total;
     return (actual - this.target) / (1.0 - this.target);
   }
 }
@@ -1207,6 +1211,9 @@ class View {
     b.append('span')
       .attr('class', 'window')
       .text((g) => ` of ${g.window}-day budget remaining`);
+    b.append('span')
+      .attr('class', 'value')
+      .text((g) => `@ ${g.value(now)} of ${g.total}, target is ${(g.target * g.total).toFixed(2)}`);
   }
 
   _renderSignIn() {

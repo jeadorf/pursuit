@@ -391,6 +391,7 @@ describe('regular goal', () => {
           .insert(10, 10)),
     });
     expect(goal.budget_remaining(10)).to.be.approximately(1, 0.000001);
+    expect(goal.value(10)).to.be.approximately(10, 0.000001);
   });
 
   it('has 20% budget remaining', () => {
@@ -404,6 +405,7 @@ describe('regular goal', () => {
           .insert(10, 8)),
     });
     expect(goal.budget_remaining(10)).to.be.approximately(0.20, 0.000001);
+    expect(goal.value(10)).to.be.approximately(8, 0.000001);
   });
 
   it('has zero budget remaining', () => {
@@ -417,6 +419,7 @@ describe('regular goal', () => {
           .insert(10, 7.5)),
     });
     expect(goal.budget_remaining(10)).to.be.approximately(0, 0.000001);
+    expect(goal.value(10)).to.be.approximately(7.5, 0.000001);
   });
 
   it('has -20% budget remaining', () => {
@@ -430,6 +433,7 @@ describe('regular goal', () => {
           .insert(10, 7)),
     });
     expect(goal.budget_remaining(10)).to.be.approximately(-0.20, 0.000001);
+    expect(goal.value(10)).to.be.approximately(7, 0.000001);
   });
 
 });
