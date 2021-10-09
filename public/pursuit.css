@@ -204,3 +204,8 @@
 .goal-description p:first-child {
 	margin: 0;
 }
+
+.regular_goal {
+  border-bottom: 1px dotted lightgray;
+  padding: 15px 0;
+}
