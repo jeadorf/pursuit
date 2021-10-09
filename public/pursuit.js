@@ -631,6 +631,7 @@ class Controller {
       name: '',
       description: '',
       goals: [],
+      regular_goals: [],
     });
 
     firebase.firestore()
