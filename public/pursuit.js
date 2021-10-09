@@ -643,6 +643,25 @@ class Controller {
       });
   }
 
+  addRegularGoal(objectiveId) {
+    let goalId = uuidv4();
+    let now = new Date().getTime();
+    firebase.firestore()
+      .collection('users')
+      .doc(this._model.user_id)
+      .collection('objectives')
+      .doc(objectiveId)
+      .update({
+        [`regular_goals.${goalId}.name`]: '',
+        [`regular_goals.${goalId}.total`]: 100,
+        [`regular_goals.${goalId}.target`]: 0.9,
+        [`regular_goals.${goalId}.window`]: 28,
+        [`regular_goals.${goalId}.trajectory`]: [
+          {date: now, value: 0},
+        ],
+      });
+  }
+
   updateGoalStage(goalId, stage) {
     let objectiveId = null;
     for (let o of this._model.objectives) {
@@ -864,6 +883,12 @@ class View {
         });
       objectiveToolbar
         .append('a')
+        .text('+Regular Goal')
+        .on('click', (o) => {
+          this._controller.addRegularGoal(o.id);
+        });
+      objectiveToolbar
+        .append('a')
         .text('Delete')
         .on('click', (o) => {
           if (confirm(`Really delete the objective named "${o.name}"?`)) {
@@ -948,7 +973,7 @@ class View {
     let progressReport = new ProgressReport();
 
     // Draw status
-	svg.append('text')
+	  svg.append('text')
       .attr('class', 'status')
       .attr('text-anchor', 'middle')
       .attr('x', '50%')
