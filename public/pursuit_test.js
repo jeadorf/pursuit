@@ -830,6 +830,7 @@ describe('view', () => {
             target: 90,
           }),
         ],
+        regular_goals: [],
       }),
     ];
 
@@ -858,6 +859,7 @@ describe('view', () => {
             end: now + 1000 * 60 * 60 * 24 * 31,
           }),
         ],
+        regular_goals: [],
       }),
     ];
 
@@ -886,7 +888,9 @@ describe('view', () => {
           new Goal({
             name: 'Caesar',
           }),
-        ]}),
+        ],
+        regular_goals: [],
+      }),
     ];
 
     app.view.render();
@@ -908,6 +912,7 @@ describe('view', () => {
             name: 'Beta',
           }),
         ],
+        regular_goals: [],
       }),
     ];
 
@@ -930,6 +935,7 @@ describe('view', () => {
         name: 'Alpha',
         description: 'Practice handwriting.',
         goals: [],
+        regular_goals: [],
       }),
     ];
 
