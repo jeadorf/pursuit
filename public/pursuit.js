@@ -220,6 +220,20 @@ class RegularGoal {
     let actual = this.value(by_date) / this.total;
     return (actual - this.target) / (1.0 - this.target);
   }
+
+  budget_remaining_adjusted(by_date) {
+    if (this.partial_data(by_date)) {
+      let adjusted_total = 1.0 * Math.max(DAY, by_date - this.trajectory.earliest.date) / (this.window * DAY) * this.total;
+      let actual = this.value(by_date) / adjusted_total;
+      return Math.max(0.0, Math.min(1.0, (actual - this.target) / (1.0 - this.target)));
+    }
+    return this.budget_remaining(by_date);
+  }
+
+  partial_data(by_date) {
+    return this.trajectory.earliest.date > (by_date - this.window * DAY);
+  }
+
 }
 
 
@@ -940,11 +954,11 @@ class View {
       .append('div')
       .attr('class', 'goal')
       .call((n) => this._renderGoal(n));
-    node.selectAll('div.regular_goal')
+    node.selectAll('div.regular-goal')
       .data((o) => o.regular_goals.sort(byName))
       .enter()
       .append('div')
-      .attr('class', 'regular_goal')
+      .attr('class', 'regular-goal')
       .call((n) => this._renderRegularGoal(n));
   }
 
@@ -1217,27 +1231,30 @@ class View {
   }
 
   _renderRegularGoal(node) {
-    node.append('div')
+    let now = new Date().getTime();
+    let w = node.append('div')
+              .attr('class', (g) => g.budget_remaining_adjusted(now) > 0 ? 'within-budget' : 'out-of-budget');
+    
+    w.append('div')
       .attr('class', 'name')
       .text((g) => g.name);
 
     let markdown = new SafeMarkdownRenderer();
-    node.append('div')
+    w.append('div')
       .attr('class', 'goal-description')
       .html((g) => markdown.render(g.description ?? ''));
 
-    let b = node.append('div')
+    let b = w.append('div')
                 .attr('class', 'level');
-    let now = new Date().getTime();
     b.append('span')
-      .attr('class', (g) => g.budget_remaining(now) >= 0 ? 'within-budget' : 'out-of-budget')
-      .text((g) => `${(100 * g.budget_remaining(now)).toFixed(1)}%`);
+      .attr('class', 'budget')
+      .text((g) => `${(100 * g.budget_remaining_adjusted(now)).toFixed(1)}%`);
     b.append('span')
       .attr('class', 'window')
-      .text((g) => ` of ${g.window}-day budget remaining`);
+      .text((g) => ` of budget remaining${g.partial_data(now) ? ' (partial data)' : ''}`);
     b.append('span')
       .attr('class', 'value')
-      .text((g) => `@ ${g.value(now)} of ${g.total} ${g.unit}, target is ${(g.target * g.total).toFixed(2)} ${g.unit}`);
+      .text((g) => `@ ${g.value(now)} of ${g.total} ${g.unit}, targeting ${(g.target * g.total).toFixed(2)} over ${g.window}-day window`);
   }
 
   _renderSignIn() {

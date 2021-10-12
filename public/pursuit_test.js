@@ -448,6 +448,20 @@ describe('regular goal', () => {
     expect(goal.value(10)).to.be.approximately(7, 0.000001);
   });
 
+  it('has budget remaining if partial data available', () => {
+    let goal = new RegularGoal({
+      window: 28,
+      target: 0.6,
+      total: 20,
+      trajectory: (
+        new Trajectory()
+          .insert(14 * DAY, 0)
+          .insert(28 * DAY, 8)),
+    });
+    expect(goal.budget_remaining_adjusted(28 * DAY)).to.be.approximately(0.50, 0.000001);
+    expect(goal.value(28 * DAY)).to.be.approximately(8, 0.000001);
+  });
+
 });
 
 
