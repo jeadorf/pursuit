@@ -102,6 +102,10 @@
   color: #cc9976;
 }
 
+.goal {
+  padding: 5px;
+}
+
 .chart {
   width: 100%;
   height: 65px;
