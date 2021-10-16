@@ -1289,10 +1289,10 @@ let vue = new Vue({
   },
   template: `
     <div class='app'>
-      <div id='signin' v-if='!signedIn'><a href='#' v-on:click="signIn">Sign in with Google</a></div>
-      <div class='toolbar' v-if='mode'>
-        <button v-on:click='plan' v-show='!isPlanning'>Plan</button>
-        <button v-on:click='view' v-show='!isViewing'>View</button>
+      <div class='toolbar'>
+        <button id='signin' v-show='!signedIn' v-on:click="signIn">Sign in with Google</button>
+        <button v-on:click='plan' v-show='isViewing'>Plan</button>
+        <button v-on:click='view' v-show='isPlanning'>View</button>
         <button v-on:click='createObjective' v-show='isPlanning'>Add objective</button>
       </div>
       <objective
