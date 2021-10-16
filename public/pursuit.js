@@ -558,6 +558,103 @@ Vue.component('objective', {
           ],
         });
     },
+    updateGoalName(goal, name) {
+      let update = null;
+      update = {
+        [`goals.${goal.id}.name`]: name,
+      };
+      
+      firebase.firestore()
+        .collection('users')
+          .doc(this.user_id)
+          .collection('objectives')
+          .doc(this.objective.id)
+          .update(update);
+    },
+    updateGoalStart(goal, start) {
+      if (!confirm(`Changing the baseline will delete the trajectory of "${goal.name}", proceed?`)) {
+        return;
+      }
+      let t = new Trajectory();
+      t.insert(goal.start, goal.baseline);
+      let update = {
+        [`goals.${goal.id}.start`]: start,
+        [`goals.${goal.id}.trajectory`]: Array.from(t),
+      };
+      
+      firebase.firestore()
+        .collection('users')
+          .doc(this.user_id)
+          .collection('objectives')
+          .doc(this.objective.id)
+          .update(update);
+    },
+    updateGoalEnd(goal, end) {
+      let update = {
+        [`goals.${goal.id}.end`]: end,
+      };
+      
+      firebase.firestore()
+        .collection('users')
+          .doc(this.user_id)
+          .collection('objectives')
+          .doc(this.objective.id)
+          .update(update);
+    },
+    updateGoalBaseline(goal, baseline) {
+      if (!confirm(`Changing the baseline will delete trajectory of "${goal.name}", proceed?`)) {
+        return;
+      }
+      let t = new Trajectory();
+      t.insert(goal.start, baseline);
+      let update = {
+        [`goals.${goal.id}.start`]: goal.start,
+        [`goals.${goal.id}.trajectory`]: Array.from(t),
+      };
+      
+      firebase.firestore()
+        .collection('users')
+          .doc(this.user_id)
+          .collection('objectives')
+          .doc(this.objective.id)
+          .update(update);
+    },
+    updateGoalTarget(goal, target) {
+      let update = {
+        [`goals.${goal.id}.target`]: target,
+      };
+      
+      firebase.firestore()
+        .collection('users')
+          .doc(this.user_id)
+          .collection('objectives')
+          .doc(this.objective.id)
+          .update(update);
+    },
+    updateGoalCurrent(goal, current) {
+      let t = _.cloneDeep(goal.trajectory);
+      t.insert(new Date().getTime(), current);
+      t.compact_head(HOUR);
+
+      firebase.firestore()
+        .collection('users')
+        .doc(this.user_id)
+        .collection('objectives')
+        .doc(this.objective.id)
+        .update({
+          [`goals.${goal.id}.trajectory`]: Array.from(t),
+        });
+    },
+    updateGoalUnit(goal, unit) {
+      firebase.firestore()
+        .collection('users')
+        .doc(this.user_id)
+        .collection('objectives')
+        .doc(this.objective.id)
+        .update({
+          [`goals.${goal.id}.unit`]: unit,
+        });
+    },
     deleteGoal: function(goal) {
       if (confirm(`Really delete the goal "${goal.name}"?`)) {
         firebase.firestore()
@@ -608,6 +705,13 @@ Vue.component('objective', {
         v-bind:goal="g"
         v-bind:mode='mode'
         v-bind:key="g.id"
+        v-on:update-name="updateGoalName($event.goal, $event.name)"
+        v-on:update-start="updateGoalStart($event.goal, $event.start)"
+        v-on:update-end="updateGoalEnd($event.goal, $event.end)"
+        v-on:update-baseline="updateGoalBaseline($event.goal, $event.baseline)"
+        v-on:update-target="updateGoalTarget($event.goal, $event.target)"
+        v-on:update-current="updateGoalCurrent($event.goal, $event.current)"
+        v-on:update-unit="updateGoalUnit($event.goal, $event.unit)"
         v-on:delete="deleteGoal($event)"
       ></goal>
       <regular_goal
@@ -661,13 +765,90 @@ Vue.component('goal', {
           return '';
       }
     },
+    name: {
+      get: function() {
+        return this.goal.name;
+      },
+      set: _.debounce(function(name) {
+        this.$emit('update-name', {
+          goal: this.goal,
+          name: name,
+        });
+      }, 1000),
+    },
+    start: {
+      get: function() {
+        return new Date(this.goal.start).toISOString().slice(0, 10);
+      },
+      set: _.debounce(function(start) {
+        this.$emit('update-start', {
+          goal: this.goal,
+          start: new Date(start).getTime(),
+        });
+      }, 1000),
+    },
+    end: {
+      get: function() {
+        return new Date(this.goal.end).toISOString().slice(0, 10);
+      },
+      set: _.debounce(function(end) {
+        this.$emit('update-end', {
+          goal: this.goal,
+          end: new Date(end).getTime(),
+        });
+      }, 1000),
+    },
+    baseline: {
+      get: function() {
+        return this.goal.baseline;
+      },
+      set: _.debounce(function(baseline) {
+        this.$emit('update-baseline', {
+          goal: this.goal,
+          baseline: baseline,
+        });
+      }, 1000),
+    },
+    target: {
+      get: function() {
+        return this.goal.target;
+      },
+      set: _.debounce(function(target) {
+        this.$emit('update-target', {
+          goal: this.goal,
+          target: target,
+        });
+      }, 1000),
+    },
+    current: {
+      get: function() {
+        return this.goal.trajectory.latest.value;
+      },
+      set: _.debounce(function(current) {
+        this.$emit('update-current', {
+          goal: this.goal,
+          current: current,
+        });
+      }, 1000),
+    },
+    unit: {
+      get: function() {
+        return this.goal.unit
+      },
+      set: _.debounce(function(unit) {
+        this.$emit('update-unit', {
+          goal: this.goal,
+          unit: unit,
+        });
+      }, 1000),
+    },
   },
   props: ['goal', 'mode'],
   template: `
     <div class='goal'>
       <div class='name'>{{ goal.name }}</div>
       <div v-show="isPlanning">
-        <button v-on:click="$emit('delete', goal)">delete goal</button>
+        <button v-on:click="$emit('delete', goal)">delete</button>
       </div>
       <svg class='chart' preserveAspectRatio='none'>
         <text
@@ -718,9 +899,17 @@ Vue.component('goal', {
           x='100%'
           y=48>{{ goal.target }} {{ goal.unit }}</text>
       </svg>
+      <div class='edit' v-show="isPlanning">
+        <div><div>Name</div> <input type="text" v-model="name"></div>
+        <div><div>Start</div> <input type="date" v-model="start"></div>
+        <div><div>End</div> <input type="date" v-model="end"></div>
+        <div><div>Baseline</div> <input type="number" v-model="baseline"></div>
+        <div><div>Target</div> <input type="number" v-model="target"></div>
+        <div><div>Current</div> <input type="number" v-model="current"></div>
+        <div><div>Unit</div> <input type="text" v-model="unit"></div>
+      </div>
     </div>
   `,
-
 });
 
 Vue.component('regular_goal', {
@@ -779,7 +968,7 @@ Vue.component('regular_goal', {
       <div :class="budgetClass">
         <div class="name">{{ goal.name }}</div>
         <div v-show="isPlanning">
-          <button v-on:click="$emit('delete', goal)">delete goal</button>
+          <button v-on:click="$emit('delete', goal)">delete</button>
         </div>
         <div class="goal-description">{{ goal.description }}</div>
         <div class="level">
