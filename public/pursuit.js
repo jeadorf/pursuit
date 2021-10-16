@@ -667,6 +667,92 @@ Vue.component('objective', {
           });
       }
     },
+    updateRegularGoalName(goal, name) {
+      let update = {
+        [`regular_goals.${goal.id}.name`]: name,
+      };
+      
+      firebase.firestore()
+        .collection('users')
+          .doc(this.user_id)
+          .collection('objectives')
+          .doc(this.objective.id)
+          .update(update);
+    },
+    updateRegularGoalDescription(goal, description) {
+      let update = {
+        [`regular_goals.${goal.id}.description`]: description,
+      };
+      
+      firebase.firestore()
+        .collection('users')
+          .doc(this.user_id)
+          .collection('objectives')
+          .doc(this.objective.id)
+          .update(update);
+    },
+    updateRegularGoalWindow(goal, window) {
+      let update = {
+        [`regular_goals.${goal.id}.window`]: window,
+      };
+      
+      firebase.firestore()
+        .collection('users')
+          .doc(this.user_id)
+          .collection('objectives')
+          .doc(this.objective.id)
+          .update(update);
+    },
+    updateRegularGoalTarget(goal, target) {
+      let update = {
+        [`regular_goals.${goal.id}.target`]: target,
+      };
+      
+      firebase.firestore()
+        .collection('users')
+          .doc(this.user_id)
+          .collection('objectives')
+          .doc(this.objective.id)
+          .update(update);
+    },
+    updateRegularGoalTotal(goal, total) {
+      let update = {
+        [`regular_goals.${goal.id}.total`]: total,
+      };
+      
+      firebase.firestore()
+        .collection('users')
+          .doc(this.user_id)
+          .collection('objectives')
+          .doc(this.objective.id)
+          .update(update);
+    },
+    updateRegularGoalUnit(goal, unit) {
+      let update = {
+        [`regular_goals.${goal.id}.unit`]: unit,
+      };
+      
+      firebase.firestore()
+        .collection('users')
+          .doc(this.user_id)
+          .collection('objectives')
+          .doc(this.objective.id)
+          .update(update);
+    },
+    updateRegularGoalCurrent(goal, current) {
+      let t = _.cloneDeep(goal.trajectory);
+      t.insert(new Date().getTime(), current);
+      t.compact_head(HOUR);
+
+      firebase.firestore()
+        .collection('users')
+        .doc(this.user_id)
+        .collection('objectives')
+        .doc(this.objective.id)
+        .update({
+          [`regular_goals.${goal.id}.trajectory`]: Array.from(t),
+        });
+    },
     deleteRegularGoal: function(goal) {
       if (confirm(`Really delete the regular goal "${goal.name}"?`)) {
         firebase.firestore()
@@ -693,7 +779,7 @@ Vue.component('objective', {
   props: ['mode', 'objective', 'user_id'],
   template: `
     <div class='objective'>
-      <div class='objective-name'> {{ objective.name }} </div>
+      <div class='objective-name'>{{ objective.name }} <span class="id" v-show="isPlanning">{{ objective.id }}</span></div>
       <div v-show='isPlanning'>
         <button v-on:click='addGoal'>Add goal</button>
         <button v-on:click='addRegularGoal'>Add regular goal</button>
@@ -719,6 +805,13 @@ Vue.component('objective', {
         v-bind:goal="g"
         v-bind:mode='mode'
         v-bind:key="g.id"
+        v-on:update-name="updateRegularGoalName($event.goal, $event.name)"
+        v-on:update-description="updateRegularGoalDescription($event.goal, $event.description)"
+        v-on:update-window="updateRegularGoalWindow($event.goal, $event.window)"
+        v-on:update-target="updateRegularGoalTarget($event.goal, $event.target)"
+        v-on:update-total="updateRegularGoalTotal($event.goal, $event.total)"
+        v-on:update-current="updateRegularGoalCurrent($event.goal, $event.current)"
+        v-on:update-unit="updateRegularGoalUnit($event.goal, $event.unit)"
         v-on:delete="deleteRegularGoal($event)"
       ></regular_goal>
     </div>
@@ -752,6 +845,29 @@ Vue.component('goal', {
     },
     startDate: function() {
       return new Date(this.goal.start).toISOString().slice(0, 10);
+    },
+    trajectory_last_updated: function() {
+      let format_date = (millis) => {
+				let is = (a, b) => {
+					return (
+						a.getDate() == b.getDate() &&
+						a.getMonth() == b.getMonth() &&
+						a.getFullYear() == b.getFullYear());
+				};
+        let date = new Date(millis);
+        let today = new Date();
+        let yesterday = new Date(today.getTime() - DAY);
+				let suffix = '';
+				if (is(date, today)) {
+					suffix = ' (today)';
+				}
+				if (is(date, yesterday)) {
+					suffix = ' (yesterday)';
+				}
+        return new Date(date).toLocaleString() + suffix;
+      };
+
+      return `last updated ${format_date(this.goal.trajectory.latest.date)}`;
     },
     velocityReport: function() {
       let now = new Date().getTime();
@@ -846,7 +962,7 @@ Vue.component('goal', {
   props: ['goal', 'mode'],
   template: `
     <div class='goal'>
-      <div class='name'>{{ goal.name }}</div>
+      <div class='name'>{{ goal.name }} <span class="id" v-show="isPlanning">{{ goal.id }}</span></div>
       <div v-show="isPlanning">
         <button v-on:click="$emit('delete', goal)">delete</button>
       </div>
@@ -905,7 +1021,7 @@ Vue.component('goal', {
         <div><div>End</div> <input type="date" v-model="end"></div>
         <div><div>Baseline</div> <input type="number" v-model="baseline"></div>
         <div><div>Target</div> <input type="number" v-model="target"></div>
-        <div><div>Current</div> <input type="number" v-model="current"></div>
+        <div><div>Current</div> <input type="number" v-model="current"> <div>{{ trajectory_last_updated }}</div></div>
         <div><div>Unit</div> <input type="text" v-model="unit"></div>
       </div>
     </div>
@@ -944,6 +1060,10 @@ Vue.component('regular_goal', {
       let now = new Date().getTime();
       return (100 * this.goal.budget_remaining_adjusted(now)).toFixed(0) + '%';
     },
+    descriptionHtml: function() {
+      let markdown = new SafeMarkdownRenderer();
+      return markdown.render(this.goal.description);
+    },
     isPlanning: function() {
       return this.mode == 'plan';
     },
@@ -961,16 +1081,116 @@ Vue.component('regular_goal', {
               targeting ${(this.goal.target * this.goal.total).toFixed(2)}
               over ${this.goal.window}-day window`;
     },
+    trajectory_last_updated: function() {
+      let format_date = (millis) => {
+				let is = (a, b) => {
+					return (
+						a.getDate() == b.getDate() &&
+						a.getMonth() == b.getMonth() &&
+						a.getFullYear() == b.getFullYear());
+				};
+        let date = new Date(millis);
+        let today = new Date();
+        let yesterday = new Date(today.getTime() - DAY);
+				let suffix = '';
+				if (is(date, today)) {
+					suffix = ' (today)';
+				}
+				if (is(date, yesterday)) {
+					suffix = ' (yesterday)';
+				}
+        return new Date(date).toLocaleString() + suffix;
+      };
+
+      return `last updated ${format_date(this.goal.trajectory.latest.date)}`;
+    },
+    name: {
+      get: function() {
+        return this.goal.name;
+      },
+      set: _.debounce(function(name) {
+        this.$emit('update-name', {
+          goal: this.goal,
+          name: name,
+        });
+      }, 1000),
+    },
+    description: {
+      get: function() {
+        return this.goal.description;
+      },
+      set: _.debounce(function(description) {
+        this.$emit('update-description', {
+          goal: this.goal,
+          description: description,
+        });
+      }, 1000),
+    },
+    window: {
+      get: function() {
+        return this.goal.window;
+      },
+      set: _.debounce(function(window) {
+        this.$emit('update-window', {
+          goal: this.goal,
+          window: window,
+        });
+      }, 1000),
+    },
+    target: {
+      get: function() {
+        return this.goal.target;
+      },
+      set: _.debounce(function(target) {
+        this.$emit('update-target', {
+          goal: this.goal,
+          target: target,
+        });
+      }, 1000),
+    },
+    total: {
+      get: function() {
+        return this.goal.total;
+      },
+      set: _.debounce(function(total) {
+        this.$emit('update-total', {
+          goal: this.goal,
+          total: total,
+        });
+      }, 1000),
+    },
+    current: {
+      get: function() {
+        return this.goal.trajectory.latest.value;
+      },
+      set: _.debounce(function(current) {
+        this.$emit('update-current', {
+          goal: this.goal,
+          current: current,
+        });
+      }, 1000),
+    },
+    unit: {
+      get: function() {
+        return this.goal.unit
+      },
+      set: _.debounce(function(unit) {
+        this.$emit('update-unit', {
+          goal: this.goal,
+          unit: unit,
+        });
+      }, 1000),
+    },
   },
   props: ['goal', 'mode'],
   template: `
     <div class="regular-goal">
       <div :class="budgetClass">
-        <div class="name">{{ goal.name }}</div>
+        <div class="name">{{ goal.name }} <span class="id" v-show="isPlanning">{{ goal.id }}</span></div>
         <div v-show="isPlanning">
           <button v-on:click="$emit('delete', goal)">delete</button>
         </div>
-        <div class="goal-description">{{ goal.description }}</div>
+        <div class="goal-description"><span v-html='descriptionHtml'></span></div>
         <div class="level">
           <span class="budget">{{ budgetRemaining }}</span>
           <span class="window"> of budget remaining {{ partialData }}</span>
@@ -981,6 +1201,15 @@ Vue.component('regular_goal', {
           </svg>
         </div>
       </div>
+      <div class='edit' v-show="isPlanning">
+        <div><div>Name</div> <input type="text" v-model="name"></div>
+        <div><div>Description</div> <input type="text" v-model="description"></div>
+        <div><div>Window</div> <input type="number" v-model="window"></div>
+        <div><div>Target</div> <input type="number" v-model="target"></div>
+        <div><div>Total</div> <input type="number" v-model="total"></div>
+        <div><div>Current</div> <input type="number" v-model="current"> <div>{{ trajectory_last_updated }}</div></div>
+        <div><div>Unit</div> <input type="text" v-model="unit"></div>
+      </div>
     </div>
   `
 });
@@ -988,7 +1217,7 @@ Vue.component('regular_goal', {
 let vue = new Vue({
   el: '#app',
   data: {
-    mode: 'view',
+    mode: '',
     objectives: [
     ],
     user_id: '',
@@ -1061,7 +1290,7 @@ let vue = new Vue({
   template: `
     <div class='app'>
       <div id='signin' v-if='!signedIn'><a href='#' v-on:click="signIn">Sign in with Google</a></div>
-      <div class='toolbar'>
+      <div class='toolbar' v-if='mode'>
         <button v-on:click='plan' v-show='!isPlanning'>Plan</button>
         <button v-on:click='view' v-show='!isViewing'>View</button>
         <button v-on:click='createObjective' v-show='isPlanning'>Add objective</button>
@@ -1079,6 +1308,7 @@ let vue = new Vue({
 
 firebase.auth().onAuthStateChanged((user) => {
   if (user) {
+    vue.mode = 'view';
     vue.user_id = user.uid;
     vue.listenToObjectives();
   }
