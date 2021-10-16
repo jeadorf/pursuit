@@ -577,30 +577,25 @@ Vue.component('goal', {
       <div class='name'>{{ goal.name }}</div>
       <svg class='chart' preserveAspectRatio='none'>
         <text
-            class='velocity'
-            text-anchor='middle'
-            x='50%'
-            y='60'>{{ velocityReport }}</text>
-        <text
             class='status'
             text-anchor='middle'
             x='50%'
             y='20'>{{ progressReport }}</text>
         <rect
             width='100%'
-            height=6
+            height=2
             fill='lightgrey'
-            y=32></rect>
+            y=28></rect>
         <rect
             class='current'
             :width='progressPercentBounded'
-            height=18
+            height=6
             :fill='progressFillColor'
             y=26></rect>
         <rect
             class='today'
             width='0.5%'
-            height=26
+            height=14
             :x='currentXPos'
             :y=22></rect>
         <text
@@ -617,12 +612,17 @@ Vue.component('goal', {
           class='baseline'
           text-anchor='start'
           x=0
-          y=60>{{ goal.baseline }}</text>
+          y=48>{{ goal.baseline }}</text>
+        <text
+            class='velocity'
+            text-anchor='middle'
+            x='50%'
+            y='48'>{{ velocityReport }}</text>
         <text
           class='target'
           text-anchor='end'
           x='100%'
-          y=60>{{ goal.target }} {{ goal.unit }}</text>
+          y=48>{{ goal.target }} {{ goal.unit }}</text>
       </svg>
     </div>
   `,
