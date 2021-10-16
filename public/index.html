@@ -25,7 +25,14 @@
   <link href='https://fonts.googleapis.com/css2?family=Mulish&display=swap' rel='stylesheet'>
 </head>
 <body>
-  <div id='app'></div>
+  <div id='app'>
+    <div id='signin' v-if='!signedIn'><a href='#' v-on:click="signIn">Sign in with Google</a></div>
+    <objective
+      v-for="o in objectives"
+      v-bind:objective="o"
+      v-bind:key="o.id"
+    ></objective>
+  </div>
 
   <script src="https://apis.google.com/js/api.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -42,8 +49,5 @@
   <!-- development version -->
   <script src='https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js'></script>
   <script src='pursuit.js'></script>
-  <script>
-    vue.app.controller.run();
-  </script>
 </body>
 </html>

@@ -452,364 +452,6 @@ class SafeMarkdownRenderer {
   }
 }
 
-
-class Model {
-  constructor() {
-    this._objectives = [];
-    this._user_id = null;
-    this._mode = 'view';
-    this._show_archived = false;
-    this._show_drafts = false;
-  }
-
-  get objectives() {
-    return this._objectives;
-  }
-
-  set objectives(value) {
-    this._objectives = value;
-  }
-
-  get user_id() {
-    return this._user_id;
-  }
-
-  set user_id(value) {
-    this._user_id = value;
-  }
-
-  get mode() {
-    return this._mode;
-  }
-
-  set mode(mode) {
-    this._mode = mode;
-  }
-
-  get show_archived() {
-    return this._show_archived;
-  }
-
-  set show_archived(value) {
-    this._show_archived = value;
-  }
-
-  get show_drafts() {
-    return this._show_drafts;
-  }
-
-  set show_drafts(value) {
-    this._show_drafts = value;
-  }
-}
-
-
-class Controller {
-  set model(value) {
-    this._model = value;
-  }
-
-  set view(value) {
-    this._view = value;
-  }
-
-  signInWithGoogle() {
-    let provider = new firebase.auth.GoogleAuthProvider();
-    firebase.auth().signInWithRedirect(provider);
-  }
-
-  run() {
-    firebase.auth().onAuthStateChanged((user) => {
-      if (user) {
-        this._model.user_id = user.uid;
-        this.listenToObjectives();
-      }
-    });
-    this._view.render();
-  }
-
-  listenToObjectives() {
-    firebase.firestore()
-      .collection('users')
-      .doc(this._model.user_id)
-      .collection('objectives')
-      .withConverter(new ObjectiveConverter())
-      .onSnapshot((snapshot) => {
-        let objectives = [];
-        snapshot.forEach((d) => {
-          objectives.push(d.data());
-        });
-        this._model.objectives = objectives;
-        vue.objectives = objectives;        
-        this._view.render();
-      });
-  }
-
-  updateGoal(goalId, key, value) {
-    let objectiveId = null;
-    let goal = null;
-    for (let o of this._model.objectives) {
-      for (let g of o.goals) {
-        if (g.id == goalId) {
-          objectiveId = o.id;
-          goal = g;
-        }
-      }
-    }
-    
-    let update = null;
-    if (key == 'baseline') {
-      if (value == goal.baseline) {
-        return;
-      }
-      goal.trajectory.insert(goal.start, value);
-      update = {
-        [`goals.${goalId}.trajectory`]: Array.from(goal.trajectory)
-      };
-    } else if (key == 'start') {
-      if (value == goal.start) {
-        return;
-      }
-
-      let baseline = goal.baseline;
-      goal.trajectory.remove(goal.start);
-      goal.trajectory.insert(value, baseline);
-      update = {
-        [`goals.${goalId}.start`]: value,
-        [`goals.${goalId}.trajectory`]: Array.from(goal.trajectory)
-      };
-    } else {
-      update = {
-        [`goals.${goalId}.${key}`]: value
-      };
-    }
-
-    firebase.firestore()
-      .collection('users')
-      .doc(this._model.user_id)
-      .collection('objectives')
-      .doc(objectiveId)
-      .update(update);
-  }
-
-  updateTrajectory(goalId, value) {
-    let objectiveId = null;
-    let trajectory = null;
-    for (let o of this._model.objectives) {
-      for (let g of o.goals) {
-        if (g.id == goalId) {
-          objectiveId = o.id;
-          if (g.trajectory.latest.value == value) {
-            // This avoids updates when one of the input fields for progress
-            // loses focus, but when the user did not change the value.
-            return;
-          }
-          g.trajectory.insert(new Date().getTime(), value);
-          g.trajectory.compact_head(HOUR);
-          trajectory = Array.from(g.trajectory);
-          break;
-        }
-      }
-    }
-
-    firebase.firestore()
-      .collection('users')
-      .doc(this._model.user_id)
-      .collection('objectives')
-      .doc(objectiveId)
-      .update({
-        [`goals.${goalId}.trajectory`]: trajectory,
-      });
-  }
-
-  updateObjectiveName(objectiveId, name) {
-    firebase.firestore()
-      .collection('users')
-      .doc(this._model.user_id)
-      .collection('objectives')
-      .doc(objectiveId)
-      .update({name});
-  }
-
-  updateObjectiveDescription(objectiveId, description) {
-    firebase.firestore()
-      .collection('users')
-      .doc(this._model.user_id)
-      .collection('objectives')
-      .doc(objectiveId)
-      .update({description});
-  }
-
-  addObjective() {
-    let objective = new Objective({
-      id: uuidv4(),
-      name: '',
-      description: '',
-      goals: [],
-      regular_goals: [],
-    });
-
-    firebase.firestore()
-      .collection('users')
-      .doc(this._model.user_id)
-      .collection('objectives')
-      .doc(objective.id)
-      .withConverter(new ObjectiveConverter())
-      .set(objective);
-  }
-
-  addGoal(objectiveId) {
-    let goalId = uuidv4();
-    let now = new Date().getTime();
-    firebase.firestore()
-      .collection('users')
-      .doc(this._model.user_id)
-      .collection('objectives')
-      .doc(objectiveId)
-      .update({
-        [`goals.${goalId}.name`]: '',
-        [`goals.${goalId}.unit`]: '',
-        [`goals.${goalId}.start`]: now,
-        [`goals.${goalId}.end`]: now + 7 * DAY,
-        [`goals.${goalId}.target`]: 100,
-        [`goals.${goalId}.stage`]: Stage.PLEDGED,
-        [`goals.${goalId}.trajectory`]: [
-          {date: now, value: 0},
-        ],
-      });
-  }
-
-  addRegularGoal(objectiveId) {
-    let goalId = uuidv4();
-    let now = new Date().getTime();
-    firebase.firestore()
-      .collection('users')
-      .doc(this._model.user_id)
-      .collection('objectives')
-      .doc(objectiveId)
-      .update({
-        [`regular_goals.${goalId}.name`]: '',
-        [`regular_goals.${goalId}.description`]: '',
-        [`regular_goals.${goalId}.unit`]: '',
-        [`regular_goals.${goalId}.total`]: 100,
-        [`regular_goals.${goalId}.target`]: 0.9,
-        [`regular_goals.${goalId}.window`]: 28,
-        [`regular_goals.${goalId}.trajectory`]: [
-          {date: now, value: 0},
-        ],
-      });
-  }
-
-  updateGoalStage(goalId, stage) {
-    let objectiveId = null;
-    for (let o of this._model.objectives) {
-      for (let g of o.goals) {
-        if (g.id == goalId) {
-          objectiveId = o.id;
-        }
-      }
-    }
-
-    firebase.firestore()
-      .collection('users')
-      .doc(this._model.user_id)
-      .collection('objectives')
-      .doc(objectiveId)
-      .update({
-        [`goals.${goalId}.stage`]: stage,
-      });
-  }
-
-  deleteGoal(goalId) {
-    let objectiveId = null;
-    for (let o of this._model.objectives) {
-      for (let g of o.goals) {
-        if (g.id == goalId) {
-          objectiveId = o.id;
-        }
-      }
-    }
-
-    firebase.firestore()
-      .collection('users')
-      .doc(this._model.user_id)
-      .collection('objectives')
-      .doc(objectiveId)
-      .update({
-        [`goals.${goalId}`]: firebase.firestore.FieldValue.delete()
-      });
-  }
-
-  deleteObjective(objectiveId) {
-    firebase.firestore()
-      .collection('users')
-      .doc(this._model.user_id)
-      .collection('objectives')
-      .doc(objectiveId)
-      .delete();
-  }
-}
-
-
-class App {
-  constructor() {
-    this._model = new Model();
-    this._view = new View();
-    this._controller = new Controller();
-
-    // Bind
-    this._view.model = this._model;
-    this._view.controller = this._controller;
-    this._controller.model = this._model;
-    this._controller.view = this._view;
-  }
-
-  get model() {
-    return this._model;
-  }
-
-  get view() {
-    return this._view;
-  }
-
-  get controller() {
-    return this._controller;
-  }
-}
-
-
-class View {
-
-  set model(value) {
-    this._model = value;
-  }
-
-  set controller(value) {
-    this._controller = value;
-  }
-
-  render() {
-    if (this._model.user_id) {
-      // Technically, this is not necessary as the sign in
-      // will redirect.
-      let signIn = document.querySelector('#signin');
-      signIn.style.display = '';
-    } else {
-      this._renderSignIn();
-    }
-  }
-
-  _renderSignIn() {
-    let signIn = document.querySelector('#signin');
-    signIn.style.display = 'block';
-    let signInLink = document.createElement('a');
-    signInLink.href = '#';
-    signInLink.innerText = 'Sign in with Google';
-    signInLink.onclick = () => this._controller.signInWithGoogle();
-    signIn.appendChild(signInLink);
-  }
-}
-
 class VelocityReport {
   report(goal, by_date) {
     let v = goal.velocity_30d(by_date) * DAY;
@@ -933,7 +575,7 @@ Vue.component('goal', {
   template: `
     <div class='goal'>
       <div class='name'>{{ goal.name }}</div>
-      <svg class='chart' viewBox='0 0 100% 65'>
+      <svg class='chart' preserveAspectRatio='none'>
         <text
             class='velocity'
             text-anchor='middle'
@@ -1044,7 +686,7 @@ Vue.component('regular_goal', {
           <span class="budget">{{ budgetRemaining }}</span>
           <span class="window"> of budget remaining {{ partialData }}</span>
           <span class="value">{{ status }}</span>
-          <svg class="chart" viewBox="0 0 100% 65" style="height: 6px">
+          <svg class="chart" preserveAspectRatio='none' style="height: 6px">
             <rect y="2" height="2" width="100%" fill="#ccc"></rect>
             <rect y="0" height="6" :x="barXPos" :width="barWidth" :fill="barColor"></rect>
           </svg>
@@ -1057,18 +699,41 @@ Vue.component('regular_goal', {
 let vue = new Vue({
   el: '#app',
   data: {
-    app: new App(),
     objectives: [
     ],
+    user_id: '',
   },
-  template: `
-    <div class='app'>
-      <div id='signin'></div>
-      <objective
-        v-for="o in objectives"
-        v-bind:objective="o"
-        v-bind:key="o.id"
-      ></objective>
-    </div>
-  `
+  computed: {
+    signedIn: function() {
+      return this.user_id != '';
+    },
+  },
+  methods: {
+    listenToObjectives: function() {
+      firebase.firestore()
+        .collection('users')
+        .doc(this.user_id)
+        .collection('objectives')
+        .withConverter(new ObjectiveConverter())
+        .onSnapshot((snapshot) => {
+          let objectives = [];
+          snapshot.forEach((d) => {
+            objectives.push(d.data());
+          });
+          this.objectives = objectives;        
+        });
+    },
+    signIn: function() {
+     let provider = new firebase.auth.GoogleAuthProvider();
+     firebase.auth().signInWithRedirect(provider);
+    },
+  },
+});
+
+
+firebase.auth().onAuthStateChanged((user) => {
+  if (user) {
+    vue.user_id = user.uid;
+    vue.listenToObjectives();
+  }
 });
