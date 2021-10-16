@@ -26,44 +26,16 @@
   width: 75%;
 }
 
-#app {
-  display: none;
+.app {
   flex-direction: column;
   margin: 0 auto;
-  padding: 50px 20px 20px 20px;
+  padding: 20px;
   max-width: 60em;
-}
-
-#app > .toolbar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  background-color: white;
-  justify-content: center;
-  border-bottom: 1px solid lightgrey;
-}
-
-.toolbar {
-  display: flex;
-  padding: 10px;
-  text-align: center;
-}
-
-.toolbar a {
-  margin: 0 10px;
-  text-decoration: none;
-  cursor: pointer;
-  color: navy;
-}
-
-.toolbar div:nth-child(1) a {
-  font-weight: bold;
 }
 
 .objective {
   font-family: "Mulish", sans-serif;
-  margin: 20px 20px 0 0;
+  margin: 0 0 20px 0;
 }
 
 .objective-name {
@@ -206,6 +178,10 @@
 
 .goal-description p:first-child {
 	margin: 0;
+}
+
+.goal, .regular-goal {
+  margin-left: 10px;
 }
 
 .regular-goal {

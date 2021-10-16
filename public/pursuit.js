@@ -540,6 +540,7 @@ class Controller {
           objectives.push(d.data());
         });
         this._model.objectives = objectives;
+        vue.objectives = objectives;        
         this._view.render();
       });
   }
@@ -747,27 +748,6 @@ class Controller {
       .doc(objectiveId)
       .delete();
   }
-
-  onView() {
-    if (this._model.mode != 'view') {
-      this._model.mode = 'view';
-      this._view.render();
-    }
-  }
-
-  onPlan() {
-    if (this._model.mode != 'plan') {
-      this._model.mode = 'plan';
-      this._view.render();
-    }
-  }
-
-  onTrack() {
-    if (this._model.mode != 'track') {
-      this._model.mode = 'track';
-      this._view.render();
-    }
-  }
 }
 
 
@@ -814,447 +794,9 @@ class View {
       // will redirect.
       let signIn = document.querySelector('#signin');
       signIn.style.display = '';
-
-      // Just clearing out everything leads to simpler code as we only need
-      // to care about the enter selection in d3. Only when this becomes a
-      // noticeable speed issue is it worthwhile to minimize DOM changes by
-      // treating enter and update selections differently.
-      document.querySelector('#app').innerHTML = '';
-
-      let toolbar = d3.select('#app')
-        .append('div')
-        .attr('class', 'toolbar');
-
-      let toolbarPrimary = toolbar.append('div');
-      let toolbarSecondary = toolbar.append('div');
-
-      toolbarPrimary
-        .append('a')
-        .text('View')
-        .on('click', () => {
-          this._controller.onView();
-        });
-      toolbarPrimary
-        .append('a')
-        .text('Plan')
-        .on('click', () => {
-          this._controller.onPlan();
-        });
-      toolbarPrimary
-        .append('a')
-        .text('Track')
-        .on('click', () => {
-          this._controller.onTrack();
-        });
-
-      if (this._model.mode == 'plan') {
-        toolbarSecondary
-          .append('a')
-          .text('+Objective')
-          .on('click', () => {
-            this._controller.addObjective();
-          });
-      }
-
-      toolbarSecondary
-        .append('a')
-        .text((this._model.show_archived ? 'Hide' : 'Show') + ' archived')
-        .on('click', () => {
-          this._model.show_archived = !this._model.show_archived;
-          this.render();
-        });
-      toolbarSecondary
-        .append('a')
-        .text((this._model.show_drafts ? 'Hide' : 'Show') + ' drafts')
-        .on('click', () => {
-        this._model.show_drafts = !this._model.show_drafts;
-        this.render();
-        });
-
-      d3.select('#app')
-        .style('display', 'flex')
-        .selectAll('div.objective')
-        .data(this._model.objectives)
-        .enter()
-        .append('div')
-        .attr('class', 'objective')
-        .call((n) => this._renderObjective(n));
     } else {
       this._renderSignIn();
     }
-  }
-
-  _renderObjective(node) {
-    if (this._model.mode == 'plan') {
-      node.append('div')
-        .attr('class', 'objective-name')
-        .append('input')
-        .attr('placeholder', 'Name the objective here...')
-        .attr('value', (o) => o.name)
-        .on('change', (o) => {
-          this._controller.updateObjectiveName(o.id, d3.event.target.value);
-        });
-    } else {
-      node.append('div')
-        .attr('class', 'objective-name')
-        .text((o) => o.name);
-    }
-
-    if (this._model.mode == 'plan') {
-      node.append('div')
-    	  .attr('class', 'objective-description')
-        .append('textarea')
-        .attr('placeholder', 'Describe the objective here...')
-        .text((o) => o.description)
-        .on('change', (o) => {
-          this._controller.updateObjectiveDescription(o.id, d3.event.target.value);
-        });
-
-      let objectiveToolbar = node.append('div')
-        .attr('class', 'toolbar');
-      objectiveToolbar
-        .append('a')
-        .text('+Goal')
-        .on('click', (o) => {
-          this._controller.addGoal(o.id);
-        });
-      objectiveToolbar
-        .append('a')
-        .text('+Regular Goal')
-        .on('click', (o) => {
-          this._controller.addRegularGoal(o.id);
-        });
-      objectiveToolbar
-        .append('a')
-        .text('Delete')
-        .on('click', (o) => {
-          if (confirm(`Really delete the objective named "${o.name}"?`)) {
-            this._controller.deleteObjective(o.id);
-          }
-        });
-    }
-    
-    if (this._model.mode == 'view') {
-      let markdown = new SafeMarkdownRenderer();
-      node.append('div')
-    	  .attr('class', 'objective-description')
-        .html((o) => markdown.render(o.description ?? ''));
-    }
-
-	let byName = (a, b) => (
-      a.name > b.name ? 1 : a.name < b.name ? -1 : 0
-    );
-    let byStatus = (g) => (
-      g.stage == Stage.PLEDGED
-        || (g.stage == Stage.DRAFT && this._model.show_drafts)
-        || (g.stage == Stage.ARCHIVED && this._model.show_archived));
-    node.selectAll('div.goal')
-      .data((o) => o.goals.filter(byStatus).sort(byName))
-      .enter()
-      .append('div')
-      .attr('class', 'goal')
-      .call((n) => this._renderGoal(n));
-    node.selectAll('div.regular-goal')
-      .data((o) => o.regular_goals.sort(byName))
-      .enter()
-      .append('div')
-      .attr('class', 'regular-goal')
-      .call((n) => this._renderRegularGoal(n));
-  }
-
-  _bound(number, min, max) {
-    return Math.max(Math.min(number, max), min);
-  }
-
-  _renderGoal(node) {
-    // Draw names
-    if (this._model.mode == 'plan') {
-      node.append('div')
-        .attr('class', 'name')
-        .append('input')
-        .attr('placeholder', 'Name the goal here...')
-        .attr('value', (g) => g.name)
-        .on('change', (g) => {
-          this._controller.updateGoal(g.id, 'name', d3.event.target.value);
-        });
-    } else {
-		  node.append('div')
-        .attr('class', 'name')
-        .text((g) => g.name + (g.stage != Stage.PLEDGED ? ` [${g.stage}]` : ''));
-    }
-
-    let svg =
-      node.append('svg')
-        .attr('class', 'chart')
-        .attr('viewBox', `0 0 100% 65`);
-
-    // Draw velocity
-    let now = new Date().getTime();
-    svg.append('text')
-      .attr('class', 'velocity')
-      .attr('text-anchor', 'middle')
-      .attr('x', '50%')
-      .attr('y', 60)
-      .text((g) => {
-        if (g.stage != Stage.ARCHIVED) {
-            if (g.end < now) {
-              return '';
-            }
-            let velocity = new VelocityReport();
-            return velocity.report(g, now);
-        } else {
-            return '';
-        }
-      });
-
-    let progressReport = new ProgressReport();
-
-    // Draw status
-	  svg.append('text')
-      .attr('class', 'status')
-      .attr('text-anchor', 'middle')
-      .attr('x', '50%')
-      .attr('y', 20)
-      .text((g) => progressReport.progressStatus(g, now));
-
-    // Draw progress bar wires
-    svg.append('rect')
-      .attr('width', '100%')
-      .attr('height', 6)
-      .attr('fill', 'lightgrey')
-      .attr('y', 32);
-
-    // Draw progress bars
-    svg.append('rect')
-      .attr('width', (g) => `${100 * this._bound(g.progress, 0, 1)}%`)
-      .attr('height', 18)
-      .attr('class', 'current')
-      .attr('fill', (g) => progressReport.progressFillColor(g, now))
-      .attr('y', 26);
-
-   // Draw current date
-   svg.append('rect')
-     .attr('class', 'today')
-     .attr('width', '0.5%')
-     .attr('height', 26)
-     .attr('x', (g) => `${100 * g.time_spent(now) - 0.25}%`)
-     .attr('y', 22);
-
-   // Draw start as text
-   svg.append('text')
-     .attr('class', 'start')
-     .attr('text-anchor', 'start')
-     .attr('x', 0)
-     .attr('y', 20)
-     .text((g) => `${new Date(g.start).toISOString().slice(0, 10)}`);
-
-   // Draw end as text
-   svg.append('text')
-     .attr('class', 'end')
-     .attr('text-anchor', 'end')
-     .attr('x', '100%')
-     .attr('y', 20)
-     .text((g) => `${new Date(g.end).toISOString().slice(0, 10)}`);
-
-   // Draw baseline as text
-   svg.append('text')
-     .attr('class', 'baseline')
-     .attr('text-anchor', 'start')
-     .attr('x', 0)
-     .attr('y', 60)
-     .text((g) => `${g.baseline}`)
-
-   // Draw target/unit as text
-   svg.append('text')
-     .attr('class', 'target')
-     .attr('text-anchor', 'end')
-     .attr('x', '100%')
-     .attr('y', 60)
-     .text((g) => `${g.target} ${g.unit}`);
-
-    if (this._model.mode == 'plan' || this._model.mode == 'track') {
-      let form =
-        node.append('div')
-          .attr('class', 'edit');
-      let add_field = (name, type, getter, setter, detail) => {
-        let field = form.append('div');
-        field.append('div')
-          .text(name);
-        field.append('input')
-          .attr('type', type)
-          .attr('placeholder', `Enter ${type}`)
-          .attr('value', getter)
-          .on('focusout', (g) => {
-            setter(g, d3.event.target.value);
-          });
-        if (detail) {
-          field.append('div')
-            .text(detail);
-        }
-      };
-
-      let format_date = (millis) => {
-				let is = (a, b) => {
-					return (
-						a.getDate() == b.getDate() &&
-						a.getMonth() == b.getMonth() &&
-						a.getFullYear() == b.getFullYear());
-				};
-        let date = new Date(millis);
-        let today = new Date();
-        let yesterday = new Date(today.getTime() - DAY);
-				let suffix = '';
-				if (is(date, today)) {
-					suffix = ' (today)';
-				}
-				if (is(date, yesterday)) {
-					suffix = ' (yesterday)';
-				}
-        return new Date(date).toLocaleString() + suffix;
-      };
-
-      let add_current_field = () => {
-        add_field(
-          'Current',
-          'number',
-          (g) => g.trajectory.latest.value,
-          (g, v) => {
-            let value = parseFloat(v);
-            this._controller.updateTrajectory(g.id, value);
-          },
-          (g) => `last updated ${format_date(g.trajectory.latest.date)}`);
-      };
-
-      if (this._model.mode == 'plan') {
-        add_field(
-          'Unit',
-          'text',
-          (g) => g.unit,
-          (g, v) => this._controller.updateGoal(g.id, 'unit', v));
-        add_field(
-          'Start',
-          'date',
-          // TODO: fix timezone logic; error handling
-          (g) => new Date(g.start).toISOString().slice(0, -14),
-          (g, v) => {
-              let t = Date.parse(v);
-              if (isNaN(t)) {
-                this._controller._view.render();
-                return;
-              }
-              t = new Date(t).getTime();
-              if (isNaN(t)) {
-                this._controller._view.render();
-                return;
-              }
-              // 01/01/9999 hack
-              if (t >= 253370764800000) {
-                this._controller._view.render();
-                return;
-              }
-              this._controller.updateGoal(g.id, 'start', t);
-          });
-        add_current_field();
-        add_field(
-          'Baseline',
-          'number',
-          (g) => g.baseline,
-          (g, v) => this._controller.updateGoal(g.id, 'baseline', parseFloat(v)));
-        add_field(
-          'End',
-          'date',
-          // TODO: fix timezone logic; error handling
-          (g) => new Date(g.end).toISOString().slice(0, -14),
-          (g, v) => {
-              let t = Date.parse(v);
-              if (isNaN(t)) {
-                this._controller._view.render();
-                return;
-              }
-              t = new Date(t).getTime();
-              if (isNaN(t)) {
-                this._controller._view.render();
-                return;
-              }
-              // 01/01/9999 hack
-              if (t >= 253370764800000) {
-                this._controller._view.render();
-                return;
-              }
-              this._controller.updateGoal(g.id, 'end', t);
-          });
-        add_field(
-          'Target',
-          'number',
-          (g) => g.target,
-          (g, v) => this._controller.updateGoal(g.id, 'target', parseFloat(v)));
-        add_field(
-          'Stage',
-          'text',
-          (g) => g.stage,
-          (g, v) => this._controller.updateGoal(g.id, 'stage', v));
-
-        let toolbar = form.append('div')
-          .attr('class', 'toolbar');
-        toolbar
-          .append('a')
-          .text('Draft')
-          .on('click', (g) => {
-            this._controller.updateGoalStage(g.id, Stage.DRAFT);
-          });
-        toolbar
-          .append('a')
-          .text('Pledge')
-          .on('click', (g) => {
-            this._controller.updateGoalStage(g.id, Stage.PLEDGED);
-          });
-        toolbar
-          .append('a')
-          .text('Archive')
-          .on('click', (g) => {
-            this._controller.updateGoalStage(g.id, Stage.ARCHIVED);
-          });
-        toolbar
-          .append('a')
-          .text('Delete')
-          .on('click', (g) => {
-            if (confirm(`Really delete the goal named "${g.name}"?`)) {
-              this._controller.deleteGoal(g.id);
-            }
-          });
-      }
-
-      if (this._model.mode == 'track') {
-        add_current_field();
-      }
-    }
-  }
-
-  _renderRegularGoal(node) {
-    let now = new Date().getTime();
-    let w = node.append('div')
-              .attr('class', (g) => g.budget_remaining_adjusted(now) > 0 ? 'within-budget' : 'out-of-budget');
-    
-    w.append('div')
-      .attr('class', 'name')
-      .text((g) => g.name);
-
-    let markdown = new SafeMarkdownRenderer();
-    w.append('div')
-      .attr('class', 'goal-description')
-      .html((g) => markdown.render(g.description ?? ''));
-
-    let b = w.append('div')
-                .attr('class', 'level');
-    b.append('span')
-      .attr('class', 'budget')
-      .text((g) => `${(100 * g.budget_remaining_adjusted(now)).toFixed(1)}%`);
-    b.append('span')
-      .attr('class', 'window')
-      .text((g) => ` of budget remaining${g.partial_data(now) ? ' (partial data)' : ''}`);
-    b.append('span')
-      .attr('class', 'value')
-      .text((g) => `@ ${g.value(now)} of ${g.total} ${g.unit}, targeting ${(g.target * g.total).toFixed(2)} over ${g.window}-day window`);
   }
 
   _renderSignIn() {
@@ -1322,3 +864,211 @@ class ProgressReport {
     }
   }
 }
+
+Vue.component('objective', {
+  computed: {
+    descriptionHtml: function() {
+      let markdown = new SafeMarkdownRenderer();
+      return markdown.render(this.objective.description);
+    },
+  },
+  props: ['objective'],
+  template: `
+    <div class='objective'>
+      <div class='objective-name'> {{ objective.name }} </div>
+      <div class='objective-description'><span v-html='descriptionHtml'></span></div>
+      <goal
+        v-for="g in objective.goals"
+        v-bind:goal="g"
+        v-bind:key="g.id"
+      ></goal>
+      <regular_goal
+        v-for="g in objective.regular_goals"
+        v-bind:goal="g"
+        v-bind:key="g.id"
+      ></regular_goal>
+    </div>
+  `,
+});
+
+Vue.component('goal', {
+  computed: {
+    currentXPos: function() {
+      let now = new Date().getTime();
+      return (100 * this.goal.time_spent(now) - 0.25) + '%';
+    },
+    endDate: function() {
+      return new Date(this.goal.end).toISOString().slice(0, 10);
+    },
+    progressFillColor: function() {
+      let now = new Date().getTime();
+      let progressReport = new ProgressReport();
+      return progressReport.progressFillColor(this.goal, now);
+    },
+    progressReport: function() {
+      let now = new Date().getTime();
+      let progressReport = new ProgressReport();
+      return progressReport.progressStatus(this.goal, now);
+    },
+    progressPercentBounded: function() {
+      return (100 * Math.max(Math.min(this.goal.progress, 1), 0)) + '%';
+    },
+    startDate: function() {
+      return new Date(this.goal.start).toISOString().slice(0, 10);
+    },
+    velocityReport: function() {
+      let now = new Date().getTime();
+      if (this.goal.stage != Stage.ARCHIVED) {
+          if (this.goal.end < now) {
+            return '';
+          }
+          let velocity = new VelocityReport();
+          return velocity.report(this.goal, now);
+      } else {
+          return '';
+      }
+    },
+  },
+  props: ['goal'],
+  template: `
+    <div class='goal'>
+      <div class='name'>{{ goal.name }}</div>
+      <svg class='chart' viewBox='0 0 100% 65'>
+        <text
+            class='velocity'
+            text-anchor='middle'
+            x='50%'
+            y='60'>{{ velocityReport }}</text>
+        <text
+            class='status'
+            text-anchor='middle'
+            x='50%'
+            y='20'>{{ progressReport }}</text>
+        <rect
+            width='100%'
+            height=6
+            fill='lightgrey'
+            y=32></rect>
+        <rect
+            class='current'
+            :width='progressPercentBounded'
+            height=18
+            :fill='progressFillColor'
+            y=26></rect>
+        <rect
+            class='today'
+            width='0.5%'
+            height=26
+            :x='currentXPos'
+            :y=22></rect>
+        <text
+            class='start'
+            text-anchor='start'
+            x=0
+            y=20>{{ startDate }}</text>
+        <text
+            class='end'
+            text-anchor='end'
+            x='100%'
+            y=20>{{ endDate }}</text>
+        <text
+          class='baseline'
+          text-anchor='start'
+          x=0
+          y=60>{{ goal.baseline }}</text>
+        <text
+          class='target'
+          text-anchor='end'
+          x='100%'
+          y=60>{{ goal.target }} {{ goal.unit }}</text>
+      </svg>
+    </div>
+  `,
+
+});
+
+Vue.component('regular_goal', {
+  computed: {
+    barColor: function() {
+      let now = new Date().getTime();
+      return this.goal.budget_remaining_adjusted(now) > 0 ? 'rgb(136,187,77)' : 'rgb(187, 102, 77)'
+    },
+    barXPos: function() {
+      let now = new Date().getTime();
+      let b = this.goal.budget_remaining_adjusted(now);
+      if (b > 0) {
+        return '0%';
+      } else {
+        return (100-Math.max(0, Math.min(100, Math.abs((100 * b))))) + '%';
+      }
+    },
+    barWidth: function() {
+      let now = new Date().getTime();
+      let b = this.goal.budget_remaining_adjusted(now);
+      return Math.max(0, Math.min(100, Math.abs((100 * b)))) + '%';
+    },
+    budgetClass: function() {
+      let now = new Date().getTime();
+      if (this.goal.budget_remaining_adjusted(now) > 0) {
+        return 'within-budget';
+      } else {
+        return 'out-of-budget';
+      }
+    },
+    budgetRemaining: function() {
+      let now = new Date().getTime();
+      return (100 * this.goal.budget_remaining_adjusted(now)).toFixed(0) + '%';
+    },
+    partialData: function() {
+      let now = new Date().getTime();
+      if (this.goal.partial_data(now)) {
+        return '(partial data)';
+      } else {
+        return '';
+      }
+    },
+    status: function() {
+      let now = new Date().getTime();
+      return `@ ${this.goal.value(now).toFixed(2)} of ${this.goal.total} ${this.goal.unit},
+              targeting ${(this.goal.target * this.goal.total).toFixed(2)}
+              over ${this.goal.window}-day window`;
+    },
+  },
+  props: ['goal'],
+  template: `
+    <div class="regular-goal">
+      <div :class="budgetClass">
+        <div class="name">{{ goal.name }}</div>
+        <div class="goal-description">{{ goal.description }}</div>
+        <div class="level">
+          <span class="budget">{{ budgetRemaining }}</span>
+          <span class="window"> of budget remaining {{ partialData }}</span>
+          <span class="value">{{ status }}</span>
+          <svg class="chart" viewBox="0 0 100% 65" style="height: 6px">
+            <rect y="2" height="2" width="100%" fill="#ccc"></rect>
+            <rect y="0" height="6" :x="barXPos" :width="barWidth" :fill="barColor"></rect>
+          </svg>
+        </div>
+      </div>
+    </div>
+  `
+});
+
+let vue = new Vue({
+  el: '#app',
+  data: {
+    app: new App(),
+    objectives: [
+    ],
+  },
+  template: `
+    <div class='app'>
+      <div id='signin'></div>
+      <objective
+        v-for="o in objectives"
+        v-bind:objective="o"
+        v-bind:key="o.id"
+      ></objective>
+    </div>
+  `
+});
