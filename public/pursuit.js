@@ -558,6 +558,30 @@ Vue.component('objective', {
           ],
         });
     },
+    deleteGoal: function(goal) {
+      if (confirm(`Really delete the goal "${goal.name}"?`)) {
+        firebase.firestore()
+          .collection('users')
+          .doc(this.user_id)
+          .collection('objectives')
+          .doc(this.objective.id)
+          .update({
+            [`goals.${goal.id}`]: firebase.firestore.FieldValue.delete()
+          });
+      }
+    },
+    deleteRegularGoal: function(goal) {
+      if (confirm(`Really delete the regular goal "${goal.name}"?`)) {
+        firebase.firestore()
+          .collection('users')
+          .doc(this.user_id)
+          .collection('objectives')
+          .doc(this.objective.id)
+          .update({
+            [`regular_goals.${goal.id}`]: firebase.firestore.FieldValue.delete()
+          });
+      }
+    },
     deleteObjective: function() {
       if (confirm(`Really delete the objective named "${this.objective.name}"?`)) {
         firebase.firestore()
@@ -573,27 +597,25 @@ Vue.component('objective', {
   template: `
     <div class='objective'>
       <div class='objective-name'> {{ objective.name }} </div>
-      <div class='objective-description'><span v-html='descriptionHtml'></span></div>
       <div v-show='isPlanning'>
         <button v-on:click='addGoal'>Add goal</button>
         <button v-on:click='addRegularGoal'>Add regular goal</button>
         <button v-on:click='deleteObjective'>Delete objective</button>
       </div>
+      <div class='objective-description'><span v-html='descriptionHtml'></span></div>
       <goal
         v-for="g in objective.goals"
         v-bind:goal="g"
         v-bind:mode='mode'
-        v-bind:objective_id='objective.id'
-        v-bind:user_id='user_id'
         v-bind:key="g.id"
+        v-on:delete="deleteGoal($event)"
       ></goal>
       <regular_goal
         v-for="g in objective.regular_goals"
         v-bind:goal="g"
         v-bind:mode='mode'
-        v-bind:objective_id='objective.id'
-        v-bind:user_id='user_id'
         v-bind:key="g.id"
+        v-on:delete="deleteRegularGoal($event)"
       ></regular_goal>
     </div>
   `,
@@ -607,6 +629,9 @@ Vue.component('goal', {
     },
     endDate: function() {
       return new Date(this.goal.end).toISOString().slice(0, 10);
+    },
+    isPlanning: function() {
+      return this.mode == 'plan';
     },
     progressFillColor: function() {
       let now = new Date().getTime();
@@ -637,10 +662,13 @@ Vue.component('goal', {
       }
     },
   },
-  props: ['goal'],
+  props: ['goal', 'mode'],
   template: `
     <div class='goal'>
       <div class='name'>{{ goal.name }}</div>
+      <div v-show="isPlanning">
+        <button v-on:click="$emit('delete', goal)">delete goal</button>
+      </div>
       <svg class='chart' preserveAspectRatio='none'>
         <text
             class='status'
@@ -727,6 +755,9 @@ Vue.component('regular_goal', {
       let now = new Date().getTime();
       return (100 * this.goal.budget_remaining_adjusted(now)).toFixed(0) + '%';
     },
+    isPlanning: function() {
+      return this.mode == 'plan';
+    },
     partialData: function() {
       let now = new Date().getTime();
       if (this.goal.partial_data(now)) {
@@ -742,11 +773,14 @@ Vue.component('regular_goal', {
               over ${this.goal.window}-day window`;
     },
   },
-  props: ['goal'],
+  props: ['goal', 'mode'],
   template: `
     <div class="regular-goal">
       <div :class="budgetClass">
         <div class="name">{{ goal.name }}</div>
+        <div v-show="isPlanning">
+          <button v-on:click="$emit('delete', goal)">delete goal</button>
+        </div>
         <div class="goal-description">{{ goal.description }}</div>
         <div class="level">
           <span class="budget">{{ budgetRemaining }}</span>

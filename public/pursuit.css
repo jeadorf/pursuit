@@ -39,7 +39,6 @@
 
 .objective-name {
   font-size: 22px;
-	margin-bottom: 10px;
 }
 
 .objective-name input {
@@ -53,6 +52,7 @@
 .objective-description {
   color: darkgrey;
   font-size: 15px;
+  margin-top: 10px;
 }
 
 .objective-description textarea {
@@ -195,10 +195,12 @@
 }
 
 button {
-  background-color: white;
+  background-color: transparent;
   border: 0;
   color: royalblue;
-  padding: 5px 10px;
+  font-size: 11px;
+  margin-right: 20px;
+  padding: 2px 0;
   text-transform: uppercase;
 }
 
