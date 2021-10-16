@@ -513,20 +513,86 @@ Vue.component('objective', {
       let markdown = new SafeMarkdownRenderer();
       return markdown.render(this.objective.description);
     },
+    isPlanning: function() {
+      return this.mode == 'plan';
+    },
   },
-  props: ['objective'],
+  methods: {
+    addGoal: function() {
+      let goalId = uuidv4();
+      let now = new Date().getTime();
+      firebase.firestore()
+        .collection('users')
+        .doc(this.user_id)
+        .collection('objectives')
+        .doc(this.objective.id)
+        .update({
+          [`goals.${goalId}.name`]: 'AA New goal',
+          [`goals.${goalId}.unit`]: '',
+          [`goals.${goalId}.start`]: now,
+          [`goals.${goalId}.end`]: now + 7 * DAY,
+          [`goals.${goalId}.target`]: 100,
+          [`goals.${goalId}.stage`]: Stage.PLEDGED,
+          [`goals.${goalId}.trajectory`]: [
+            {date: now, value: 0},
+          ],
+        });
+    },
+    addRegularGoal: function() {
+      let goalId = uuidv4();
+      let now = new Date().getTime();
+      firebase.firestore()
+        .collection('users')
+        .doc(this.user_id)
+        .collection('objectives')
+        .doc(this.objective.id)
+        .update({
+          [`regular_goals.${goalId}.name`]: 'AA New regular goal',
+          [`regular_goals.${goalId}.description`]: '',
+          [`regular_goals.${goalId}.unit`]: '',
+          [`regular_goals.${goalId}.total`]: 100,
+          [`regular_goals.${goalId}.target`]: 0.9,
+          [`regular_goals.${goalId}.window`]: 28,
+          [`regular_goals.${goalId}.trajectory`]: [
+            {date: now, value: 0},
+          ],
+        });
+    },
+    deleteObjective: function() {
+      if (confirm(`Really delete the objective named "${this.objective.name}"?`)) {
+        firebase.firestore()
+          .collection('users')
+          .doc(this.user_id)
+          .collection('objectives')
+          .doc(this.objective.id)
+          .delete();
+      }
+    },
+  },
+  props: ['mode', 'objective', 'user_id'],
   template: `
     <div class='objective'>
       <div class='objective-name'> {{ objective.name }} </div>
       <div class='objective-description'><span v-html='descriptionHtml'></span></div>
+      <div v-show='isPlanning'>
+        <button v-on:click='addGoal'>Add goal</button>
+        <button v-on:click='addRegularGoal'>Add regular goal</button>
+        <button v-on:click='deleteObjective'>Delete objective</button>
+      </div>
       <goal
         v-for="g in objective.goals"
         v-bind:goal="g"
+        v-bind:mode='mode'
+        v-bind:objective_id='objective.id'
+        v-bind:user_id='user_id'
         v-bind:key="g.id"
       ></goal>
       <regular_goal
         v-for="g in objective.regular_goals"
         v-bind:goal="g"
+        v-bind:mode='mode'
+        v-bind:objective_id='objective.id'
+        v-bind:user_id='user_id'
         v-bind:key="g.id"
       ></regular_goal>
     </div>
@@ -699,16 +765,39 @@ Vue.component('regular_goal', {
 let vue = new Vue({
   el: '#app',
   data: {
+    mode: 'view',
     objectives: [
     ],
     user_id: '',
   },
   computed: {
+    isPlanning: function() {
+      return this.mode == 'plan';
+    },
+    isViewing: function() {
+      return this.mode == 'view';
+    },
     signedIn: function() {
       return this.user_id != '';
     },
   },
   methods: {
+    createObjective: function() {
+      let objective = new Objective({
+        id: uuidv4(),
+        name: 'AA New objective',
+        description: '',
+        goals: [],
+        regular_goals: [],
+      });
+      firebase.firestore()
+        .collection('users')
+        .doc(this.user_id)
+        .collection('objectives')
+        .doc(objective.id)
+        .withConverter(new ObjectiveConverter())
+        .set(objective);
+    },
     listenToObjectives: function() {
       firebase.firestore()
         .collection('users')
@@ -720,16 +809,50 @@ let vue = new Vue({
           snapshot.forEach((d) => {
             objectives.push(d.data());
           });
+          objectives.sort((a, b) => {
+            if (a.name > b.name) return 1;
+            return -1;
+          });
+          objectives.forEach((o) => o.goals.sort((a, b) => {
+            if (a.name > b.name) return 1;
+            return -1;
+          }));
+          objectives.forEach((o) => o.regular_goals.sort((a, b) => {
+            if (a.name > b.name) return 1;
+            return -1;
+          }));
           this.objectives = objectives;        
         });
+    },
+    plan: function() {
+      this.mode = 'plan';
     },
     signIn: function() {
      let provider = new firebase.auth.GoogleAuthProvider();
      firebase.auth().signInWithRedirect(provider);
     },
+    view: function() {
+      this.mode = 'view';
+    },
   },
+  template: `
+    <div class='app'>
+      <div id='signin' v-if='!signedIn'><a href='#' v-on:click="signIn">Sign in with Google</a></div>
+      <div class='toolbar'>
+        <button v-on:click='plan' v-show='!isPlanning'>Plan</button>
+        <button v-on:click='view' v-show='!isViewing'>View</button>
+        <button v-on:click='createObjective' v-show='isPlanning'>Add objective</button>
+      </div>
+      <objective
+        v-for="o in objectives"
+        v-bind:objective="o"
+        v-bind:user_id='user_id'
+        v-bind:mode='mode'
+        v-bind:key="o.id"
+      ></objective>
+    </div>
+  `
 });
-
 
 firebase.auth().onAuthStateChanged((user) => {
   if (user) {

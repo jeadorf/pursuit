@@ -26,12 +26,6 @@
 </head>
 <body>
   <div id='app'>
-    <div id='signin' v-if='!signedIn'><a href='#' v-on:click="signIn">Sign in with Google</a></div>
-    <objective
-      v-for="o in objectives"
-      v-bind:objective="o"
-      v-bind:key="o.id"
-    ></objective>
   </div>
 
   <script src="https://apis.google.com/js/api.js"></script>
