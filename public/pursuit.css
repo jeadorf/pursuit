@@ -74,13 +74,9 @@
   color: #cc9976;
 }
 
-.goal {
-  padding: 5px;
-}
-
 .chart {
   width: 100%;
-  height: 65px;
+  height: 55px;
 }
 
 .name, .start, .end, .baseline, .target, .velocity, .status, .budget, .window, .value {
@@ -181,17 +177,18 @@
 }
 
 .goal, .regular-goal {
+  border-bottom: 1px dotted lightgray;
   margin-left: 10px;
+  padding: 15px 0;
+}
+
+.goal {
+  padding-bottom: 5px;
 }
 
 .regular-goal {
-  border-bottom: 1px dotted lightgray;
   fill: darkgrey;
   font-size: 14px;
-}
-
-.regular-goal > div {
-  padding: 15px 5px;
 }
 
 .out-of-budget {
