@@ -430,6 +430,9 @@ class ObjectiveConverter {
 
 class SafeMarkdownRenderer {
   render(markdown) {
+    if (!markdown) {
+      return '';
+    }
     let rawHtml = marked(markdown);
     return sanitizeHtml(rawHtml, {
       allowedTags: [
@@ -1404,10 +1407,12 @@ let vue = new Vue({
   `
 });
 
-firebase.auth().onAuthStateChanged((user) => {
-  if (user) {
-    vue.mode = 'view';
-    vue.user_id = user.uid;
-    vue.listenToObjectives();
-  }
-});
+if (!testing) {
+  firebase.auth().onAuthStateChanged((user) => {
+    if (user) {
+      vue.mode = 'view';
+      vue.user_id = user.uid;
+      vue.listenToObjectives();
+    }
+  });
+}

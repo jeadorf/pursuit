@@ -898,6 +898,18 @@ describe('progress report', () => {
 });
 
 describe('safe markdown renderer', () => {
+  it('can render empty markdown', () => {
+    let renderer = new SafeMarkdownRenderer();
+    let html = renderer.render('');
+    expect(html).to.equal('');
+  });
+
+  it('can render null markdown', () => {
+    let renderer = new SafeMarkdownRenderer();
+    let html = renderer.render(null);
+    expect(html).to.equal('');
+  });
+
   it('can render bold markdown', () => {
     let renderer = new SafeMarkdownRenderer();
     let html = renderer.render('this **bold** abc.');
@@ -932,5 +944,48 @@ describe('safe markdown renderer', () => {
     let renderer = new SafeMarkdownRenderer();
     let html = renderer.render('this [link](mailto:bert@example.org/) abc.');
     expect(html).to.equal('<p>this <a>link</a> abc.</p>\n');
+  });
+});
+
+describe('objective component', () => {
+  it('renders name', (done) => {
+    let vue = new Vue({
+      el: document.createElement('div'),
+      data: {
+        objective: new Objective({}),
+      },
+      template: `<objective v-bind:objective='objective'></objective>`
+    });
+
+    let objective = new Objective({name: 'Land on Mars'});
+    Promise.resolve()
+      .then(vue.$nextTick())
+      .then(() => expect(vue.$el.innerText).not.to.contain(objective.name))
+      .then(() => vue.objective = objective)
+      .then(vue.$nextTick())
+      .then(() => {expect(vue.$el.innerText).to.contain(objective.name)})
+      .then(done)
+      .catch(() => done('error'));
+  });
+
+  it('renders description', (done) => {
+    let vue = new Vue({
+      el: document.createElement('div'),
+      data: {
+        objective: new Objective({}),
+      },
+      template: `<objective v-bind:objective='objective'></objective>`
+    });
+
+    let objective = new Objective({description: 'one giant leap'});
+
+    Promise.resolve()
+      .then(vue.$nextTick())
+      .then(() => expect(vue.$el.innerText).not.to.contain(objective.description))
+      .then(() => vue.objective = objective)
+      .then(vue.$nextTick())
+      .then(() => {expect(vue.$el.innerText).to.contain(objective.description)})
+      .then(done)
+      .catch(() => done('error'));
   });
 });
