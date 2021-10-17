@@ -801,58 +801,6 @@ describe('objective converter', () => {
   });
 });
 
-
-describe('model', () => {
-  it('has no objectives initially', () => {
-    let model = new Model();
-    expect(model.objectives).to.be.empty;
-  });
-
-  it('has no user id initially', () => {
-    let model = new Model();
-    expect(model.user_id).to.be.null;
-  });
-
-  it('can set objectives', () => {
-    let model = new Model();
-    let objectives = [new Objective({}), new Objective({})]
-    expect(model.objectives).to.be.empty;
-
-    model.objectives = objectives;
-
-    expect(model.objectives).to.have.lengthOf(2);
-  });
-
-  it('can set user id', () => {
-    let model = new Model();
-    expect(model.user_id).to.be.null;
-
-    model.user_id = 'test-user';
-
-    expect(model.user_id).to.equal('test-user');
-  });
-});
-
-
-describe('view', () => {
-  it('renders sign-in screen if not logged in', () => {
-    let app = new App();
-
-    app.view.render();
-
-    let signIn = document.querySelector('#signin');
-    expect(signIn.style.display).to.equal('block');
-    expect(signIn.innerText).to.have.string('Sign in with Google');
-
-    app.model.user_id = 'test-user';
-    app.view.render();
-
-    expect(signIn.style.display).to.be.empty;
-    expect(signIn.innerText).to.have.string('Sign in with Google');
-  });
-});
-
-
 describe('velocity report', () => {
   it('shows 30d-velocity in unit / day', () => {
     let goal = new Goal({

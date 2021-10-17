@@ -1373,8 +1373,8 @@ let vue = new Vue({
       this.mode = 'plan';
     },
     signIn: function() {
-     let provider = new firebase.auth.GoogleAuthProvider();
-     firebase.auth().signInWithRedirect(provider);
+    let provider = new firebase.auth.GoogleAuthProvider();
+    firebase.auth().signInWithRedirect(provider);
     },
     track: function() {
       this.mode = 'track';
