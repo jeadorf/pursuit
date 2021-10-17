@@ -19,6 +19,9 @@
 let HOUR = 60 * 60 * 1000;
 let DAY = 24 * HOUR;
 
+// Objective represents a set of goals. There are two kinds of goals: One-off
+// goals, and regular goals. One-off goals are scoped to a specific, fixed time
+// window. In contrast, regular goals are bound to a moving time window.
 class Objective {
   constructor({id, name, description, goals, regular_goals}) {
     this._id = id;
@@ -28,41 +31,61 @@ class Objective {
     this._regular_goals = regular_goals;
   }
 
+  // id uniquely identifies the objective, and is typically assigned by the
+  // system rather than the user.
   get id() {
     return this._id;
   }
 
+  // name is the title of an objective.
   get name() {
     return this._name;
   }
 
+  // description provides a more detailed narrative about the objective than
+  // the name alone.
   get description() {
     return this._description;
   }
 
+  // goals is the list of one-off goals of this objective. All instances in
+  // this list must be of type Goal. See class Goal.
   get goals() {
     return this._goals;
   }
 
+  // regular_goals is the list of regular goals of this objective. All
+  // instances in this list must be of type RegularGoal. See class RegularGoal.
   get regular_goals() {
     return this._regular_goals;
   }
 
+  // goals replaces the set of one-off goals in this objective. See the
+  // corresponding getter.
   set goals(goals) {
     this._goals = goals;
   }
 
+  // regular_goals replaces the set of regular goals in this objective. See the
+  // corresponding getter.
   set regular_goals(regular_goals) {
     this._regular_goals = regular_goals;
   }
 }
 
+// Stage enumerates all different states a goal can be in. The stage is
+// currently not surfaced or editable in the user interface.
+//
+// @enum {string}
 const Stage = {
   DRAFT: 'draft',
   PLEDGED: 'pledged',
   ARCHIVED: 'archived',
 };
 
+// Goal represents a one-off goal, defined by a fixed time window between a
+// start and end date, a target value which needs to be reached by the end
+// date, and the timeseries recording past progress (or regression).
 class Goal {
 
   constructor({id = '',
@@ -83,42 +106,63 @@ class Goal {
     this._trajectory = trajectory;
   }
 
+  // id uniquely identifies the goal.
   get id() {
     return this._id;
   }
 
+  // name is the title of a goal.
   get name() {
     return this._name;
   }
 
+  // unit specifies the unit of the baseline, the target, and the values in the
+  // timeseries, i.e. the trajectory.
   get unit() {
     return this._unit;
   }
 
+  // target specifies the value that the timeseries (trajectory) needs to reach
+  // by the end date. If the target is reached, then the goal is said to be
+  // complete.
   get target() {
     return this._target;
   }
 
+  // start date in milliseconds since epoch. The start date must not be greater
+  // than the end date.
   get start() {
     return this._start;
   }
 
+  // end date in milliseconds since epoch. The end date must not be less than
+  // the start date.
   get end() {
     return this._end;
   }
 
+  // stage specifies the state of the goal; whether the goal is a draft,
+  // pledged, or archived.
   get stage() {
     return this._stage;
   }
 
+  // trajectory describes the progress towards the goal. It is a timeseries.
+  // The trajectory can be empty: this means that no values have been reported
+  // for the goal.
   get trajectory() {
     return this._trajectory;
   }
 
+  // baseline describes the value of the trajectory at the start date.
   get baseline() {
     return this.trajectory.at(this.start);
   }
 
+  // progress returns the relative progress (a percentage) made towards the
+  // target value, at the current point in time. 0% means that no progress has
+  // been made, 100% or higher indicates that the goal is complete, and
+  // negative values indicate a regression.
   get progress() {
     if (!this.trajectory.length) {
       return NaN;
@@ -129,20 +173,32 @@ class Goal {
       (this.target - this.baseline));
   }
 
+  // time_spent the percent of time that has passed at a given point in time
+  // (by_date) since the start date, relative to the fixed time window set by
+  // the start and end dates of the goal. 0% is the start date, 100% is the end
+  // date.
   time_spent(by_date) {
     let total = this._end - this._start;
     let spent = by_date - this._start;
     return total == 0 ? 1.0 : spent / total;
   }
 
+  // days_until_start returns the number of days that remain at a given point
+  // in time until the start date.
   days_until_start(by_date) {
     return (this.start - by_date) / DAY;
   }
 
+  // days_until_end returns the number of days that remain at a given point in
+  // time until the end date.
   days_until_end(by_date) {
     return (this.end - by_date) / DAY;
   }
 
+  // relative_progress returns the progress towards the goal relative to the
+  // time that has passed. The exact rationale behind the formula was
+  // forgotten, but the idea was to indicate how much progress was made towards
+  // the target compared to how much time has been spent since the start.
   relative_progress(by_date) {
     if (by_date <= this.start) { return 1.0; }
     let p = this.trajectory.at(by_date) / (this.target - this.baseline);
@@ -150,24 +206,42 @@ class Goal {
     return p / t;
   }
 
+  // is_on_track is true if and only if the progress towards the goal is at
+  // least as fast as the passing of time. For example, if halfway between the
+  // start and end date, the trajectory hais not proceeded at least halfway
+  // from the baseline to the target, then the goal is off track.
   is_on_track(by_date) {
     return this.progress >= this.time_spent(Math.min(this.end, by_date));
   }
 
+  // velocity estimates the velocity of progress towards the target. See method
+  // Trajectory.velocity.
   velocity(by_date) {
     return this.trajectory.velocity(this.start, by_date);
   }
 
+  // velocity estimates the velocity of progress towards the target over a 30
+  // day window. See method Trajectory.velocity.
   velocity_30d(by_date) {
     return this.trajectory.velocity(Math.max(this.start, by_date - 30 * DAY), by_date);
   }
   
+  // velocity _required estimates the velocity of progress that is required in
+  // order to reach the target by the end date, i.e. to complete the goal in
+  // time. For example, if you have 8 chapters left in a book, and 4 days left
+  // on your holiday, then you need to read with a velocity of 2 chapters a day
+  // in order to complete the book on your vacation.
   velocity_required(by_date) {
     return (this.target - this.trajectory.at(by_date)) / (this.end - by_date);
   }
 }
 
 
+// RegularGoal is a goal over a moving time window of fixed length. The regular
+// goal has a total, which describes the ideal difference between the
+// timeseries values at the boundaries of the time window. The regular goal has
+// a target, which specifies the percentage of the total, at which we still
+// consider the goal to be reached.
 class RegularGoal {
 
   constructor({id = '',
@@ -188,47 +262,71 @@ class RegularGoal {
     this._trajectory = trajectory;
   }
 
+  // id uniquely identifies the (regular) goal.
   get id() {
     return this._id;
   }
 
+  // name is the title of the regular goal.
   get name() {
     return this._name;
   }
 
+  // description provides a more detailed narrative of what is to be achieved.
   get description() {
     return this._description;
   }
 
+  // unit describes the unit for the total, and for the values of the
+  // timeseries (trajectory).
   get unit() {
     return this._unit;
   }
 
+  // window defines the length of the moving time window in days.
   get window() {
     return this._window;
   }
 
+  // target defines the percentage of the total that needs to be attained
+  // within the moving time window.
   get target() {
     return this._target;
   }
 
+  // total provides the ideal difference of the timeseries between the start
+  // and the end of the moving time window.
   get total() {
     return this._total;
   }
 
+  // trajectory describes the progress towards the goal. It is a timeseries.
+  // The trajectory can be empty: this means that no values have been reported
+  // for the goal.
   get trajectory() {
     return this._trajectory;
   }
 
+  // value describes the progress at a given point in time (the end of the time
+  // window) relative to the start of the moving time window. For example, if
+  // the number of pizzas eaten was 12 at the start of the window, and the
+  // number of pizzas eaten is 21 at the end of the window, the value is 21 -
+  // 12 = 9.
   value(by_date) {
     return (this.trajectory.at(by_date) - this.trajectory.at(by_date - this.window * DAY));
   }
 
+  // budget_remaining returns the percentage of the permissible shortfall from
+  // the total; this budget is equivalent to the error budget of a Service
+  // Level Objectives (SLO).
   budget_remaining(by_date) {
     let actual = this.value(by_date) / this.total;
     return (actual - this.target) / (1.0 - this.target);
   }
 
+  // budget_remaining_adjusted is like budget_remaining, but adjusts for
+  // partial data, i.e. when the moving window extends to earlier dates than
+  // where recordings were available.
   budget_remaining_adjusted(by_date) {
     if (this.partial_data(by_date)) {
       let adjusted_total = 1.0 * Math.max(DAY, by_date - this.trajectory.earliest.date) / (this.window * DAY) * this.total;
@@ -238,6 +336,8 @@ class RegularGoal {
     return this.budget_remaining(by_date);
   }
 
+  // partial_data returns true if the trajectory does not contain any point
+  // earlier than the start of the moving time window.
   partial_data(by_date) {
     return this.trajectory.earliest.date > (by_date - this.window * DAY);
   }
@@ -245,11 +345,14 @@ class RegularGoal {
 }
 
 
+// Trajectory is a timeseries, i.e. a list of dated values.
 class Trajectory {
   constructor() {
     this._line = [];
   }
 
+  // insert adds a point to the timeseries. It is possible to insert points
+  // out-of-order.
   insert(date, value) {
     let p = this._line.length;
     while (p > 0 && this._line[p-1].date >= date) {
@@ -262,6 +365,9 @@ class Trajectory {
     return this;
   }
 
+  // at returns the value of the timeseries at a given point in time,
+  // extrapolating at both ends of the timeseries, and interpolating in between
+  // two adjacent points in the timeseries.
   at(date) {
     if (!this._line.length) {
       return undefined;
@@ -288,6 +394,7 @@ class Trajectory {
     return m0 + (date - t0) * (m2 - m0) / (t2 - t0);
   }
 
+  // remove deletes points from the timeseries at the specified date.
   remove(date) {
     for (let i = 0; i < this._line.length; i++) {
       if (this._line[i].date == date) {
@@ -297,15 +404,13 @@ class Trajectory {
     }
   }
 
-  /**
-   * Removes entries from the timeline that happened within an hour of the
-   * latest entry. Never removes the earliest or latest entry from the
-   * trajectory.
-   *
-   * Calling compact_head() after insertions into the trajectory helps reducing
-   * the rate of changes recorded and ensures that transient states while the
-   * user is editing the goal are discarded.
-   */
+  // Removes entries from the timeline that happened within an hour of the
+  // latest entry. Never removes the earliest or latest entry from the
+  // trajectory.
+  // 
+  // Calling compact_head() after insertions into the trajectory helps reducing
+  // the rate of changes recorded and ensures that transient states while the
+  // user is editing the goal are discarded.
   compact_head(duration = HOUR) {
     let head = this._line.pop();
     for (let i = this._line.length - 1;
@@ -316,10 +421,15 @@ class Trajectory {
     this._line.splice(this._line.length, 0, head);
   }
 
+  // velocity returns the estimated velocity over a given period of time.  The
+  // terminology here is inspired from atimeseries measuring the "distance
+  // traveled".
   velocity(a, b) {
     return (this.at(b) - this.at(a)) / (b - a);
   }
 
+  // earliest returns the earliest (smallest timestamp) point in the
+  // timeseries.
   get earliest() {
     if (!this._line) {
       return NaN;
@@ -327,6 +437,7 @@ class Trajectory {
     return this._line[0];
   }
 
+  // latest returns the latest (biggest timestamp) point in the timeseries.
   get latest() {
     if (!this._line) {
       return NaN;
@@ -334,10 +445,12 @@ class Trajectory {
     return this._line[this._line.length - 1];
   }
 
+  // length returns the number of points in the timeseries.
   get length() {
     return this._line.length;
   }
 
+  // [Symbol.iterator] returns iterator over all points in the timesries.
   [Symbol.iterator]() {
     return this._line[Symbol.iterator]();
   }
