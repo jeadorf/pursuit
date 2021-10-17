@@ -527,11 +527,13 @@ const Mode = {
   // change objectives or goals. This prevents accidental changes, and avoids
   // distracting elements.
   VIEW: 'view',
+
   // TRACK is a mode which allows the user to conveniently update the progress
   // for their goals. Still, this mode only provides the minimum surface for
   // updating progress, avoiding other distracting elements, and preventing
   // accidental changes.
   TRACK: 'track',
+
   // PLAN is a mode which gives the user full control (CRUD) over objectives
   // and goals.
   PLAN: 'plan',
@@ -544,9 +546,11 @@ let modeMixin = {
     viewing: function() {
       return this.mode == Mode.VIEW;
     },
+
     tracking: function() {
       return this.mode == Mode.TRACK;
     },
+
     planning: function() {
       return this.mode == Mode.PLAN;
     },
@@ -557,13 +561,16 @@ let modeMixin = {
 // objective and its goals.
 Vue.component('objective', {
   mixins: [modeMixin],
+
   props: ['objective', 'mode', 'user_id'],
+
   computed: {
     descriptionHtml: function() {
       let markdown = new SafeMarkdownRenderer();
       return markdown.render(this.objective.description);
     },
   },
+
   methods: {
     // updateObjective makes changes to the objective in Firestore.
     updateObjective: function(update) {
@@ -881,30 +888,37 @@ let goalMixin = {
 // Registers the <goal> Vue component globally. This component renders a goal.
 Vue.component('goal', {
   mixins: [goalMixin, modeMixin],
+
   computed: {
     currentXPos: function() {
       let now = new Date().getTime();
       return (100 * this.goal.time_spent(now) - 0.25) + '%';
     },
+
     endDate: function() {
       return new Date(this.goal.end).toISOString().slice(0, 10);
     },
+
     progressFillColor: function() {
       let now = new Date().getTime();
       let progressReport = new ProgressReport();
       return progressReport.progressFillColor(this.goal, now);
     },
+
     progressReport: function() {
       let now = new Date().getTime();
       let progressReport = new ProgressReport();
       return progressReport.progressStatus(this.goal, now);
     },
+
     progressPercentBounded: function() {
       return (100 * Math.max(Math.min(this.goal.progress, 1), 0)) + '%';
     },
+
     startDate: function() {
       return new Date(this.goal.start).toISOString().slice(0, 10);
     },
+
     trajectory_last_updated: function() {
       let format_date = (millis) => {
 				let is = (a, b) => {
@@ -928,6 +942,7 @@ Vue.component('goal', {
 
       return `last updated ${format_date(this.goal.trajectory.latest.date)}`;
     },
+
     velocityReport: function() {
       let now = new Date().getTime();
       if (this.goal.stage != Stage.ARCHIVED) {
@@ -940,6 +955,7 @@ Vue.component('goal', {
           return '';
       }
     },
+
     name: {
       get: function() {
         return this.goal.name;
@@ -951,6 +967,7 @@ Vue.component('goal', {
         });
       }, 1000),
     },
+
     start: {
       get: function() {
         return new Date(this.goal.start).toISOString().slice(0, 10);
@@ -962,6 +979,7 @@ Vue.component('goal', {
         });
       }, 1000),
     },
+
     end: {
       get: function() {
         return new Date(this.goal.end).toISOString().slice(0, 10);
@@ -973,6 +991,7 @@ Vue.component('goal', {
         });
       }, 1000),
     },
+
     baseline: {
       get: function() {
         return this.goal.baseline;
@@ -984,6 +1003,7 @@ Vue.component('goal', {
         });
       }, 1000),
     },
+
     target: {
       get: function() {
         return this.goal.target;
@@ -995,6 +1015,7 @@ Vue.component('goal', {
         });
       }, 1000),
     },
+
     current: {
       get: function() {
         return this.goal.trajectory.latest.value;
@@ -1006,6 +1027,7 @@ Vue.component('goal', {
         });
       }, 1000),
     },
+
     unit: {
       get: function() {
         return this.goal.unit
@@ -1018,6 +1040,7 @@ Vue.component('goal', {
       }, 1000),
     },
   },
+
   template: `
     <div class='goal'>
       <div class='name'>{{ goal.name }} <button class="id" v-show="planning" v-on:click="copyGoalIdToClipboard()">{{ goal.id }}</button></div>
@@ -1094,11 +1117,13 @@ Vue.component('goal', {
 // regular goal.
 Vue.component('regular_goal', {
   mixins: [goalMixin, modeMixin],
+
   computed: {
     barColor: function() {
       let now = new Date().getTime();
       return this.goal.budget_remaining_adjusted(now) > 0 ? 'rgb(136,187,77)' : 'rgb(187, 102, 77)'
     },
+
     barXPos: function() {
       let now = new Date().getTime();
       let b = this.goal.budget_remaining_adjusted(now);
@@ -1108,11 +1133,13 @@ Vue.component('regular_goal', {
         return (100-Math.max(0, Math.min(100, Math.abs((100 * b))))) + '%';
       }
     },
+
     barWidth: function() {
       let now = new Date().getTime();
       let b = this.goal.budget_remaining_adjusted(now);
       return Math.max(0, Math.min(100, Math.abs((100 * b)))) + '%';
     },
+
     budgetClass: function() {
       let now = new Date().getTime();
       if (this.goal.budget_remaining_adjusted(now) > 0) {
@@ -1121,14 +1148,17 @@ Vue.component('regular_goal', {
         return 'out-of-budget';
       }
     },
+
     budgetRemaining: function() {
       let now = new Date().getTime();
       return (100 * this.goal.budget_remaining_adjusted(now)).toFixed(0) + '%';
     },
+
     descriptionHtml: function() {
       let markdown = new SafeMarkdownRenderer();
       return markdown.render(this.goal.description);
     },
+
     partialData: function() {
       let now = new Date().getTime();
       if (this.goal.partial_data(now)) {
@@ -1137,12 +1167,14 @@ Vue.component('regular_goal', {
         return '';
       }
     },
+
     status: function() {
       let now = new Date().getTime();
       return `@ ${this.goal.value(now).toFixed(2)} of ${this.goal.total} ${this.goal.unit},
               targeting ${(this.goal.target * this.goal.total).toFixed(2)}
               over ${this.goal.window}-day window`;
     },
+
     trajectory_last_updated: function() {
       let format_date = (millis) => {
 				let is = (a, b) => {
@@ -1177,6 +1209,7 @@ Vue.component('regular_goal', {
         });
       }, 1000),
     },
+
     description: {
       get: function() {
         return this.goal.description;
@@ -1188,6 +1221,7 @@ Vue.component('regular_goal', {
         });
       }, 1000),
     },
+
     window: {
       get: function() {
         return this.goal.window;
@@ -1199,6 +1233,7 @@ Vue.component('regular_goal', {
         });
       }, 1000),
     },
+
     target: {
       get: function() {
         return this.goal.target;
@@ -1210,6 +1245,7 @@ Vue.component('regular_goal', {
         });
       }, 1000),
     },
+
     total: {
       get: function() {
         return this.goal.total;
@@ -1221,6 +1257,7 @@ Vue.component('regular_goal', {
         });
       }, 1000),
     },
+
     current: {
       get: function() {
         return this.goal.trajectory.latest.value;
@@ -1232,6 +1269,7 @@ Vue.component('regular_goal', {
         });
       }, 1000),
     },
+
     unit: {
       get: function() {
         return this.goal.unit
@@ -1244,6 +1282,7 @@ Vue.component('regular_goal', {
       }, 1000),
     },
   },
+
   template: `
     <div class="regular-goal">
       <div :class="budgetClass">
@@ -1382,6 +1421,7 @@ let vue = new Vue({
       this.mode = Mode.PLAN;
     },
   },
+
   template: `
     <div class='app'>
       <button
