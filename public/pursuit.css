@@ -31,6 +31,8 @@
 }
 
 .objective-name {
+  align-items: baseline;
+  display: flex;
   font-size: 22px;
 }
 
@@ -75,7 +77,9 @@
 }
 
 .name {
-   font-size: 16px;
+  align-items: baseline;
+  font-size: 16px;
+  display: flex;
 }
 
 .name input {
@@ -213,8 +217,12 @@ button:hover {
   font-weight: bold;
 }
 
-.id {
+button.id {
   color: mediumslateblue;
+  flex-grow: 1;
   font-size: 12px;
+  font-weight: normal;
   padding: 0 10px;
+  text-align: right;
+  text-transform: none;
 }

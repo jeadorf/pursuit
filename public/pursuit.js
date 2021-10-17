@@ -558,6 +558,9 @@ Vue.component('objective', {
           ],
         });
     },
+    copyObjectiveIdToClipboard: function() {
+      navigator.clipboard.writeText(this.objective.id);
+    },
     updateGoalName(goal, name) {
       let update = null;
       update = {
@@ -779,7 +782,7 @@ Vue.component('objective', {
   props: ['mode', 'objective', 'user_id'],
   template: `
     <div class='objective'>
-      <div class='objective-name'>{{ objective.name }} <span class="id" v-show="isPlanning">{{ objective.id }}</span></div>
+      <div class='objective-name'>{{ objective.name }} <button class="id" v-show="isPlanning" v-on:click="copyObjectiveIdToClipboard()">{{ objective.id }}</button></div>
       <div v-show='isPlanning'>
         <button v-on:click='addGoal'>Add goal</button>
         <button v-on:click='addRegularGoal'>Add regular goal</button>
@@ -959,10 +962,15 @@ Vue.component('goal', {
       }, 1000),
     },
   },
+  methods: {
+    copyGoalIdToClipboard: function() {
+      navigator.clipboard.writeText(this.goal.id);
+    },
+  },
   props: ['goal', 'mode'],
   template: `
     <div class='goal'>
-      <div class='name'>{{ goal.name }} <span class="id" v-show="isPlanning">{{ goal.id }}</span></div>
+      <div class='name'>{{ goal.name }} <button class="id" v-show="isPlanning" v-on:click="copyGoalIdToClipboard()">{{ goal.id }}</button></div>
       <div v-show="isPlanning">
         <button v-on:click="$emit('delete', goal)">delete</button>
       </div>
@@ -1182,11 +1190,16 @@ Vue.component('regular_goal', {
       }, 1000),
     },
   },
+  methods: {
+    copyGoalIdToClipboard: function() {
+      navigator.clipboard.writeText(this.goal.id);
+    },
+  },
   props: ['goal', 'mode'],
   template: `
     <div class="regular-goal">
       <div :class="budgetClass">
-        <div class="name">{{ goal.name }} <span class="id" v-show="isPlanning">{{ goal.id }}</span></div>
+        <div class="name">{{ goal.name }} <button class="id" v-show="isPlanning" v-on:click="copyGoalIdToClipboard()">{{ goal.id }}</button></div>
         <div v-show="isPlanning">
           <button v-on:click="$emit('delete', goal)">delete</button>
         </div>
@@ -1234,6 +1247,9 @@ let vue = new Vue({
     },
   },
   methods: {
+    copyUserIdToClipboard: function() {
+      navigator.clipboard.writeText(this.user_id);
+    },
     createObjective: function() {
       let objective = new Objective({
         id: uuidv4(),
@@ -1294,6 +1310,7 @@ let vue = new Vue({
         <button v-on:click='plan' v-show='isViewing'>Plan</button>
         <button v-on:click='view' v-show='isPlanning'>View</button>
         <button v-on:click='createObjective' v-show='isPlanning'>Add objective</button>
+        <button class="id" v-show="isPlanning" v-on:click="copyUserIdToClipboard()">{{ user_id }}</button>
       </div>
       <objective
         v-for="o in objectives"
