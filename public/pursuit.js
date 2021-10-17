@@ -561,6 +561,34 @@ Vue.component('objective', {
     copyObjectiveIdToClipboard: function() {
       navigator.clipboard.writeText(this.objective.id);
     },
+    incrementGoal(goal) {
+      let t = _.cloneDeep(goal.trajectory);
+      t.insert(new Date().getTime(), t.latest.value + 1);
+      t.compact_head(HOUR);
+
+      firebase.firestore()
+        .collection('users')
+        .doc(this.user_id)
+        .collection('objectives')
+        .doc(this.objective.id)
+        .update({
+          [`goals.${goal.id}.trajectory`]: Array.from(t),
+        });
+    },
+    decrementGoal(goal) {
+      let t = _.cloneDeep(goal.trajectory);
+      t.insert(new Date().getTime(), t.latest.value - 1);
+      t.compact_head(HOUR);
+
+      firebase.firestore()
+        .collection('users')
+        .doc(this.user_id)
+        .collection('objectives')
+        .doc(this.objective.id)
+        .update({
+          [`goals.${goal.id}.trajectory`]: Array.from(t),
+        });
+    },
     updateGoalName(goal, name) {
       let update = null;
       update = {
@@ -669,6 +697,34 @@ Vue.component('objective', {
             [`goals.${goal.id}`]: firebase.firestore.FieldValue.delete()
           });
       }
+    },
+    incrementRegularGoal(goal) {
+      let t = _.cloneDeep(goal.trajectory);
+      t.insert(new Date().getTime(), t.latest.value + 1);
+      t.compact_head(HOUR);
+
+      firebase.firestore()
+        .collection('users')
+        .doc(this.user_id)
+        .collection('objectives')
+        .doc(this.objective.id)
+        .update({
+          [`regular_goals.${goal.id}.trajectory`]: Array.from(t),
+        });
+    },
+    decrementRegularGoal(goal) {
+      let t = _.cloneDeep(goal.trajectory);
+      t.insert(new Date().getTime(), t.latest.value - 1);
+      t.compact_head(HOUR);
+
+      firebase.firestore()
+        .collection('users')
+        .doc(this.user_id)
+        .collection('objectives')
+        .doc(this.objective.id)
+        .update({
+          [`regular_goals.${goal.id}.trajectory`]: Array.from(t),
+        });
     },
     updateRegularGoalName(goal, name) {
       let update = {
@@ -794,6 +850,8 @@ Vue.component('objective', {
         v-bind:goal="g"
         v-bind:mode='mode'
         v-bind:key="g.id"
+        v-on:increment="incrementGoal($event)"
+        v-on:decrement="decrementGoal($event)"
         v-on:update-name="updateGoalName($event.goal, $event.name)"
         v-on:update-start="updateGoalStart($event.goal, $event.start)"
         v-on:update-end="updateGoalEnd($event.goal, $event.end)"
@@ -808,6 +866,8 @@ Vue.component('objective', {
         v-bind:goal="g"
         v-bind:mode='mode'
         v-bind:key="g.id"
+        v-on:increment="incrementRegularGoal($event)"
+        v-on:decrement="decrementRegularGoal($event)"
         v-on:update-name="updateRegularGoalName($event.goal, $event.name)"
         v-on:update-description="updateRegularGoalDescription($event.goal, $event.description)"
         v-on:update-window="updateRegularGoalWindow($event.goal, $event.window)"
@@ -832,6 +892,9 @@ Vue.component('goal', {
     },
     isPlanning: function() {
       return this.mode == 'plan';
+    },
+    isTracking: function() {
+      return this.mode == 'track';
     },
     progressFillColor: function() {
       let now = new Date().getTime();
@@ -974,6 +1037,10 @@ Vue.component('goal', {
       <div v-show="isPlanning">
         <button v-on:click="$emit('delete', goal)">delete</button>
       </div>
+      <div v-show="isTracking">
+        <button v-on:click="$emit('increment', goal)">increment</button>
+        <button v-on:click="$emit('decrement', goal)">decrement</button>
+      </div>
       <svg class='chart' preserveAspectRatio='none'>
         <text
             class='status'
@@ -1074,6 +1141,9 @@ Vue.component('regular_goal', {
     },
     isPlanning: function() {
       return this.mode == 'plan';
+    },
+    isTracking: function() {
+      return this.mode == 'track';
     },
     partialData: function() {
       let now = new Date().getTime();
@@ -1203,6 +1273,10 @@ Vue.component('regular_goal', {
         <div v-show="isPlanning">
           <button v-on:click="$emit('delete', goal)">delete</button>
         </div>
+        <div v-show="isTracking">
+          <button v-on:click="$emit('increment', goal)">increment</button>
+          <button v-on:click="$emit('decrement', goal)">decrement</button>
+        </div>
         <div class="goal-description"><span v-html='descriptionHtml'></span></div>
         <div class="level">
           <span class="budget">{{ budgetRemaining }}</span>
@@ -1238,6 +1312,9 @@ let vue = new Vue({
   computed: {
     isPlanning: function() {
       return this.mode == 'plan';
+    },
+    isTracking: function() {
+      return this.mode == 'track';
     },
     isViewing: function() {
       return this.mode == 'view';
@@ -1299,6 +1376,9 @@ let vue = new Vue({
      let provider = new firebase.auth.GoogleAuthProvider();
      firebase.auth().signInWithRedirect(provider);
     },
+    track: function() {
+      this.mode = 'track';
+    },
     view: function() {
       this.mode = 'view';
     },
@@ -1307,8 +1387,9 @@ let vue = new Vue({
     <div class='app'>
       <div class='toolbar'>
         <button id='signin' v-show='!signedIn' v-on:click="signIn">Sign in with Google</button>
-        <button v-on:click='plan' v-show='isViewing'>Plan</button>
-        <button v-on:click='view' v-show='isPlanning'>View</button>
+        <button v-on:click='view' v-show='isPlanning || isTracking'>View</button>
+        <button v-on:click='track' v-show='isPlanning || isViewing'>Track</button>
+        <button v-on:click='plan' v-show='isViewing || isTracking'>Plan</button>
         <button v-on:click='createObjective' v-show='isPlanning'>Add objective</button>
         <button class="id" v-show="isPlanning" v-on:click="copyUserIdToClipboard()">{{ user_id }}</button>
       </div>
