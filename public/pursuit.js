@@ -47,6 +47,14 @@ class Objective {
   get regular_goals() {
     return this._regular_goals;
   }
+
+  set goals(goals) {
+    this._goals = goals;
+  }
+
+  set regular_goals(regular_goals) {
+    this._regular_goals = regular_goals;
+  }
 }
 
 const Stage = {
@@ -510,46 +518,85 @@ class ProgressReport {
   }
 }
 
+// Mode represents different UI: viewing, tracking, or planning.
+//
+// @enum {string}
+const Mode = {
+  // VIEW is a "read-only" mode. When viewing, the user can see their
+  // objectives and goals, and thus see progress. However, the user cannot
+  // change objectives or goals. This prevents accidental changes, and avoids
+  // distracting elements.
+  VIEW: 'view',
+  // TRACK is a mode which allows the user to conveniently update the progress
+  // for their goals. Still, this mode only provides the minimum surface for
+  // updating progress, avoiding other distracting elements, and preventing
+  // accidental changes.
+  TRACK: 'track',
+  // PLAN is a mode which gives the user full control (CRUD) over objectives
+  // and goals.
+  PLAN: 'plan',
+};
+
+// modeMixin provides common functionality to both the <goal> and the
+// <regular-goal> Vue components.
+let modeMixin = {
+  computed: {
+    viewing: function() {
+      return this.mode == Mode.VIEW;
+    },
+    tracking: function() {
+      return this.mode == Mode.TRACK;
+    },
+    planning: function() {
+      return this.mode == Mode.PLAN;
+    },
+  },
+};
+
+// Registers the <objective> Vue component globally. This component renders an
+// objective and its goals.
 Vue.component('objective', {
+  mixins: [modeMixin],
+  props: ['objective', 'mode', 'user_id'],
   computed: {
     descriptionHtml: function() {
       let markdown = new SafeMarkdownRenderer();
       return markdown.render(this.objective.description);
     },
-    isPlanning: function() {
-      return this.mode == 'plan';
-    },
   },
   methods: {
-    addGoal: function() {
-      let goalId = uuidv4();
-      let now = new Date().getTime();
+    // updateObjective makes changes to the objective in Firestore.
+    updateObjective: function(update) {
       firebase.firestore()
         .collection('users')
         .doc(this.user_id)
         .collection('objectives')
         .doc(this.objective.id)
-        .update({
-          [`goals.${goalId}.name`]: 'AA New goal',
-          [`goals.${goalId}.unit`]: '',
-          [`goals.${goalId}.start`]: now,
-          [`goals.${goalId}.end`]: now + 7 * DAY,
-          [`goals.${goalId}.target`]: 100,
-          [`goals.${goalId}.stage`]: Stage.PLEDGED,
-          [`goals.${goalId}.trajectory`]: [
-            {date: now, value: 0},
-          ],
-        });
+        .update(update);
     },
-    addRegularGoal: function() {
+
+    // createGoal adds a new goal to the objective in Firestore.
+    createGoal: function() {
       let goalId = uuidv4();
       let now = new Date().getTime();
-      firebase.firestore()
-        .collection('users')
-        .doc(this.user_id)
-        .collection('objectives')
-        .doc(this.objective.id)
-        .update({
+      this.updateObjective({
+        [`goals.${goalId}.name`]: 'AA New goal',
+        [`goals.${goalId}.unit`]: '',
+        [`goals.${goalId}.start`]: now,
+        [`goals.${goalId}.end`]: now + 7 * DAY,
+        [`goals.${goalId}.target`]: 100,
+        [`goals.${goalId}.stage`]: Stage.PLEDGED,
+        [`goals.${goalId}.trajectory`]: [
+          {date: now, value: 0},
+        ],
+      });
+    },
+
+    // createRegularGoal adds a new regular goal to the objective in Firestore.
+    createRegularGoal: function() {
+      let goalId = uuidv4();
+      let now = new Date().getTime();
+      this.updateObjective({
           [`regular_goals.${goalId}.name`]: 'AA New regular goal',
           [`regular_goals.${goalId}.description`]: '',
           [`regular_goals.${goalId}.unit`]: '',
@@ -561,272 +608,200 @@ Vue.component('objective', {
           ],
         });
     },
+
+    // copyObjectiveIdToClipboard puts the objective ID into the clipboard.
     copyObjectiveIdToClipboard: function() {
       navigator.clipboard.writeText(this.objective.id);
     },
+
+    // incrementGoal increments the latest value of a goal by one.
     incrementGoal(goal) {
       let t = _.cloneDeep(goal.trajectory);
       t.insert(new Date().getTime(), t.latest.value + 1);
       t.compact_head(HOUR);
 
-      firebase.firestore()
-        .collection('users')
-        .doc(this.user_id)
-        .collection('objectives')
-        .doc(this.objective.id)
-        .update({
-          [`goals.${goal.id}.trajectory`]: Array.from(t),
-        });
+      this.updateObjective({
+        [`goals.${goal.id}.trajectory`]: Array.from(t),
+      });
     },
+
+    // decrementGoal decrements the latest value of a goal by one.
     decrementGoal(goal) {
       let t = _.cloneDeep(goal.trajectory);
       t.insert(new Date().getTime(), t.latest.value - 1);
       t.compact_head(HOUR);
 
-      firebase.firestore()
-        .collection('users')
-        .doc(this.user_id)
-        .collection('objectives')
-        .doc(this.objective.id)
-        .update({
-          [`goals.${goal.id}.trajectory`]: Array.from(t),
-        });
+      this.updateObjective({
+        [`goals.${goal.id}.trajectory`]: Array.from(t),
+      });
     },
+
+    // updateGoalName renames the goal.
     updateGoalName(goal, name) {
-      let update = null;
-      update = {
+      this.updateObjective({
         [`goals.${goal.id}.name`]: name,
-      };
-      
-      firebase.firestore()
-        .collection('users')
-          .doc(this.user_id)
-          .collection('objectives')
-          .doc(this.objective.id)
-          .update(update);
+      });
     },
+
+    // updateGoalStart changes the start date of the goal. It is not obvious
+    // what to do if the trajectory already contains point past the previous
+    // start date. Users should not change the start date for any goals after
+    // they already made progress on these goals.  If users still want to
+    // change the start date, they will have to reset the trajectory.  Smarter
+    // implementations are possible.
     updateGoalStart(goal, start) {
       if (!confirm(`Changing the baseline will delete the trajectory of "${goal.name}", proceed?`)) {
         return;
       }
       let t = new Trajectory();
       t.insert(goal.start, goal.baseline);
-      let update = {
+      this.updateObjective({
         [`goals.${goal.id}.start`]: start,
         [`goals.${goal.id}.trajectory`]: Array.from(t),
-      };
-      
-      firebase.firestore()
-        .collection('users')
-          .doc(this.user_id)
-          .collection('objectives')
-          .doc(this.objective.id)
-          .update(update);
+      });
     },
+
+    // updateGoalStart changes the end date of the goal.
     updateGoalEnd(goal, end) {
-      let update = {
+      this.updateObjective({
         [`goals.${goal.id}.end`]: end,
-      };
-      
-      firebase.firestore()
-        .collection('users')
-          .doc(this.user_id)
-          .collection('objectives')
-          .doc(this.objective.id)
-          .update(update);
+      });
     },
+
+    // updateGoalBaseline changes the end date of the goal.
     updateGoalBaseline(goal, baseline) {
       if (!confirm(`Changing the baseline will delete trajectory of "${goal.name}", proceed?`)) {
         return;
       }
       let t = new Trajectory();
       t.insert(goal.start, baseline);
-      let update = {
+      this.updateObjective({
         [`goals.${goal.id}.start`]: goal.start,
         [`goals.${goal.id}.trajectory`]: Array.from(t),
-      };
-      
-      firebase.firestore()
-        .collection('users')
-          .doc(this.user_id)
-          .collection('objectives')
-          .doc(this.objective.id)
-          .update(update);
+      });
     },
+
+    // updateGoalTarget changes the target of the goal.
     updateGoalTarget(goal, target) {
-      let update = {
+      this.updateObjective({
         [`goals.${goal.id}.target`]: target,
-      };
-      
-      firebase.firestore()
-        .collection('users')
-          .doc(this.user_id)
-          .collection('objectives')
-          .doc(this.objective.id)
-          .update(update);
+      });
     },
+
+    // updateGoalCurrent changes the latest value of the goal.
     updateGoalCurrent(goal, current) {
       let t = _.cloneDeep(goal.trajectory);
       t.insert(new Date().getTime(), current);
       t.compact_head(HOUR);
 
-      firebase.firestore()
-        .collection('users')
-        .doc(this.user_id)
-        .collection('objectives')
-        .doc(this.objective.id)
-        .update({
-          [`goals.${goal.id}.trajectory`]: Array.from(t),
-        });
+      this.updateObjective({
+        [`goals.${goal.id}.trajectory`]: Array.from(t),
+      });
     },
+
+    // updateGoalUnit changes the unit of the goal.
     updateGoalUnit(goal, unit) {
-      firebase.firestore()
-        .collection('users')
-        .doc(this.user_id)
-        .collection('objectives')
-        .doc(this.objective.id)
-        .update({
-          [`goals.${goal.id}.unit`]: unit,
-        });
+      this.updateObjective({
+        [`goals.${goal.id}.unit`]: unit,
+      });
     },
+
+    // deleteGoal removes the goal from its objective.
     deleteGoal: function(goal) {
       if (confirm(`Really delete the goal "${goal.name}"?`)) {
-        firebase.firestore()
-          .collection('users')
-          .doc(this.user_id)
-          .collection('objectives')
-          .doc(this.objective.id)
-          .update({
-            [`goals.${goal.id}`]: firebase.firestore.FieldValue.delete()
-          });
+        this.updateObjective({
+          [`goals.${goal.id}`]: firebase.firestore.FieldValue.delete()
+        });
       }
     },
+
+    // incrementRegularGoal increments the latest value of a regular goal by
+    // one.
     incrementRegularGoal(goal) {
       let t = _.cloneDeep(goal.trajectory);
       t.insert(new Date().getTime(), t.latest.value + 1);
       t.compact_head(HOUR);
 
-      firebase.firestore()
-        .collection('users')
-        .doc(this.user_id)
-        .collection('objectives')
-        .doc(this.objective.id)
-        .update({
-          [`regular_goals.${goal.id}.trajectory`]: Array.from(t),
-        });
+      this.updateObjective({
+        [`regular_goals.${goal.id}.trajectory`]: Array.from(t),
+      });
     },
+
+    // decrementRegularGoal decrements the latest value of a regular goal by
+    // one.
     decrementRegularGoal(goal) {
       let t = _.cloneDeep(goal.trajectory);
       t.insert(new Date().getTime(), t.latest.value - 1);
       t.compact_head(HOUR);
 
-      firebase.firestore()
-        .collection('users')
-        .doc(this.user_id)
-        .collection('objectives')
-        .doc(this.objective.id)
-        .update({
-          [`regular_goals.${goal.id}.trajectory`]: Array.from(t),
-        });
+      this.updateObjective({
+        [`regular_goals.${goal.id}.trajectory`]: Array.from(t),
+      });
     },
+
+    // updateRegularGoalName renames a regular goal.
     updateRegularGoalName(goal, name) {
-      let update = {
+      this.updateObjective({
         [`regular_goals.${goal.id}.name`]: name,
-      };
-      
-      firebase.firestore()
-        .collection('users')
-          .doc(this.user_id)
-          .collection('objectives')
-          .doc(this.objective.id)
-          .update(update);
+      });
     },
+
+    // updateRegularGoalDescription changes the description of a regular goal.
     updateRegularGoalDescription(goal, description) {
-      let update = {
+      this.updateObjective({
         [`regular_goals.${goal.id}.description`]: description,
-      };
-      
-      firebase.firestore()
-        .collection('users')
-          .doc(this.user_id)
-          .collection('objectives')
-          .doc(this.objective.id)
-          .update(update);
+      });
     },
+
+    // updateRegularGoalWindow changes the window of a regular goal.
     updateRegularGoalWindow(goal, window) {
-      let update = {
+      this.updateObjective({
         [`regular_goals.${goal.id}.window`]: window,
-      };
-      
-      firebase.firestore()
-        .collection('users')
-          .doc(this.user_id)
-          .collection('objectives')
-          .doc(this.objective.id)
-          .update(update);
+      });
     },
+
+    // updateRegularGoalTarget changes the target of a regular goal.
     updateRegularGoalTarget(goal, target) {
-      let update = {
+      this.updateObjective({
         [`regular_goals.${goal.id}.target`]: target,
-      };
-      
-      firebase.firestore()
-        .collection('users')
-          .doc(this.user_id)
-          .collection('objectives')
-          .doc(this.objective.id)
-          .update(update);
+      });
     },
+
+    // updateRegularGoalTotal changes the total of a regular goal.
     updateRegularGoalTotal(goal, total) {
-      let update = {
+      this.updateObjective({
         [`regular_goals.${goal.id}.total`]: total,
-      };
-      
-      firebase.firestore()
-        .collection('users')
-          .doc(this.user_id)
-          .collection('objectives')
-          .doc(this.objective.id)
-          .update(update);
+      });
     },
+
+    // updateRegularGoalUnit changes the unit of a regular goal.
     updateRegularGoalUnit(goal, unit) {
-      let update = {
+      this.updateObjective({
         [`regular_goals.${goal.id}.unit`]: unit,
-      };
-      
-      firebase.firestore()
-        .collection('users')
-          .doc(this.user_id)
-          .collection('objectives')
-          .doc(this.objective.id)
-          .update(update);
+      });
     },
+
+    // updateRegularGoalCurrent changes the latest value of a regular goal.
     updateRegularGoalCurrent(goal, current) {
       let t = _.cloneDeep(goal.trajectory);
       t.insert(new Date().getTime(), current);
       t.compact_head(HOUR);
 
-      firebase.firestore()
-        .collection('users')
-        .doc(this.user_id)
-        .collection('objectives')
-        .doc(this.objective.id)
-        .update({
-          [`regular_goals.${goal.id}.trajectory`]: Array.from(t),
-        });
+      this.updateObjective({
+        [`regular_goals.${goal.id}.trajectory`]: Array.from(t),
+      });
     },
+
+    // deleteGoal removes the goal from its objective.
     deleteRegularGoal: function(goal) {
       if (confirm(`Really delete the regular goal "${goal.name}"?`)) {
-        firebase.firestore()
-          .collection('users')
-          .doc(this.user_id)
-          .collection('objectives')
-          .doc(this.objective.id)
-          .update({
-            [`regular_goals.${goal.id}`]: firebase.firestore.FieldValue.delete()
-          });
+        this.updateObjective({
+          [`regular_goals.${goal.id}`]: firebase.firestore.FieldValue.delete()
+        });
       }
     },
+
+    // deleteObjective removes the objective from the user's collection.
     deleteObjective: function() {
       if (confirm(`Really delete the objective named "${this.objective.name}"?`)) {
         firebase.firestore()
@@ -838,13 +813,21 @@ Vue.component('objective', {
       }
     },
   },
-  props: ['mode', 'objective', 'user_id'],
+
   template: `
     <div class='objective'>
-      <div class='objective-name'>{{ objective.name }} <button class="id" v-show="isPlanning" v-on:click="copyObjectiveIdToClipboard()">{{ objective.id }}</button></div>
-      <div v-show='isPlanning'>
-        <button v-on:click='addGoal'>Add goal</button>
-        <button v-on:click='addRegularGoal'>Add regular goal</button>
+      <div class='objective-name'>
+        {{ objective.name }}
+        <button
+            class="id"
+            v-show="planning"
+            v-on:click="copyObjectiveIdToClipboard()">
+          {{ objective.id }}
+        </button>
+      </div>
+      <div v-show='planning'>
+        <button v-on:click='createGoal'>Add goal</button>
+        <button v-on:click='createRegularGoal'>Add regular goal</button>
         <button v-on:click='deleteObjective'>Delete objective</button>
       </div>
       <div class='objective-description'><span v-html='descriptionHtml'></span></div>
@@ -884,7 +867,20 @@ Vue.component('objective', {
   `,
 });
 
+// goalMixin provides common functionality to both the <goal> and the
+// <regular-goal> Vue components.
+let goalMixin = {
+  props: ['goal', 'mode'],
+  methods: {
+    copyGoalIdToClipboard: function() {
+      navigator.clipboard.writeText(this.goal.id);
+    },
+  },
+};
+
+// Registers the <goal> Vue component globally. This component renders a goal.
 Vue.component('goal', {
+  mixins: [goalMixin, modeMixin],
   computed: {
     currentXPos: function() {
       let now = new Date().getTime();
@@ -892,12 +888,6 @@ Vue.component('goal', {
     },
     endDate: function() {
       return new Date(this.goal.end).toISOString().slice(0, 10);
-    },
-    isPlanning: function() {
-      return this.mode == 'plan';
-    },
-    isTracking: function() {
-      return this.mode == 'track';
     },
     progressFillColor: function() {
       let now = new Date().getTime();
@@ -1028,19 +1018,13 @@ Vue.component('goal', {
       }, 1000),
     },
   },
-  methods: {
-    copyGoalIdToClipboard: function() {
-      navigator.clipboard.writeText(this.goal.id);
-    },
-  },
-  props: ['goal', 'mode'],
   template: `
     <div class='goal'>
-      <div class='name'>{{ goal.name }} <button class="id" v-show="isPlanning" v-on:click="copyGoalIdToClipboard()">{{ goal.id }}</button></div>
-      <div v-show="isPlanning">
+      <div class='name'>{{ goal.name }} <button class="id" v-show="planning" v-on:click="copyGoalIdToClipboard()">{{ goal.id }}</button></div>
+      <div v-show="planning">
         <button v-on:click="$emit('delete', goal)">delete</button>
       </div>
-      <div v-show="isTracking">
+      <div v-show="tracking">
         <button v-on:click="$emit('increment', goal)">increment</button>
         <button v-on:click="$emit('decrement', goal)">decrement</button>
       </div>
@@ -1093,7 +1077,7 @@ Vue.component('goal', {
           x='100%'
           y=48>{{ goal.target }} {{ goal.unit }}</text>
       </svg>
-      <div class='edit' v-show="isPlanning">
+      <div class='edit' v-show="planning">
         <div><div>Name</div> <input type="text" v-model="name"></div>
         <div><div>Start</div> <input type="date" v-model="start"></div>
         <div><div>End</div> <input type="date" v-model="end"></div>
@@ -1106,7 +1090,10 @@ Vue.component('goal', {
   `,
 });
 
+// Registers the <goal> Vue component globally. This component renders a
+// regular goal.
 Vue.component('regular_goal', {
+  mixins: [goalMixin, modeMixin],
   computed: {
     barColor: function() {
       let now = new Date().getTime();
@@ -1141,12 +1128,6 @@ Vue.component('regular_goal', {
     descriptionHtml: function() {
       let markdown = new SafeMarkdownRenderer();
       return markdown.render(this.goal.description);
-    },
-    isPlanning: function() {
-      return this.mode == 'plan';
-    },
-    isTracking: function() {
-      return this.mode == 'track';
     },
     partialData: function() {
       let now = new Date().getTime();
@@ -1263,20 +1244,14 @@ Vue.component('regular_goal', {
       }, 1000),
     },
   },
-  methods: {
-    copyGoalIdToClipboard: function() {
-      navigator.clipboard.writeText(this.goal.id);
-    },
-  },
-  props: ['goal', 'mode'],
   template: `
     <div class="regular-goal">
       <div :class="budgetClass">
-        <div class="name">{{ goal.name }} <button class="id" v-show="isPlanning" v-on:click="copyGoalIdToClipboard()">{{ goal.id }}</button></div>
-        <div v-show="isPlanning">
+        <div class="name">{{ goal.name }} <button class="id" v-show="planning" v-on:click="copyGoalIdToClipboard()">{{ goal.id }}</button></div>
+        <div v-show="planning">
           <button v-on:click="$emit('delete', goal)">delete</button>
         </div>
-        <div v-show="isTracking">
+        <div v-show="tracking">
           <button v-on:click="$emit('increment', goal)">increment</button>
           <button v-on:click="$emit('decrement', goal)">decrement</button>
         </div>
@@ -1291,7 +1266,7 @@ Vue.component('regular_goal', {
           </svg>
         </div>
       </div>
-      <div class='edit' v-show="isPlanning">
+      <div class='edit' v-show="planning">
         <div><div>Name</div> <input type="text" v-model="name"></div>
         <div><div>Description</div> <input type="text" v-model="description"></div>
         <div><div>Window</div> <input type="number" v-model="window"></div>
@@ -1304,32 +1279,48 @@ Vue.component('regular_goal', {
   `
 });
 
+// The main Vue instance that is driving the application.
 let vue = new Vue({
+  mixins: [modeMixin],
+
   el: '#app',
+
   data: {
-    mode: '',
-    objectives: [
-    ],
+    // See enum Mode.
+    mode: Mode.VIEW,
+
+    // objectives holds all of the objectives fetched from Firestore.
+    // objectives is considered immutable, all changes to an objective or its
+    // goals should be made directly in Firestore, relying on Firestore pushing
+    // such changes back to the client. See also: class Objective.
+    objectives: [],
+
+    // user_id contains the ID of the Firebase user. If user_id is set, then
+    // this means that a user is signed in and the client authenticated with
+    // Firebase.
     user_id: '',
+
+    // loaded signals when the objectives have been fetched from Firestore for
+    // the first time. This is a useful signal for the application to make
+    // other parts of the user interface available in synchronization. This
+    // prevents the user interface from loading piece by piece. Instead, the
+    // user interface should load in logical chunks.
+    loaded: false,
   },
+  
   computed: {
-    isPlanning: function() {
-      return this.mode == 'plan';
-    },
-    isTracking: function() {
-      return this.mode == 'track';
-    },
-    isViewing: function() {
-      return this.mode == 'view';
-    },
     signedIn: function() {
       return this.user_id != '';
     },
   },
+
   methods: {
+    // copyUserIdToClipboard sets the clipboard to the ID of the signed-in user.
     copyUserIdToClipboard: function() {
       navigator.clipboard.writeText(this.user_id);
     },
+
+    // createObjective adds a new objective to Firestore.
     createObjective: function() {
       let objective = new Objective({
         id: uuidv4(),
@@ -1346,6 +1337,10 @@ let vue = new Vue({
         .withConverter(new ObjectiveConverter())
         .set(objective);
     },
+
+    // listenToObjectives ensures that whenever any of the objectives changes in Firestore, the 
+    // objectives on the client application are refreshed; Firestore is considered the source of
+    // truth.
     listenToObjectives: function() {
       firebase.firestore()
         .collection('users')
@@ -1355,62 +1350,89 @@ let vue = new Vue({
         .onSnapshot((snapshot) => {
           let objectives = [];
           snapshot.forEach((d) => {
+            let o = d.data();
+            o.goals = _.sortBy(o.goals, ['name', 'id']);
+            o.regular_goals = _.sortBy(o.regular_goals, ['name', 'id']);
             objectives.push(d.data());
           });
-          objectives.sort((a, b) => {
-            if (a.name > b.name) return 1;
-            return -1;
-          });
-          objectives.forEach((o) => o.goals.sort((a, b) => {
-            if (a.name > b.name) return 1;
-            return -1;
-          }));
-          objectives.forEach((o) => o.regular_goals.sort((a, b) => {
-            if (a.name > b.name) return 1;
-            return -1;
-          }));
-          this.objectives = objectives;        
+          this.objectives = _.sortBy(objectives, ['name', 'id']);
+          this.loaded = true;
         });
     },
-    plan: function() {
-      this.mode = 'plan';
-    },
+
+    // signIn authenticates the client using redirect flow. The result of this
+    // operation is handled in listener to onAuthStateChanged.
     signIn: function() {
-    let provider = new firebase.auth.GoogleAuthProvider();
-    firebase.auth().signInWithRedirect(provider);
+      let provider = new firebase.auth.GoogleAuthProvider();
+      firebase.auth().signInWithRedirect(provider);
     },
-    track: function() {
-      this.mode = 'track';
-    },
+
+    // view switches the user interface into viewing mode.
     view: function() {
-      this.mode = 'view';
+      this.mode = Mode.VIEW;
+    },
+    
+    // track switches the user interface into tracking mode.
+    track: function() {
+      this.mode = Mode.TRACK;
+    },
+
+    // plan switcches the user interface into planning mode.
+    plan: function() {
+      this.mode = Mode.PLAN;
     },
   },
   template: `
     <div class='app'>
-      <div class='toolbar'>
-        <button id='signin' v-show='!signedIn' v-on:click="signIn">Sign in with Google</button>
-        <button v-on:click='view' v-show='isPlanning || isTracking'>View</button>
-        <button v-on:click='track' v-show='isPlanning || isViewing'>Track</button>
-        <button v-on:click='plan' v-show='isViewing || isTracking'>Plan</button>
-        <button v-on:click='createObjective' v-show='isPlanning'>Add objective</button>
-        <button class="id" v-show="isPlanning" v-on:click="copyUserIdToClipboard()">{{ user_id }}</button>
+      <button
+          id='signin'
+          v-show='!signedIn'
+          v-on:click="signIn">
+        Sign in with Google
+      </button>
+      <div class='toolbar' v-show='loaded'>
+        <button
+            :disabled='viewing'
+            v-on:click='view'>
+          View
+        </button>
+        <button
+            :disabled='tracking'
+            v-on:click='track'>
+          Track
+        </button>
+        <button
+            :disabled='planning'
+            v-on:click='plan'>
+          Plan
+        </button>
+        <button
+            class="id"
+            v-show="planning"
+            v-on:click="copyUserIdToClipboard()">
+          {{ user_id }}
+        </button>
+      </div>
+      <div class='toolbar' v-show='planning'>
+        <button v-on:click='createObjective'>Add objective</button>
       </div>
       <objective
-        v-for="o in objectives"
-        v-bind:objective="o"
-        v-bind:user_id='user_id'
-        v-bind:mode='mode'
-        v-bind:key="o.id"
-      ></objective>
+          v-for="o in objectives"
+          v-bind:objective="o"
+          v-bind:user_id='user_id'
+          v-bind:mode='mode'
+          v-bind:key="o.id">
+      </objective>
     </div>
   `
 });
 
+// Listen to the results of the sign-in flow.
+// Once, successfully authenticated, fetch the
+// objectives from Firestore.
 if (!testing) {
   firebase.auth().onAuthStateChanged((user) => {
     if (user) {
-      vue.mode = 'view';
       vue.user_id = user.uid;
       vue.listenToObjectives();
     }

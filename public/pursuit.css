@@ -223,7 +223,12 @@ button {
   text-transform: uppercase;
 }
 
-button:hover {
+button:disabled {
+  color: black;
+  cursor: default;
+}
+
+button:hover:not([disabled]) {
   color: salmon;
   cursor: pointer;
 }
