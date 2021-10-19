@@ -1505,7 +1505,7 @@ let vue = new Vue({
             let o = d.data();
             o.goals = _.sortBy(o.goals, ['name', 'id']);
             o.regular_goals = _.sortBy(o.regular_goals, ['name', 'id']);
-            objectives.push(d.data());
+            objectives.push(o);
           });
           this.objectives = _.sortBy(objectives, ['name', 'id']);
           this.loaded = true;

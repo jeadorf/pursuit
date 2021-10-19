@@ -39,7 +39,9 @@ func (s Storage) SetGoalValue(userID, objectiveID, goalID string, value float32)
 	if err != nil {
 		return err
 	}
-	objective.SetGoalValue(goalID, value)
+	if err = objective.SetGoalValue(goalID, value); err != nil {
+		return err
+	}
 	return s.writeObjective(userID, objectiveID, objective)
 }
 
@@ -50,7 +52,9 @@ func (s Storage) SetRegularGoalValue(userID, objectiveID, goalID string, value f
 	if err != nil {
 		return err
 	}
-	objective.SetRegularGoalValue(goalID, value)
+	if err = objective.SetRegularGoalValue(goalID, value); err != nil {
+		return err
+	}
 	return s.writeObjective(userID, objectiveID, objective)
 }
 
@@ -61,7 +65,9 @@ func (s Storage) IncrementGoalValue(userID, objectiveID, goalID string, delta fl
 	if err != nil {
 		return err
 	}
-	objective.IncrementGoalValue(goalID, delta)
+	if err = objective.IncrementGoalValue(goalID, delta); err != nil {
+		return err
+	}
 	return s.writeObjective(userID, objectiveID, objective)
 }
 
@@ -72,7 +78,9 @@ func (s Storage) IncrementRegularGoalValue(userID, objectiveID, goalID string, d
 	if err != nil {
 		return err
 	}
-	objective.IncrementRegularGoalValue(goalID, delta)
+	if err = objective.IncrementRegularGoalValue(goalID, delta); err != nil {
+		return err
+	}
 	return s.writeObjective(userID, objectiveID, objective)
 }
 
@@ -83,7 +91,9 @@ func (s Storage) readObjective(userID string, objectiveID string) (Objective, er
 		return Objective{}, fmt.Errorf("Error reading objective: %v", err)
 	}
 	var objective Objective
-	doc.DataTo(&objective)
+	if err := doc.DataTo(&objective); err != nil {
+		return Objective{}, err
+	}
 	return objective, nil
 }
 
