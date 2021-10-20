@@ -42,7 +42,7 @@ func (s Storage) SetGoalValue(userID, objectiveID, goalID string, value float32)
 	if err = objective.SetGoalValue(goalID, value); err != nil {
 		return err
 	}
-	return s.writeObjective(userID, objectiveID, objective)
+	return s.updateGoalTrajectory(userID, objectiveID, goalID, objective.Goals[goalID].Trajectory)
 }
 
 // SetRegularGoalValue adds a new value to the trajectory of the regular goal,
@@ -55,7 +55,7 @@ func (s Storage) SetRegularGoalValue(userID, objectiveID, goalID string, value f
 	if err = objective.SetRegularGoalValue(goalID, value); err != nil {
 		return err
 	}
-	return s.writeObjective(userID, objectiveID, objective)
+	return s.updateRegularGoalTrajectory(userID, objectiveID, goalID, objective.Goals[goalID].Trajectory)
 }
 
 // IncrementGoalValue adds a new value to the trajectory of the goal,
@@ -68,7 +68,7 @@ func (s Storage) IncrementGoalValue(userID, objectiveID, goalID string, delta fl
 	if err = objective.IncrementGoalValue(goalID, delta); err != nil {
 		return err
 	}
-	return s.writeObjective(userID, objectiveID, objective)
+	return s.updateGoalTrajectory(userID, objectiveID, goalID, objective.Goals[goalID].Trajectory)
 }
 
 // IncrementRegularGoalValue adds a new value to the trajectory of the regular goal,
@@ -81,7 +81,7 @@ func (s Storage) IncrementRegularGoalValue(userID, objectiveID, goalID string, d
 	if err = objective.IncrementRegularGoalValue(goalID, delta); err != nil {
 		return err
 	}
-	return s.writeObjective(userID, objectiveID, objective)
+	return s.updateRegularGoalTrajectory(userID, objectiveID, goalID, objective.RegularGoals[goalID].Trajectory)
 }
 
 func (s Storage) readObjective(userID string, objectiveID string) (Objective, error) {
@@ -100,5 +100,23 @@ func (s Storage) readObjective(userID string, objectiveID string) (Objective, er
 func (s Storage) writeObjective(userID string, objectiveID string, objective Objective) error {
 	ref := s.client.Collection("users").Doc(userID).Collection("objectives").Doc(objectiveID)
 	_, err := ref.Set(s.ctx, objective)
+	return err
+}
+
+func (s Storage) updateGoalTrajectory(userID string, objectiveID string, goalID string, trajectory Trajectory) error {
+	ref := s.client.Collection("users").Doc(userID).Collection("objectives").Doc(objectiveID)
+	update := firestore.Update{
+		Path:  fmt.Sprintf("goals.%s.trajectory", goalID),
+		Value: trajectory}
+	_, err := ref.Update(s.ctx, []firestore.Update{update})
+	return err
+}
+
+func (s Storage) updateRegularGoalTrajectory(userID string, objectiveID string, goalID string, trajectory Trajectory) error {
+	ref := s.client.Collection("users").Doc(userID).Collection("objectives").Doc(objectiveID)
+	update := firestore.Update{
+		Path:  fmt.Sprintf("regular_goals.%s.trajectory", goalID),
+		Value: trajectory}
+	_, err := ref.Update(s.ctx, []firestore.Update{update})
 	return err
 }
