@@ -88,7 +88,7 @@ func (s Storage) readObjective(userID string, objectiveID string) (Objective, er
 	ref := s.client.Collection("users").Doc(userID).Collection("objectives").Doc(objectiveID)
 	doc, err := ref.Get(s.ctx)
 	if err != nil {
-		return Objective{}, fmt.Errorf("Error reading objective: %v", err)
+		return Objective{}, fmt.Errorf("Error reading objective %q for user %q: %v", userID, objectiveID, err)
 	}
 	var objective Objective
 	if err := doc.DataTo(&objective); err != nil {
