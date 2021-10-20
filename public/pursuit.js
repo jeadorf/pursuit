@@ -1163,6 +1163,7 @@ Vue.component('goal', {
       <div v-show="tracking">
         <button v-on:click="$emit('increment', goal)">increment</button>
         <button v-on:click="$emit('decrement', goal)">decrement</button>
+        <span class="last-updated">{{ trajectory_last_updated }}</span>
       </div>
       <svg class='chart' preserveAspectRatio='none'>
         <text
@@ -1406,6 +1407,7 @@ Vue.component('regular_goal', {
         <div v-show="tracking">
           <button v-on:click="$emit('increment', goal)">increment</button>
           <button v-on:click="$emit('decrement', goal)">decrement</button>
+          <span class="last-updated">{{ trajectory_last_updated }}</span>
         </div>
         <div class="goal-description"><span v-html='descriptionHtml'></span></div>
         <div class="level">

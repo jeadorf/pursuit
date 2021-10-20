@@ -250,3 +250,8 @@ button.id {
   text-align: right;
   text-transform: none;
 }
+
+.last-updated {
+  color: darkslategray;
+  font-size: 12px;
+}
