@@ -1217,9 +1217,9 @@ Vue.component('goal', {
         <div><div>Name</div> <input type="text" v-model="name"></div>
         <div><div>Start</div> <input type="date" v-model="start"></div>
         <div><div>End</div> <input type="date" v-model="end"></div>
-        <div><div>Baseline</div> <input type="number" v-model="baseline"></div>
-        <div><div>Target</div> <input type="number" v-model="target"></div>
-        <div><div>Current</div> <input type="number" v-model="current"> <div>{{ trajectory_last_updated }}</div></div>
+        <div><div>Baseline</div> <input type="number" v-model.number="baseline"></div>
+        <div><div>Target</div> <input type="number" v-model.number="target"></div>
+        <div><div>Current</div> <input type="number" v-model.number="current"> <div>{{ trajectory_last_updated }}</div></div>
         <div><div>Unit</div> <input type="text" v-model="unit"></div>
       </div>
     </div>
@@ -1421,10 +1421,10 @@ Vue.component('regular_goal', {
       <div class='edit' v-show="planning">
         <div><div>Name</div> <input type="text" v-model="name"></div>
         <div><div>Description</div> <input type="text" v-model="description"></div>
-        <div><div>Window</div> <input type="number" v-model="window"></div>
-        <div><div>Target</div> <input type="number" v-model="target"></div>
-        <div><div>Total</div> <input type="number" v-model="total"></div>
-        <div><div>Current</div> <input type="number" v-model="current"> <div>{{ trajectory_last_updated }}</div></div>
+        <div><div>Window</div> <input type="number" v-model.number="window"></div>
+        <div><div>Target</div> <input type="number" v-model.number="target"></div>
+        <div><div>Total</div> <input type="number" v-model.number="total"></div>
+        <div><div>Current</div> <input type="number" v-model.number="current"> <div>{{ trajectory_last_updated }}</div></div>
         <div><div>Unit</div> <input type="text" v-model="unit"></div>
       </div>
     </div>
