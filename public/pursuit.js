@@ -328,6 +328,9 @@ class RegularGoal {
   // partial data, i.e. when the moving window extends to earlier dates than
   // where recordings were available.
   budget_remaining_adjusted(by_date) {
+    if (!this.trajectory.earliest) {
+      return NaN;
+    }
     if (this.partial_data(by_date)) {
       let adjusted_total = 1.0 * Math.max(DAY, by_date - this.trajectory.earliest.date) / (this.window * DAY) * this.total;
       let actual = this.value(by_date) / adjusted_total;
@@ -339,6 +342,9 @@ class RegularGoal {
   // partial_data returns true if the trajectory does not contain any point
   // earlier than the start of the moving time window.
   partial_data(by_date) {
+    if (!this.trajectory.earliest) {
+      return NaN;
+    }
     return this.trajectory.earliest.date > (by_date - this.window * DAY);
   }
 
@@ -967,7 +973,7 @@ Vue.component('objective', {
         v-on:update-unit="updateGoalUnit($event.goal, $event.unit)"
         v-on:delete="deleteGoal($event)"
       ></goal>
-      <regular_goal
+      <regular-goal
         v-for="g in objective.regular_goals"
         v-bind:goal="g"
         v-bind:mode='mode'
@@ -982,7 +988,7 @@ Vue.component('objective', {
         v-on:update-current="updateRegularGoalCurrent($event.goal, $event.current)"
         v-on:update-unit="updateRegularGoalUnit($event.goal, $event.unit)"
         v-on:delete="deleteRegularGoal($event)"
-      ></regular_goal>
+      ></regular-goal>
     </div>
   `,
 });
@@ -991,6 +997,52 @@ Vue.component('objective', {
 // <regular-goal> Vue components.
 let goalMixin = {
   props: ['goal', 'mode'],
+
+  computed: {
+    trajectory_last_updated: function() {
+      let format_date = (millis) => {
+				let is = (a, b) => {
+					return (
+						a.getDate() == b.getDate() &&
+						a.getMonth() == b.getMonth() &&
+						a.getFullYear() == b.getFullYear());
+				};
+        let date = new Date(millis);
+        let today = new Date();
+        let yesterday = new Date(today.getTime() - DAY);
+				let suffix = '';
+				if (is(date, today)) {
+					suffix = ' (today)';
+				}
+				if (is(date, yesterday)) {
+					suffix = ' (yesterday)';
+				}
+        return new Date(date).toLocaleString() + suffix;
+      };
+
+      if (!this.goal.trajectory.latest) {
+        return `last updated ${NaN}`;
+      }
+
+      return `last updated ${format_date(this.goal.trajectory.latest.date)}`;
+    },
+
+    current: {
+      get: function() {
+        if (!this.goal.trajectory.latest) {
+          return NaN;
+        }
+        return this.goal.trajectory.latest.value;
+      },
+      set: _.debounce(function(current) {
+        this.$emit('update-current', {
+          goal: this.goal,
+          current: current,
+        });
+      }, 1000),
+    },
+  },
+
   methods: {
     copyGoalIdToClipboard: function() {
       navigator.clipboard.writeText(this.goal.id);
@@ -1030,30 +1082,6 @@ Vue.component('goal', {
 
     startDate: function() {
       return new Date(this.goal.start).toISOString().slice(0, 10);
-    },
-
-    trajectory_last_updated: function() {
-      let format_date = (millis) => {
-				let is = (a, b) => {
-					return (
-						a.getDate() == b.getDate() &&
-						a.getMonth() == b.getMonth() &&
-						a.getFullYear() == b.getFullYear());
-				};
-        let date = new Date(millis);
-        let today = new Date();
-        let yesterday = new Date(today.getTime() - DAY);
-				let suffix = '';
-				if (is(date, today)) {
-					suffix = ' (today)';
-				}
-				if (is(date, yesterday)) {
-					suffix = ' (yesterday)';
-				}
-        return new Date(date).toLocaleString() + suffix;
-      };
-
-      return `last updated ${format_date(this.goal.trajectory.latest.date)}`;
     },
 
     velocityReport: function() {
@@ -1125,18 +1153,6 @@ Vue.component('goal', {
         this.$emit('update-target', {
           goal: this.goal,
           target: target,
-        });
-      }, 1000),
-    },
-
-    current: {
-      get: function() {
-        return this.goal.trajectory.latest.value;
-      },
-      set: _.debounce(function(current) {
-        this.$emit('update-current', {
-          goal: this.goal,
-          current: current,
         });
       }, 1000),
     },
@@ -1229,7 +1245,7 @@ Vue.component('goal', {
 
 // Registers the <goal> Vue component globally. This component renders a
 // regular goal.
-Vue.component('regular_goal', {
+Vue.component('regular-goal', {
   mixins: [goalMixin, modeMixin],
 
   computed: {
@@ -1289,29 +1305,6 @@ Vue.component('regular_goal', {
               over ${this.goal.window}-day window`;
     },
 
-    trajectory_last_updated: function() {
-      let format_date = (millis) => {
-				let is = (a, b) => {
-					return (
-						a.getDate() == b.getDate() &&
-						a.getMonth() == b.getMonth() &&
-						a.getFullYear() == b.getFullYear());
-				};
-        let date = new Date(millis);
-        let today = new Date();
-        let yesterday = new Date(today.getTime() - DAY);
-				let suffix = '';
-				if (is(date, today)) {
-					suffix = ' (today)';
-				}
-				if (is(date, yesterday)) {
-					suffix = ' (yesterday)';
-				}
-        return new Date(date).toLocaleString() + suffix;
-      };
-
-      return `last updated ${format_date(this.goal.trajectory.latest.date)}`;
-    },
     name: {
       get: function() {
         return this.goal.name;
@@ -1368,18 +1361,6 @@ Vue.component('regular_goal', {
         this.$emit('update-total', {
           goal: this.goal,
           total: total,
-        });
-      }, 1000),
-    },
-
-    current: {
-      get: function() {
-        return this.goal.trajectory.latest.value;
-      },
-      set: _.debounce(function(current) {
-        this.$emit('update-current', {
-          goal: this.goal,
-          current: current,
         });
       }, 1000),
     },

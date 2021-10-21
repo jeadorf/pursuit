@@ -462,6 +462,10 @@ describe('regular goal', () => {
     expect(goal.value(28 * DAY)).to.be.approximately(8, 0.000001);
   });
 
+  it('has NaN as remaining budget when trajectory is empty', () => {
+    let goal = new RegularGoal({});
+    expect(goal.budget_remaining(10)).to.be.NaN;
+  });
 });
 
 
@@ -948,44 +952,129 @@ describe('safe markdown renderer', () => {
 });
 
 describe('objective component', () => {
-  it('renders name', (done) => {
-    let vue = new Vue({
+  let vue = null;
+
+  beforeEach(() => {
+    vue = new Vue({
       el: document.createElement('div'),
       data: {
         objective: new Objective({}),
       },
       template: `<objective v-bind:objective='objective'></objective>`
     });
-
-    let objective = new Objective({name: 'Land on Mars'});
-    Promise.resolve()
-      .then(vue.$nextTick())
-      .then(() => expect(vue.$el.innerText).not.to.contain(objective.name))
-      .then(() => vue.objective = objective)
-      .then(vue.$nextTick())
-      .then(() => {expect(vue.$el.innerText).to.contain(objective.name)})
-      .then(done)
-      .catch(() => done('error'));
   });
 
-  it('renders description', (done) => {
-    let vue = new Vue({
+  it('shows name', async () => {
+    let name = 'one giant leap';
+    let objective = new Objective({name});
+
+    await vue.$nextTick();
+    expect(vue.$el.innerText).not.to.contain(name);
+    vue.objective = objective;
+    await vue.$nextTick();
+    expect(vue.$el.innerText).to.contain(name);
+  });
+
+  it('shows description', async () => {
+    let description = 'one giant leap';
+    let objective = new Objective({description});
+
+    await vue.$nextTick();
+    expect(vue.$el.innerText).not.to.contain(description);
+    vue.objective = objective;
+    await vue.$nextTick();
+    expect(vue.$el.innerText).to.contain(description);
+  });
+
+  it('shows goal', async () => {
+    let goalName = 'find a rainbow';
+    let goal = new Goal({
+      name: goalName,
+      start: 0,
+      end: 10,
+      baseline: 0,
+      target: 100,
+      trajectory: (
+        new Trajectory()
+          .insert(0, 0))
+    });
+    let objective = new Objective({goals: [goal]});
+
+    await vue.$nextTick();
+    expect(vue.$el.innerText).not.to.contain(goalName);
+    vue.objective = objective;
+    await vue.$nextTick();
+    expect(vue.$el.innerText).to.contain(goalName);
+  });
+
+  it('shows regular goal', async () => {
+    let goalName = 'find a rainbow';
+    let goal = new RegularGoal({
+      name: goalName,
+      window: 10,
+      target: 0.75,
+      total: 10,
+      trajectory: (
+        new Trajectory()
+          .insert(0, 0)
+          .insert(10, 10)),
+    });
+    let objective = new Objective({regular_goals: [goal]});
+
+    await vue.$nextTick();
+    expect(vue.$el.innerText).not.to.contain(goalName);
+    vue.objective = objective;
+    await vue.$nextTick();
+    expect(vue.$el.innerText).to.contain(goalName);
+  });
+});
+
+describe('goal component', () => {
+  let vue = null;
+
+  beforeEach(() => {
+    vue = new Vue({
       el: document.createElement('div'),
       data: {
-        objective: new Objective({}),
+        goal: new Goal({}),
       },
-      template: `<objective v-bind:objective='objective'></objective>`
+      template: `<goal v-bind:goal='goal'></goal>`
     });
+  });
 
-    let objective = new Objective({description: 'one giant leap'});
+  it('shows name', async () => {
+    let name = 'one giant leap';
+    let goal = new Goal({name});
 
-    Promise.resolve()
-      .then(vue.$nextTick())
-      .then(() => expect(vue.$el.innerText).not.to.contain(objective.description))
-      .then(() => vue.objective = objective)
-      .then(vue.$nextTick())
-      .then(() => {expect(vue.$el.innerText).to.contain(objective.description)})
-      .then(done)
-      .catch(() => done('error'));
+    await vue.$nextTick();
+    expect(vue.$el.innerText).not.to.contain(name);
+    vue.goal = goal;
+    await vue.$nextTick();
+    expect(vue.$el.innerText).to.contain(name);
+  });
+});
+
+describe('regular goal component', () => {
+  let vue = null;
+
+  beforeEach(() => {
+    vue = new Vue({
+      el: document.createElement('div'),
+      data: {
+        goal: new RegularGoal({}),
+      },
+      template: `<regular-goal v-bind:goal='goal'></regular-goal>`
+    });
+  });
+
+  it('shows name', async () => {
+    let name = 'one giant leap';
+    let goal = new RegularGoal({name});
+
+    await vue.$nextTick();
+    expect(vue.$el.innerText).not.to.contain(name);
+    vue.goal = goal;
+    await vue.$nextTick();
+    expect(vue.$el.innerText).to.contain(name);
   });
 });
