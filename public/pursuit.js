@@ -1317,7 +1317,7 @@ Vue.component('regular-goal', {
     },
 
     partialData: function() {
-      let now = new Date().getTime();
+;      let now = new Date().getTime();
       if (this.goal.partial_data(now)) {
         return '(partial data)';
       } else {
@@ -1534,6 +1534,114 @@ let vue = new Vue({
       this.mode = Mode.VIEW;
     },
     
+    // track switches the user interface into tracking mode.
+    track: function() {
+      this.mode = Mode.TRACK;
+    },
+
+    // plan switcches the user interface into planning mode.
+    plan: function() {
+      this.mode = Mode.PLAN;
+    },
+  },
+
+  template: `
+
+// The main Vue instance that is driving the application.
+let vue = new Vue({
+  mixins: [modeMixin],
+
+  el: '#app',
+
+  data: {
+    // See enum Mode.
+    mode: Mode.VIEW,
+
+    // objectives holds all of the objectives fetched from Firestore.
+    // objectives is considered immutable, all changes to an objective or its
+    // goals should be made directly in Firestore, relying on Firestore pushing
+    // such changes back to the client. See also: class Objective.
+    objectives: [],
+
+    // user_id contains the ID of the Firebase user. If user_id is set, then
+    // this means that a user is signed in and the client authenticated with
+    // Firebase.
+    user_id: '',
+
+    // loaded signals when the objectives have been fetched from Firestore for
+    // the first time. This is a useful signal for the application to make
+    // other parts of the user interface available in synchronization. This
+    // prevents the user interface from loading piece by piece. Instead, the
+    // user interface should load in logical chunks.
+    loaded: false,
+  },
+
+  computed: {
+    signedIn: function() {
+      return this.user_id != '';
+    },
+  },
+
+  methods: {
+    // copyUserIdToClipboard sets the clipboard to the ID of the signed-in user.
+    copyUserIdToClipboard: function() {
+      navigator.clipboard.writeText(this.user_id);
+    },
+
+    // createObjective adds a new objective to Firestore.
+    createObjective: function() {
+      let objective = new Objective({
+        id: uuidv4(),
+        name: 'AA New objective',
+        description: '',
+        goals: [],
+        regular_goals: [],
+      });
+      firebase.firestore()
+          .collection('users')
+          .doc(this.user_id)
+          .collection('objectives')
+          .doc(objective.id)
+          .withConverter(new ObjectiveConverter())
+          .set(objective);
+    },
+
+    // listenToObjectives ensures that whenever any of the objectives changes in
+    // Firestore, the
+    // objectives on the client application are refreshed; Firestore is
+    // considered the source of
+    // truth.
+    listenToObjectives: function() {
+      firebase.firestore()
+          .collection('users')
+          .doc(this.user_id)
+          .collection('objectives')
+          .withConverter(new ObjectiveConverter())
+          .onSnapshot((snapshot) => {
+            let objectives = [];
+            snapshot.forEach((d) => {
+              let o = d.data();
+              o.goals = _.sortBy(o.goals, ['name', 'id']);
+              o.regular_goals = _.sortBy(o.regular_goals, ['name', 'id']);
+              objectives.push(o);
+            });
+            this.objectives = _.sortBy(objectives, ['name', 'id']);
+            this.loaded = true;
+          });
+    },
+
+    // signIn authenticates the client using redirect flow. The result of this
+    // operation is handled in listener to onAuthStateChanged.
+    signIn: function() {
+      let provider = new firebase.auth.GoogleAuthProvider();
+      firebase.auth().signInWithRedirect(provider);
+    },
+
+    // view switches the user interface into viewing mode.
+    view: function() {
+      this.mode = Mode.VIEW;
+    },
+
     // track switches the user interface into tracking mode.
     track: function() {
       this.mode = Mode.TRACK;

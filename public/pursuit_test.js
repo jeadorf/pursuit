@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-"use strict"
+'use strict'
 
 let expect = chai.expect;
 
@@ -109,10 +109,7 @@ describe('goal', () => {
       start: 0,
       end: 10,
       target: 100,
-      trajectory: (
-        new Trajectory()
-          .insert(0, 0)
-          .insert(5, 12)),
+      trajectory: (new Trajectory().insert(0, 0).insert(5, 12)),
     });
     expect(goal.progress).to.equal(0.12);
   });
@@ -122,10 +119,7 @@ describe('goal', () => {
       start: 0,
       end: 10,
       target: 100,
-      trajectory: (
-        new Trajectory()
-          .insert(0, 0)
-          .insert(5, 100)),
+      trajectory: (new Trajectory().insert(0, 0).insert(5, 100)),
     });
 
     expect(goal.progress).to.equal(1.0);
@@ -136,10 +130,7 @@ describe('goal', () => {
       start: 0,
       end: 10,
       target: 800,
-      trajectory: (
-        new Trajectory()
-          .insert(0, -200)
-          .insert(5, 200)),
+      trajectory: (new Trajectory().insert(0, -200).insert(5, 200)),
     });
     expect(goal.progress).to.equal(0.4);
   });
@@ -149,10 +140,7 @@ describe('goal', () => {
       start: 0,
       end: 10,
       target: -200,
-      trajectory: (
-        new Trajectory()
-          .insert(0, 800)
-          .insert(5, 600)),
+      trajectory: (new Trajectory().insert(0, 800).insert(5, 600)),
     });
     expect(goal.progress).to.equal(0.2);
   });
@@ -162,10 +150,7 @@ describe('goal', () => {
       start: 0,
       end: 10,
       target: 100,
-      trajectory: (
-        new Trajectory()
-          .insert(0, 0)
-          .insert(5, 50)),
+      trajectory: (new Trajectory().insert(0, 0).insert(5, 50)),
     });
     expect(goal.relative_progress(5)).to.equal(1.0);
   });
@@ -175,10 +160,7 @@ describe('goal', () => {
       start: 0,
       end: 10,
       target: 100,
-      trajectory: (
-        new Trajectory()
-          .insert(0, 0)
-          .insert(5, 40)),
+      trajectory: (new Trajectory().insert(0, 0).insert(5, 40)),
     });
     expect(goal.relative_progress(5)).to.equal(0.8);
   });
@@ -188,10 +170,7 @@ describe('goal', () => {
       start: 0,
       end: 10,
       target: 100,
-      trajectory: (
-        new Trajectory()
-          .insert(0, 0)
-          .insert(5, 60)),
+      trajectory: (new Trajectory().insert(0, 0).insert(5, 60)),
     });
     expect(goal.relative_progress(5)).to.equal(1.2);
   });
@@ -201,10 +180,7 @@ describe('goal', () => {
       start: 1,
       end: 10,
       target: 100,
-      trajectory: (
-        new Trajectory()
-          .insert(1, 0)
-          .insert(5, 60)),
+      trajectory: (new Trajectory().insert(1, 0).insert(5, 60)),
     });
     expect(goal.relative_progress(0)).to.equal(1.0);
   });
@@ -214,10 +190,7 @@ describe('goal', () => {
       start: 1,
       end: 10,
       target: 100,
-      trajectory: (
-        new Trajectory()
-          .insert(1, 0)
-          .insert(9, 100)),
+      trajectory: (new Trajectory().insert(1, 0).insert(9, 100)),
     });
     expect(goal.relative_progress(11)).to.equal(1.0);
   });
@@ -227,10 +200,7 @@ describe('goal', () => {
       start: 1,
       end: 10,
       target: 100,
-      trajectory: (
-        new Trajectory()
-          .insert(1, 0)
-          .insert(5, 90)),
+      trajectory: (new Trajectory().insert(1, 0).insert(5, 90)),
     });
     expect(goal.relative_progress(11)).to.equal(0.9);
   });
@@ -306,10 +276,7 @@ describe('goal', () => {
       start: 5000,
       end: 15000,
       target: 120,
-      trajectory: (
-        new Trajectory()
-          .insert(5000, 20)
-          .insert(6000, 30)),
+      trajectory: (new Trajectory().insert(5000, 20).insert(6000, 30)),
     });
     expect(goal.is_on_track(6000)).to.be.true;
     expect(goal.is_on_track(6001)).to.be.false;
@@ -320,10 +287,7 @@ describe('goal', () => {
       start: 5000,
       end: 15000,
       target: 120,
-      trajectory: (
-        new Trajectory()
-          .insert(5000, 20)
-          .insert(15000, 120)),
+      trajectory: (new Trajectory().insert(5000, 20).insert(15000, 120)),
     });
     expect(goal.is_on_track(15000)).to.be.true;
     expect(goal.is_on_track(20000)).to.be.true;
@@ -334,12 +298,11 @@ describe('goal', () => {
       target: 300,
       start: 0,
       end: 1000,
-      trajectory: (
-        new Trajectory()
-          .insert(0, 50)
-          .insert(100, 60)
-          .insert(500, 150)
-          .insert(1000, 300)),
+      trajectory: (new Trajectory()
+                       .insert(0, 50)
+                       .insert(100, 60)
+                       .insert(500, 150)
+                       .insert(1000, 300)),
     });
 
     expect(goal.velocity(100)).to.equal(0.1);
@@ -397,10 +360,7 @@ describe('regular goal', () => {
       window: 10,
       target: 7.5,
       total: 10,
-      trajectory: (
-        new Trajectory()
-          .insert(0, 0)
-          .insert(10 * DAY, 10)),
+      trajectory: (new Trajectory().insert(0, 0).insert(10 * DAY, 10)),
     });
     expect(goal.budget_remaining(10 * DAY)).to.be.approximately(1, 0.000001);
     expect(goal.value(10 * DAY)).to.be.approximately(10, 0.000001);
@@ -411,10 +371,7 @@ describe('regular goal', () => {
       window: 10,
       target: 7.5,
       total: 10,
-      trajectory: (
-        new Trajectory()
-          .insert(0, 0)
-          .insert(10 * DAY, 8)),
+      trajectory: (new Trajectory().insert(0, 0).insert(10 * DAY, 8)),
     });
     expect(goal.budget_remaining(10 * DAY)).to.be.approximately(0.20, 0.000001);
     expect(goal.value(10 * DAY)).to.be.approximately(8, 0.000001);
@@ -425,10 +382,7 @@ describe('regular goal', () => {
       window: 10,
       target: 7.5,
       total: 10,
-      trajectory: (
-        new Trajectory()
-          .insert(0, 0)
-          .insert(10 * DAY, 7.5)),
+      trajectory: (new Trajectory().insert(0, 0).insert(10 * DAY, 7.5)),
     });
     expect(goal.budget_remaining(10 * DAY)).to.be.approximately(0, 0.000001);
     expect(goal.value(10 * DAY)).to.be.approximately(7.5, 0.000001);
@@ -439,9 +393,7 @@ describe('regular goal', () => {
       window: 10,
       target: 7.5,
       total: 10,
-      trajectory: (
-        new Trajectory()
-          .insert(0, 0))
+      trajectory: (new Trajectory().insert(0, 0))
     });
     expect(goal.partial_data(10 * DAY - 1)).to.be.true;
     expect(goal.partial_data(10 * DAY)).to.be.false;
@@ -452,12 +404,10 @@ describe('regular goal', () => {
       window: 28,
       target: 12,
       total: 20,
-      trajectory: (
-        new Trajectory()
-          .insert(14 * DAY, 0)
-          .insert(28 * DAY, 8)),
+      trajectory: (new Trajectory().insert(14 * DAY, 0).insert(28 * DAY, 8)),
     });
-    expect(goal.budget_remaining_prorated(28 * DAY)).to.be.approximately(0.50, 0.000001);
+    expect(goal.budget_remaining_prorated(28 * DAY))
+        .to.be.approximately(0.50, 0.000001);
     expect(goal.value(28 * DAY)).to.be.approximately(8, 0.000001);
   });
 
@@ -489,13 +439,13 @@ describe('trajectory', () => {
 
   it('has earliest value undefined if empty', () => {
     let trajectory = new Trajectory();
-    
+
     expect(trajectory.earliest).to.be.undefined;
   });
 
   it('has latest value undefined if empty', () => {
     let trajectory = new Trajectory();
-    
+
     expect(trajectory.latest).to.be.undefined;
   });
 
@@ -506,7 +456,7 @@ describe('trajectory', () => {
     trajectory.insert(0, 12);
     trajectory.insert(1, 18);
     trajectory.insert(2, 24);
-    
+
     expect(trajectory.earliest.date).to.equal(0);
     expect(trajectory.earliest.value).to.equal(12);
   });
@@ -517,7 +467,7 @@ describe('trajectory', () => {
     trajectory.insert(0, 12);
     trajectory.insert(1, 18);
     trajectory.insert(2, 24);
-    
+
     expect(trajectory.latest.date).to.equal(2);
     expect(trajectory.latest.value).to.equal(24);
   });
@@ -528,7 +478,7 @@ describe('trajectory', () => {
 
     trajectory.insert(date, 123);
     trajectory.insert(date, 246);
-    
+
     expect(trajectory.latest.date).to.equal(date);
     expect(trajectory.latest.value).to.equal(246);
   });
@@ -540,7 +490,7 @@ describe('trajectory', () => {
     expect(trajectory.length).to.equal(2);
 
     trajectory.remove(314);
-    
+
     expect(trajectory.length).to.equal(1);
     expect(trajectory.at(144)).to.equal(666);
     expect(trajectory.at(314)).to.equal(666);
@@ -548,15 +498,15 @@ describe('trajectory', () => {
 
   it('can compact timeline', () => {
     let trajectory = new Trajectory()
-      .insert(0, 10)
-      .insert(DAY, 12)
-      .insert(DAY + 1, 24)
-      .insert(DAY + HOUR, 36)
-      .insert(2 * DAY + 1, 48)
+                         .insert(0, 10)
+                         .insert(DAY, 12)
+                         .insert(DAY + 1, 24)
+                         .insert(DAY + HOUR, 36)
+                         .insert(2 * DAY + 1, 48)
     expect(trajectory.length).to.equal(5);
 
     trajectory.compact_head(DAY);
-    
+
     expect(trajectory.at(0)).to.equal(10);
     expect(trajectory.at(DAY)).to.equal(12);
     expect(trajectory.at(2 * DAY + 1)).to.equal(48);
@@ -569,7 +519,7 @@ describe('trajectory', () => {
     trajectory.insert(0, 12);
     trajectory.insert(1, 18);
     trajectory.insert(2, 24);
-    
+
     expect(trajectory.at(0)).to.equal(12);
     expect(trajectory.at(1)).to.equal(18);
     expect(trajectory.at(2)).to.equal(24);
@@ -580,7 +530,7 @@ describe('trajectory', () => {
 
     trajectory.insert(0, 0);
     trajectory.insert(4, 100);
-    
+
     expect(trajectory.at(1)).to.equal(25);
     expect(trajectory.at(2)).to.equal(50);
     expect(trajectory.at(3)).to.equal(75);
@@ -591,7 +541,7 @@ describe('trajectory', () => {
 
     trajectory.insert(0, 0);
     trajectory.insert(2, 100);
-    
+
     expect(trajectory.at(-1)).to.equal(0);
   });
 
@@ -665,10 +615,7 @@ describe('objective converter', () => {
             window: 10,
             target: 0.75,
             total: 10,
-            trajectory: (
-              new Trajectory()
-                .insert(0, 0)
-                .insert(10, 10)),
+            trajectory: (new Trajectory().insert(0, 0).insert(10, 10)),
           },
         },
       })
@@ -677,20 +624,15 @@ describe('objective converter', () => {
       id: '11616568-c5f8-4e3f-9bc1-1c432bd361c2',
       name: 'name',
       description: 'description',
-      goals: [
-        new Goal({
-				  id: 'd66c24f7-a7fd-4760-95be-401dc7b53935',
-          name: 'Shuttle Speed',
-          target: 2300,
-          start: 2490,
-          end: 5439,
-          stage: Stage.ARCHIVED,
-          trajectory: (
-            new Trajectory()
-              .insert(2490, 0)
-              .insert(3622, 110))
-        })
-      ],
+      goals: [new Goal({
+        id: 'd66c24f7-a7fd-4760-95be-401dc7b53935',
+        name: 'Shuttle Speed',
+        target: 2300,
+        start: 2490,
+        end: 5439,
+        stage: Stage.ARCHIVED,
+        trajectory: (new Trajectory().insert(2490, 0).insert(3622, 110))
+      })],
       regular_goals: [
         new RegularGoal({
           id: 'e156d27b-1182-433e-9ax3-f29c78b1a113',
@@ -700,17 +642,14 @@ describe('objective converter', () => {
           window: 10,
           target: 0.75,
           total: 10,
-          trajectory: (
-            new Trajectory()
-              .insert(0, 0)
-              .insert(10, 10)),
+          trajectory: (new Trajectory().insert(0, 0).insert(10, 10)),
         }),
       ],
     });
 
     expect(converter.fromFirestore(doc)).to.eql(expected);
   });
- 
+
   it('can convert objectives without goals from Firestore', () => {
     let converter = new ObjectiveConverter();
     let doc = {
@@ -730,28 +669,23 @@ describe('objective converter', () => {
 
     expect(converter.fromFirestore(doc)).to.eql(expected);
   });
-  
+
   it('can convert to Firestore', () => {
     let converter = new ObjectiveConverter();
     let objective = new Objective({
       id: '11616568-c5f8-4e3f-9bc1-1c432bd361c2',
       name: 'name',
       description: 'description',
-      goals: [
-        new Goal({
-				  id: 'd66c24f7-a7fd-4760-95be-401dc7b53935',
-          name: 'Shuttle Speed',
-          unit: 'km/h',
-          target: 2300,
-          start: 2490,
-          end: 5439,
-          stage: Stage.ARCHIVED,
-          trajectory: (
-            new Trajectory()
-              .insert(2490, 0)
-              .insert(3622, 110)),
-        })
-      ],
+      goals: [new Goal({
+        id: 'd66c24f7-a7fd-4760-95be-401dc7b53935',
+        name: 'Shuttle Speed',
+        unit: 'km/h',
+        target: 2300,
+        start: 2490,
+        end: 5439,
+        stage: Stage.ARCHIVED,
+        trajectory: (new Trajectory().insert(2490, 0).insert(3622, 110)),
+      })],
       regular_goals: [
         new RegularGoal({
           id: 'e156d27b-1182-433e-9ax3-f29c78b1a113',
@@ -761,46 +695,41 @@ describe('objective converter', () => {
           window: 10,
           target: 0.75,
           total: 10,
-          trajectory: (
-            new Trajectory()
-              .insert(0, 0)
-              .insert(10, 10)),
+          trajectory: (new Trajectory().insert(0, 0).insert(10, 10)),
         }),
       ],
     });
     let expected = {
       name: 'name',
       description: 'description',
-      goals:
-        {
-				  ['d66c24f7-a7fd-4760-95be-401dc7b53935']: {
-				    id: 'd66c24f7-a7fd-4760-95be-401dc7b53935',
-            name: 'Shuttle Speed',
-            unit: 'km/h',
-            target: 2300,
-            start: 2490,
-            end: 5439,
-            stage: Stage.ARCHIVED,
-            trajectory: [
-              {date: 2490, value: 0},
-              {date: 3622, value: 110},
-            ],
-          }
-        },
-      regular_goals:
-        {
-          ['e156d27b-1182-433e-9ax3-f29c78b1a113']: {
-            id: 'e156d27b-1182-433e-9ax3-f29c78b1a113',
-            name: 'name',
-            description: 'description',
-            unit: 'unit',
-            window: 10,
-            target: 0.75,
-            total: 10,
-            trajectory: [
-              {date: 0, value: 0},
-              {date: 10, value: 10},
-            ],
+      goals: {
+        ['d66c24f7-a7fd-4760-95be-401dc7b53935']: {
+          id: 'd66c24f7-a7fd-4760-95be-401dc7b53935',
+          name: 'Shuttle Speed',
+          unit: 'km/h',
+          target: 2300,
+          start: 2490,
+          end: 5439,
+          stage: Stage.ARCHIVED,
+          trajectory: [
+            {date: 2490, value: 0},
+            {date: 3622, value: 110},
+          ],
+        }
+      },
+      regular_goals: {
+        ['e156d27b-1182-433e-9ax3-f29c78b1a113']: {
+          id: 'e156d27b-1182-433e-9ax3-f29c78b1a113',
+          name: 'name',
+          description: 'description',
+          unit: 'unit',
+          window: 10,
+          target: 0.75,
+          total: 10,
+          trajectory: [
+            {date: 0, value: 0},
+            {date: 10, value: 10},
+          ],
         }
       },
     };
@@ -817,13 +746,12 @@ describe('velocity report', () => {
       baseline: 0,
       target: 180,
       unit: 'sessions',
-      trajectory: (
-        new Trajectory()
-          .insert(0, 0)
-          .insert(30 * DAY, 135))
+      trajectory: (new Trajectory().insert(0, 0).insert(30 * DAY, 135))
     });
     let velocity = new VelocityReport();
-    expect(velocity.report(goal, 30 * DAY)).to.be.equal('30d: 4.5 sessions per day; now need 1.5 sessions per day');
+    expect(velocity.report(goal, 30 * DAY))
+        .to.be.equal(
+            '30d: 4.5 sessions per day; now need 1.5 sessions per day');
   });
 
   it('shows 30d-velocity in unit / week', () => {
@@ -833,13 +761,12 @@ describe('velocity report', () => {
       baseline: 0,
       target: 30,
       unit: 'sessions',
-      trajectory: (
-        new Trajectory()
-          .insert(0, 0)
-          .insert(35 * DAY, 20))
+      trajectory: (new Trajectory().insert(0, 0).insert(35 * DAY, 20))
     });
     let velocity = new VelocityReport();
-    expect(velocity.report(goal, 5 * 7 * DAY)).to.be.equal('30d: 4.0 sessions per week; now need 2.8 sessions per week');
+    expect(velocity.report(goal, 5 * 7 * DAY))
+        .to.be.equal(
+            '30d: 4.0 sessions per week; now need 2.8 sessions per week');
   });
 
   it('shows 30d-velocity in unit / month', () => {
@@ -849,13 +776,12 @@ describe('velocity report', () => {
       baseline: 0,
       target: 12,
       unit: 'sessions',
-      trajectory: (
-        new Trajectory()
-          .insert(0, 0)
-          .insert(90 * DAY, 9))
+      trajectory: (new Trajectory().insert(0, 0).insert(90 * DAY, 9))
     });
     let velocity = new VelocityReport();
-    expect(velocity.report(goal, 90 * DAY)).to.be.equal('30d: 3.0 sessions per month; now need 1.0 sessions per month');
+    expect(velocity.report(goal, 90 * DAY))
+        .to.be.equal(
+            '30d: 3.0 sessions per month; now need 1.0 sessions per month');
   });
 });
 
@@ -866,13 +792,11 @@ describe('progress report', () => {
       end: 10,
       baseline: 0,
       target: 100,
-      trajectory: (
-        new Trajectory()
-          .insert(0, 0)
-          .insert(3, 30))
+      trajectory: (new Trajectory().insert(0, 0).insert(3, 30))
     });
     let progressReport = new ProgressReport();
-    expect(progressReport.progressFillColor(goal, 3)).to.be.equal('rgb(136,187,77)');
+    expect(progressReport.progressFillColor(goal, 3))
+        .to.be.equal('rgb(136,187,77)');
   });
 
   it('chooses green if relative progress is greater than 100%', () => {
@@ -881,13 +805,11 @@ describe('progress report', () => {
       end: 10,
       baseline: 0,
       target: 100,
-      trajectory: (
-        new Trajectory()
-          .insert(0, 0)
-          .insert(3, 60))
+      trajectory: (new Trajectory().insert(0, 0).insert(3, 60))
     });
     let progressReport = new ProgressReport();
-    expect(progressReport.progressFillColor(goal, 3)).to.be.equal('rgb(136,187,77)');
+    expect(progressReport.progressFillColor(goal, 3))
+        .to.be.equal('rgb(136,187,77)');
   });
 
   it('chooses red if relative progress is 0%', () => {
@@ -896,12 +818,11 @@ describe('progress report', () => {
       end: 10,
       baseline: 0,
       target: 100,
-      trajectory: (
-        new Trajectory()
-          .insert(0, 0))
+      trajectory: (new Trajectory().insert(0, 0))
     });
     let progressReport = new ProgressReport();
-    expect(progressReport.progressFillColor(goal, 3)).to.be.equal('rgb(187,102,77)');
+    expect(progressReport.progressFillColor(goal, 3))
+        .to.be.equal('rgb(187,102,77)');
   });
 });
 
@@ -945,7 +866,8 @@ describe('safe markdown renderer', () => {
   it('renders links with schema http', () => {
     let renderer = new SafeMarkdownRenderer();
     let html = renderer.render('this [link](http://www.example.org/) abc.');
-    expect(html).to.equal('<p>this <a href="http://www.example.org/">link</a> abc.</p>\n');
+    expect(html).to.equal(
+        '<p>this <a href="http://www.example.org/">link</a> abc.</p>\n');
   });
 
   it('does not render links with schema mailto', () => {
@@ -1003,9 +925,7 @@ describe('objective component', () => {
       end: 10,
       baseline: 0,
       target: 100,
-      trajectory: (
-        new Trajectory()
-          .insert(0, 0))
+      trajectory: (new Trajectory().insert(0, 0))
     });
     let objective = new Objective({goals: [goal]});
 
@@ -1023,10 +943,7 @@ describe('objective component', () => {
       window: 10,
       target: 0.75,
       total: 10,
-      trajectory: (
-        new Trajectory()
-          .insert(0, 0)
-          .insert(10, 10)),
+      trajectory: (new Trajectory().insert(0, 0).insert(10, 10)),
     });
     let objective = new Objective({regular_goals: [goal]});
 
@@ -1055,7 +972,8 @@ describe('goal component', () => {
           return this.$el.innerText;
         }
       },
-      template: `<goal v-bind:goal='goal' v-bind:mode='mode' v-bind:locale='locale' v-bind:timezone='timezone'></goal>`
+      template:
+          `<goal v-bind:goal='goal' v-bind:mode='mode' v-bind:locale='locale' v-bind:timezone='timezone'></goal>`
     });
   });
 
@@ -1120,12 +1038,13 @@ describe('goal component', () => {
     expect(c.text()).to.not.contain('decrement');
   });
 
-  it('does not allow user to increment or decrement when planning', async () => {
-    c.mode = 'plan';
-    await c.$nextTick();
-    expect(c.text()).to.not.contain('increment');
-    expect(c.text()).to.not.contain('decrement');
-  });
+  it('does not allow user to increment or decrement when planning',
+     async () => {
+       c.mode = 'plan';
+       await c.$nextTick();
+       expect(c.text()).to.not.contain('increment');
+       expect(c.text()).to.not.contain('decrement');
+     });
 
   it('shows user the id when planning', async () => {
     let id = '1234567890';
@@ -1176,7 +1095,8 @@ describe('regular goal component', () => {
           return this.$el.innerText;
         }
       },
-      template: `<regular-goal v-bind:goal='goal' v-bind:mode='mode'></regular-goal>`
+      template:
+          `<regular-goal v-bind:goal='goal' v-bind:mode='mode'></regular-goal>`
     });
   });
 
@@ -1216,12 +1136,13 @@ describe('regular goal component', () => {
     expect(c.text()).to.not.contain('decrement');
   });
 
-  it('does not allow user to increment or decrement when planning', async () => {
-    c.mode = 'plan';
-    await c.$nextTick();
-    expect(c.text()).to.not.contain('increment');
-    expect(c.text()).to.not.contain('decrement');
-  });
+  it('does not allow user to increment or decrement when planning',
+     async () => {
+       c.mode = 'plan';
+       await c.$nextTick();
+       expect(c.text()).to.not.contain('increment');
+       expect(c.text()).to.not.contain('decrement');
+     });
 
   it('shows user the id when planning', async () => {
     let id = '1234567890';
@@ -1240,7 +1161,7 @@ describe('regular goal component', () => {
     c.mode = 'view';
 
     c.goal = goal;
-    
+
     await c.$nextTick();
     expect(c.text()).not.to.contain(id);
   });
@@ -1262,10 +1183,7 @@ describe('regular goal component', () => {
       window: 2,
       total: 2,
       target: 1,
-      trajectory: (
-        new Trajectory()
-          .insert(now - DAY, 0)
-          .insert(now, 1)),
+      trajectory: (new Trajectory().insert(now - DAY, 0).insert(now, 1)),
     });
 
     await c.$nextTick();
@@ -1275,10 +1193,7 @@ describe('regular goal component', () => {
       window: 2,
       total: 2,
       target: 1,
-      trajectory: (
-        new Trajectory()
-          .insert(now - 2 * DAY, 0)
-          .insert(now, 1)),
+      trajectory: (new Trajectory().insert(now - 2 * DAY, 0).insert(now, 1)),
     });
 
     await c.$nextTick();
