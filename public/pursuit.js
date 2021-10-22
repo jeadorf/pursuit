@@ -777,6 +777,10 @@ class SafeMarkdownRenderer {
  * VelocityReport provides descriptions of velocity towards a goal.
  */
 class VelocityReport {
+  /**
+   * @param {Goal} goal 
+   * @param {number} by_date 
+   */
   report(goal, by_date) {
     let v = goal.velocity30d(by_date) * DAY;
     let rv = goal.velocityRequired(by_date) * DAY;
@@ -801,6 +805,10 @@ class VelocityReport {
  * ProgressReport provides descriptions of progress towards a goal.
  */
 class ProgressReport {
+  /**
+   * @param {Goal} goal 
+   * @param {number} by_date 
+   */
   progressFillColor(goal, by_date) {
     let s = 0.8;
     let w = (goal.relativeProgress(by_date) - s) / (1.0 - s);
@@ -812,6 +820,10 @@ class ProgressReport {
     return `rgb(${r},${g},${b})`;
   }
 
+  /**
+   * @param {Goal} goal 
+   * @param {number} by_date 
+   */
   progressStatus(goal, by_date) {
     let daysUntilStart = goal.daysUntilStart(by_date);
     let daysUntilEnd = goal.daysUntilEnd(by_date);
@@ -932,7 +944,7 @@ Vue.component('objective', {
     },
 
     /**
-       createRegularGoal adds a new regular goal to the objective in Firestore.
+     * createRegularGoal adds a new regular goal to the objective in Firestore.
      */
     createRegularGoal: function() {
       let goalId = uuidv4();
