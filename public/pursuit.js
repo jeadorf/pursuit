@@ -1327,8 +1327,8 @@ Vue.component('regular-goal', {
 
     status: function() {
       let now = new Date().getTime();
-      return `@ ${this.goal.value(now).toFixed(2)} of ${this.goal.total} ${this.goal.unit},
-              targeting ${(this.goal.target).toFixed(2)}
+      return `@ ${this.goal.value(now).toFixed(2)},
+              targeting ${(this.goal.target).toFixed(2)} / ${this.goal.total} ${this.goal.unit}
               over ${this.goal.window}-day window`;
     },
 
