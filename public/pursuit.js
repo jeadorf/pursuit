@@ -38,61 +38,88 @@ class Objective {
     this._regularGoals = regularGoals;
   }
 
-  // id uniquely identifies the objective, and is typically assigned by the
-  // system rather than the user.
+  /**
+   * id uniquely identifies the objective, and is typically assigned by the
+   * system rather than the user.
+   * @type {string}
+   */
   get id() {
     return this._id;
   }
 
-  // name is the title of an objective.
+  /**
+   * name is the title of an objective.
+   * @type {string}
+   */
   get name() {
     return this._name;
   }
 
-  // description provides a more detailed narrative about the objective than
-  // the name alone.
+  /**
+   * description provides a more detailed narrative about the objective than
+   * the name alone.
+   * @type {string}
+   */
   get description() {
     return this._description;
   }
 
-  // goals is the list of one-off goals of this objective. All instances in
-  // this list must be of type Goal. See class Goal.
+  /**
+   * goals is the list of one-off goals of this objective. All instances in
+   * this list must be of type Goal. See class Goal.
+   * @type {Goal[]}
+   */
   get goals() {
     return this._goals;
   }
 
-  // regularGoals is the list of regular goals of this objective. All
-  // instances in this list must be of type RegularGoal. See class RegularGoal.
+  /**
+   * regularGoals is the list of regular goals of this objective. All
+   * instances in this list must be of type RegularGoal. See class RegularGoal.
+   * @type {RegularGoal[]}
+   */
   get regularGoals() {
     return this._regularGoals;
   }
 
-  // goals replaces the set of one-off goals in this objective. See the
-  // corresponding getter.
+  /**
+   * goals replaces the set of one-off goals in this objective. See the
+   * corresponding getter.
+   * @param {Goal[]} goals
+   */
   set goals(goals) {
     this._goals = goals;
   }
 
-  // regularGoals replaces the set of regular goals in this objective. See the
-  // corresponding getter.
+  /**
+   * regularGoals replaces the set of one-off goals in this objective. See the
+   * corresponding getter.
+   * @param {RegularGoal[]} regularGoals
+   */
   set regularGoals(regularGoals) {
     this._regularGoals = regularGoals;
   }
 }
 
-// Stage enumerates all different states a goal can be in. The stage is
-// currently not surfaced or editable in the user interface.
-//
-// @enum {string}
+/**
+ * Stage enumerates all different states a goal can be in. The stage is
+ * currently not surfaced or editable in the user interface.
+ * @enum {string}
+ */
 const Stage = {
+  /** DRAFT indicates that the goal has not yet been pledged. */
   DRAFT: 'draft',
+  /** PLEDGED indicates commitment to the goal. */
   PLEDGED: 'pledged',
+  /** ARCHIVED indicates that the goal is no longer actively pursued. */
   ARCHIVED: 'archived',
 };
 
-// Goal represents a one-off goal, defined by a fixed time window between a
-// start and end date, a target value which needs to be reached by the end
-// date, and the timeseries recording past progress (or regression).
+/**
+ * Goal represents a one-off goal, defined by a fixed time window between a
+ * start and end date, a target value which needs to be reached by the end date,
+ * and the timeseries recording past progress (or regression).
+ */
 class Goal {
   constructor({
     id = '',
@@ -104,81 +131,110 @@ class Goal {
     stage = Stage.PLEDGED,
     trajectory = new Trajectory()
   }) {
-     /** @private */
+    /** @private */
     this._id = id;
-     /** @private */
+    /** @private */
     this._name = name;
-     /** @private */
+    /** @private */
     this._unit = unit;
-     /** @private */
+    /** @private */
     this._target = target;
-     /** @private */
+    /** @private */
     this._start = start;
-     /** @private */
+    /** @private */
     this._end = end;
-     /** @private */
+    /** @private */
     this._stage = stage;
-     /** @private */
+    /** @private */
     this._trajectory = trajectory;
   }
 
-  // id uniquely identifies the goal.
+  /**
+   * id uniquely identifies the goal.
+   * @type {string}
+   */
   get id() {
     return this._id;
   }
 
-  // name is the title of a goal.
+  /**
+   * name is the title of a goal.
+   * @type {string}
+   */
   get name() {
     return this._name;
   }
 
-  // unit specifies the unit of the baseline, the target, and the values in the
-  // timeseries, i.e. the trajectory.
+  /**
+   * unit specifies the unit of the baseline, the target, and the values in the
+   * timeseries, i.e. the trajectory.
+   * @type {string}
+   */
   get unit() {
     return this._unit;
   }
 
-  // target specifies the value that the timeseries (trajectory) needs to reach
-  // by the end date. If the target is reached, then the goal is said to be
-  // complete.
+  /**
+   * target specifies the value that the timeseries (trajectory) needs to reach
+   * by the end date. If the target is reached, then the goal is said to be
+   * complete.
+   * @type {number}
+   */
   get target() {
     return this._target;
   }
 
-  // start date in milliseconds since epoch. The start date must not be greater
-  // than the end date.
+  /**
+   * start date in milliseconds since epoch. The start date must not be greater
+   * than the end date.
+   * @type {number}
+   */
   get start() {
     return this._start;
   }
 
-  // end date in milliseconds since epoch. The end date must not be less than
-  // the start date.
+  /**
+   * end date in milliseconds since epoch. The end date must not be less than
+   * the start date.
+   * @type {number}
+   */
   get end() {
     return this._end;
   }
 
-  // stage specifies the state of the goal; whether the goal is a draft,
-  // pledged, or archived.
+  /**
+   * stage specifies the level of commitment to the goal.
+   * @type {Stage}
+   */
   get stage() {
     return this._stage;
   }
 
-  // trajectory describes the progress towards the goal. It is a timeseries.
-  // The trajectory can be empty: this means that no values have been reported
-  // for the goal.
+  /**
+   * trajectory describes the progress towards the goal. It is a timeseries. The
+   * trajectory can be empty: this means that no values have been reported for
+   * the goal.
+   * @type {Trajectory}
+   */
   get trajectory() {
     return this._trajectory;
   }
 
-  // baseline describes the value of the trajectory at the start date.
+  /**
+   * baseline describes the value of the trajectory at the start date.
+   * @type {number}
+   */
   get baseline() {
     return this.trajectory.at(this.start);
   }
 
-  // progress returns the relative progress (a percentage) made towards the
-  // target value, at the current point in time. 0% means that no progress has
-  // been made, 100% or higher indicates that the goal is complete, and
-  // negative values indicate a regression.
+  /**
+   * progress returns the relative progress (a percentage) made towards the
+   * target value, at the current point in time. 0% means that no progress has
+   * been made, 100% or higher indicates that the goal is complete, and negative
+   * values indicate a regression.
+   * @type {number}
+   */
   get progress() {
     if (!this.trajectory.length) {
       return NaN;
@@ -189,32 +245,43 @@ class Goal {
         (this.target - this.baseline));
   }
 
-  // timeSpent the percent of time that has passed at a given point in time
-  // (by_date) since the start date, relative to the fixed time window set by
-  // the start and end dates of the goal. 0% is the start date, 100% is the end
-  // date.
+  /**
+   * timeSpent the percent of time that has passed at a given point in time
+   * (by_date) since the start date, relative to the fixed time window set by
+   * the start and end dates of the goal. 0% is the start date, 100% is the end
+   * date.
+   * @type {number}
+   */
   timeSpent(by_date) {
     let total = this._end - this._start;
     let spent = by_date - this._start;
     return total == 0 ? 1.0 : spent / total;
   }
 
-  // daysUntilStart returns the number of days that remain at a given point
-  // in time until the start date.
+  /**
+   * daysUntilStart returns the number of days that remain at a given point in
+   * time until the start date.
+   * @return {number}
+   */
   daysUntilStart(by_date) {
     return (this.start - by_date) / DAY;
   }
 
-  // daysUntilEnd returns the number of days that remain at a given point in
-  // time until the end date.
+  /**
+   * daysUntilEnd returns the number of days that remain at a given point in
+   * time until the end date.
+   * @return {number}
+   */
   daysUntilEnd(by_date) {
     return (this.end - by_date) / DAY;
   }
 
-  // relativeProgress returns the progress towards the goal relative to the
-  // time that has passed. The exact rationale behind the formula was
-  // forgotten, but the idea was to indicate how much progress was made towards
-  // the target compared to how much time has been spent since the start.
+  /**
+   * relativeProgress returns the progress towards the goal relative to the
+   * time that has passed. The exact rationale behind the formula was
+   * forgotten, but the idea was to indicate how much progress was made towards
+   * the target compared to how much time has been spent since the start.
+   */
   relativeProgress(by_date) {
     if (by_date <= this.start) {
       return 1.0;
@@ -224,43 +291,56 @@ class Goal {
     return p / t;
   }
 
-  // isOnTrack is true if and only if the progress towards the goal is at
-  // least as fast as the passing of time. For example, if halfway between the
-  // start and end date, the trajectory hais not proceeded at least halfway
-  // from the baseline to the target, then the goal is off track.
+  /**
+   * isOnTrack is true if and only if the progress towards the goal is at
+   * least as fast as the passing of time. For example, if halfway between the
+   * start and end date, the trajectory hais not proceeded at least halfway
+   * from the baseline to the target, then the goal is off track.
+   * @return {boolean}
+   */
   isOnTrack(by_date) {
     return this.progress >= this.timeSpent(Math.min(this.end, by_date));
   }
 
-  // velocity estimates the velocity of progress towards the target. See method
-  // Trajectory.velocity.
+  /**
+   * velocity estimates the velocity of progress towards the target. See method
+   * Trajectory.velocity.
+   * @return {number}
+   */
   velocity(by_date) {
     return this.trajectory.velocity(this.start, by_date);
   }
 
-  // velocity estimates the velocity of progress towards the target over a 30
-  // day window. See method Trajectory.velocity.
+  /**
+   * velocity estimates the velocity of progress towards the target over a 30
+   * day window. See method Trajectory.velocity.
+   * @return {number}
+   */
   velocity30d(by_date) {
     return this.trajectory.velocity(
         Math.max(this.start, by_date - 30 * DAY), by_date);
   }
 
-  // velocity _required estimates the velocity of progress that is required in
-  // order to reach the target by the end date, i.e. to complete the goal in
-  // time. For example, if you have 8 chapters left in a book, and 4 days left
-  // on your holiday, then you need to read with a velocity of 2 chapters a day
-  // in order to complete the book on your vacation.
+  /**
+   * velocity _required estimates the velocity of progress that is required in
+   * order to reach the target by the end date, i.e. to complete the goal in
+   * time. For example, if you have 8 chapters left in a book, and 4 days left
+   * on your holiday, then you need to read with a velocity of 2 chapters a day
+   * in order to complete the book on your vacation.
+   */
   velocityRequired(by_date) {
     return (this.target - this.trajectory.at(by_date)) / (this.end - by_date);
   }
 }
 
 
-// RegularGoal is a goal over a moving time window of fixed length. The regular
-// goal has a total, which describes the ideal difference between the
-// timeseries values at the boundaries of the time window. The regular goal has
-// a target, which specifies the percentage of the total, at which we still
-// consider the goal to be reached.
+/**
+ * RegularGoal is a goal over a moving time window of fixed length. The regular
+ * goal has a total, which describes the ideal difference between the
+ * timeseries values at the boundaries of the time window. The regular goal has
+ * a target, which specifies the percentage of the total, at which we still
+ * consider the goal to be reached.
+ */
 class RegularGoal {
   constructor({
     id = '',
@@ -272,11 +352,11 @@ class RegularGoal {
     total = 0.0,
     trajectory = new Trajectory()
   }) {
-     /** @private */
+    /** @private */
     this._id = id;
-     /** @private */
+    /** @private */
     this._name = name;
-     /** @private */
+    /** @private */
     this._description = description;
     /** @private */
     this._unit = unit;
@@ -290,72 +370,105 @@ class RegularGoal {
     this._trajectory = trajectory;
   }
 
-  // id uniquely identifies the (regular) goal.
+  /**
+   * id uniquely identifies the (regular) goal.
+   * @type {string}
+   */
   get id() {
     return this._id;
   }
 
-  // name is the title of the regular goal.
+  /**
+   * name is the title of the regular goal.
+   * @type {string}
+   */
   get name() {
     return this._name;
   }
 
-  // description provides a more detailed narrative of what is to be achieved.
+  /**
+   * description provides a more detailed narrative of what is to be achieved.
+   * @type {string}
+   */
   get description() {
     return this._description;
   }
 
-  // unit describes the unit for the total, and for the values of the
-  // timeseries (trajectory).
+  /**
+   * unit describes the unit for the total, and for the values of the
+   * timeseries (trajectory).
+   * @type {string}
+   */
   get unit() {
     return this._unit;
   }
 
-  // window defines the length of the moving time window in days.
+  /**
+   * window defines the length of the moving time window in days.
+   * @type {number}
+   */
   get window() {
     return this._window;
   }
 
-  // target defines the percentage of the total that needs to be attained
-  // within the moving time window.
+  /**
+   * target defines the percentage of the total that needs to be attained
+   * within the moving time window.
+   * @type {number}
+   */
   get target() {
     return this._target;
   }
 
-  // total provides the ideal difference of the timeseries between the start
-  // and the end of the moving time window.
+  /**
+   * total provides the ideal difference of the timeseries between the start
+   * and the end of the moving time window.
+   * @type {number}
+   */
   get total() {
     return this._total;
   }
 
-  // trajectory describes the progress towards the goal. It is a timeseries.
-  // The trajectory can be empty: this means that no values have been reported
-  // for the goal.
+  /**
+   * trajectory describes the progress towards the goal. It is a timeseries.
+   * The trajectory can be empty: this means that no values have been reported
+   * for the goal.
+   * @type {Trajectory}
+   */
   get trajectory() {
     return this._trajectory;
   }
 
-  // value describes the progress at a given point in time (the end of the time
-  // window) relative to the start of the moving time window. For example, if
-  // the number of pizzas eaten was 12 at the start of the window, and the
-  // number of pizzas eaten is 21 at the end of the window, the value is 21 -
-  // 12 = 9.
+  /**
+   * value describes the progress at a given point in time (the end of the time
+   * window) relative to the start of the moving time window. For example, if
+   * the number of pizzas eaten was 12 at the start of the window, and the
+   * number of pizzas eaten is 21 at the end of the window, the value is 21 -
+   * 12 = 9.
+   * @type {number}
+   */
   value(by_date) {
     return (
         this.trajectory.at(by_date) -
         this.trajectory.at(by_date - this.window * DAY));
   }
 
-  // budget_remaining returns the percentage of the permissible shortfall from
-  // the total; this budget is equivalent to the error budget of a Service
-  // Level Objectives (SLO).
+  /**
+   * budget_remaining returns the percentage of the permissible shortfall from
+   * the total; this budget is equivalent to the error budget of a Service
+   * Level Objectives (SLO).
+   * @type {number}
+   */
   budgetRemaining(by_date) {
     return (this.value(by_date) - this.target) / (this.total - this.target);
   }
 
-  // budget_remaining_prorated is like budget_remaining, but adjusts for
-  // partial data, i.e. when the moving window extends to earlier dates than
-  // where recordings were available.
+  /**
+   * budget_remaining_prorated is like budget_remaining, but adjusts for
+   * partial data, i.e. when the moving window extends to earlier dates than
+   * where recordings were available.
+   * @type {number}
+   */
   budgetRemainingProrated(by_date) {
     if (!this.trajectory.earliest) {
       return NaN;
@@ -369,8 +482,11 @@ class RegularGoal {
     return this.budgetRemaining(by_date);
   }
 
-  // partialData returns true if the trajectory does not contain any point
-  // earlier than the start of the moving time window.
+  /**
+   * partialData returns true if the trajectory does not contain any point
+   * earlier than the start of the moving time window.
+   * @type {boolean}
+   */
   partialData(by_date) {
     if (!this.trajectory.earliest) {
       return NaN;
@@ -380,15 +496,18 @@ class RegularGoal {
 }
 
 
-// Trajectory is a timeseries, i.e. a list of dated values.
+/** Trajectory is a timeseries, i.e. a list of dated values. */
 class Trajectory {
   constructor() {
     /** @private */
     this._line = [];
   }
 
-  // insert adds a point to the timeseries. It is possible to insert points
-  // out-of-order.
+  /**
+   * insert adds a point to the timeseries. It is possible to insert points
+   * out-of-order.
+   * @return {Trajectory}
+   */
   insert(date, value) {
     let p = this._line.length;
     while (p > 0 && this._line[p - 1].date >= date) {
@@ -400,25 +519,28 @@ class Trajectory {
     return this;
   }
 
-  // at returns the value of the timeseries at a given point in time,
-  // extrapolating at both ends of the timeseries, and interpolating in between
-  // two adjacent points in the timeseries.
+  /**
+   * at returns the value of the timeseries at a given point in time,
+   * extrapolating at both ends of the timeseries, and interpolating in between
+   * two adjacent points in the timeseries.
+   * @return {number}
+   */
   at(date) {
     if (!this._line.length) {
       return undefined;
     }
 
-    // extrapolate on the left
+    /** extrapolate on the left */
     if (this.earliest.date >= date) {
       return this.earliest.value;
     }
 
-    // extrapolate on the right
+    /** extrapolate on the right */
     if (this.latest.date <= date) {
       return this.latest.value;
     }
 
-    // interpolate
+    /** interpolate */
     let i0;
     for (i0 = 0; i0 < this._line.length - 1 && this._line[i0 + 1].date <= date;
          i0++) {
@@ -431,23 +553,29 @@ class Trajectory {
     return m0 + (date - t0) * (m2 - m0) / (t2 - t0);
   }
 
-  // remove deletes points from the timeseries at the specified date.
+  /**
+   * remove deletes points from the timeseries at the specified date.
+   * @return {Trajectory}
+   */
   remove(date) {
     for (let i = 0; i < this._line.length; i++) {
       if (this._line[i].date == date) {
         this._line.splice(i, 1);
-        return;
+        return this;
       }
     }
+    return this;
   }
 
-  // compactHead removes entries from the timeline that happened within an hour of the
-  // latest entry. Never removes the earliest or latest entry from the
-  // trajectory.
-  //
-  // Calling compactHead() after insertions into the trajectory helps reducing
-  // the rate of changes recorded and ensures that transient states while the
-  // user is editing the goal are discarded.
+  /**
+   * compactHead removes entries from the timeline that happened within an hour
+   * of the latest entry. Never removes the earliest or latest entry from the
+   * trajectory.
+   *
+   * Calling compactHead() after insertions into the trajectory helps reducing
+   * the rate of changes recorded and ensures that transient states while the
+   * user is editing the goal are discarded.
+   */
   compactHead(duration = HOUR) {
     let head = this._line.pop();
     for (let i = this._line.length - 1;
@@ -457,15 +585,22 @@ class Trajectory {
     this._line.splice(this._line.length, 0, head);
   }
 
-  // velocity returns the estimated velocity over a given period of time.  The
-  // terminology here is inspired from atimeseries measuring the "distance
-  // traveled".
+  /**
+   * velocity returns the estimated velocity over a given period of time.  The
+   * terminology here is inspired from atimeseries measuring the "distance
+   * traveled".
+   * @param {number} a
+   * @param {number} b
+   */
   velocity(a, b) {
     return (this.at(b) - this.at(a)) / (b - a);
   }
 
-  // earliest returns the earliest (smallest timestamp) point in the
-  // timeseries.
+  /**
+   * earliest returns the earliest (smallest timestamp) point in the
+   * timeseries.
+   * @type {number}
+   */
   get earliest() {
     if (!this._line) {
       return NaN;
@@ -473,7 +608,10 @@ class Trajectory {
     return this._line[0];
   }
 
-  // latest returns the latest (biggest timestamp) point in the timeseries.
+  /**
+   * latest returns the latest (biggest timestamp) point in the timeseries.
+   * @type {number}
+   */
   get latest() {
     if (!this._line) {
       return NaN;
@@ -481,19 +619,30 @@ class Trajectory {
     return this._line[this._line.length - 1];
   }
 
-  // length returns the number of points in the timeseries.
+  /**
+   * length returns the number of points in the timeseries.
+   * @type {number}
+   */
   get length() {
     return this._line.length;
   }
 
-  // [Symbol.iterator] returns iterator over all points in the timesries.
+  /** [Symbol.iterator] returns iterator over all points in the timeseries. */
   [Symbol.iterator]() {
     return this._line[Symbol.iterator]();
   }
 };
 
 
+/**
+ * ObjectiveConverter serializes and deserializes objectives from their
+ * representation in Firestore.
+ */
 class ObjectiveConverter {
+  /**
+   * toFirestore converts an objective to its Firestore representation.
+   * @param {!Objective} objective
+   */
   toFirestore(objective) {
     let goals = {};
     for (let g of objective.goals) {
@@ -584,7 +733,9 @@ class ObjectiveConverter {
   }
 }
 
-
+/**
+ * SafeMarkdownRenderer renders markdown to HTML.
+ */
 class SafeMarkdownRenderer {
   render(markdown) {
     if (!markdown) {
@@ -622,14 +773,17 @@ class SafeMarkdownRenderer {
   }
 }
 
+/**
+ * VelocityReport provides descriptions of velocity towards a goal.
+ */
 class VelocityReport {
   report(goal, by_date) {
     let v = goal.velocity30d(by_date) * DAY;
     let rv = goal.velocityRequired(by_date) * DAY;
     let round = (f) => f.toFixed(1);
     // Attempt to choose a time period where there was at least one unit of
-    // progress. There are alternative ways of choosing a sensible period of
-    // time, e.g. based on the rate (target - baseline) / (end - start).
+    // progress.There are alternative ways of choosing a sensible period of
+    // time, e.g.based on the rate (target - baseline) / (end - start).
     if (v >= 1 || rv >= 1) {
       return `30d: ${round(v)} ${goal.unit} per day; now need ${round(rv)} ${
           goal.unit} per day`;
@@ -643,6 +797,9 @@ class VelocityReport {
   }
 }
 
+/**
+ * ProgressReport provides descriptions of progress towards a goal.
+ */
 class ProgressReport {
   progressFillColor(goal, by_date) {
     let s = 0.8;
@@ -682,29 +839,38 @@ class ProgressReport {
   }
 }
 
-// Mode represents different UI: viewing, tracking, or planning.
-//
-// @enum {string}
+/**
+ * Mode represents different UI: viewing, tracking, or planning.
+ * @enum {string}
+ */
 const Mode = {
-  // VIEW is a "read-only" mode. When viewing, the user can see their
-  // objectives and goals, and thus see progress. However, the user cannot
-  // change objectives or goals. This prevents accidental changes, and avoids
-  // distracting elements.
+  /**
+   * VIEW is a "read-only" mode. When viewing, the user can see their
+   * objectives and goals, and thus see progress. However, the user cannot
+   * change objectives or goals. This prevents accidental changes, and avoids
+   * distracting elements.
+   */
   VIEW: 'view',
 
-  // TRACK is a mode which allows the user to conveniently update the progress
-  // for their goals. Still, this mode only provides the minimum surface for
-  // updating progress, avoiding other distracting elements, and preventing
-  // accidental changes.
+  /**
+   * TRACK is a mode which allows the user to conveniently update the progress
+   * for their goals. Still, this mode only provides the minimum surface for
+   * updating progress, avoiding other distracting elements, and preventing
+   * accidental changes.
+   */
   TRACK: 'track',
 
-  // PLAN is a mode which gives the user full control (CRUD) over objectives
-  // and goals.
+  /**
+   * PLAN is a mode which gives the user full control (CRUD) over objectives
+   * and goals.
+   */
   PLAN: 'plan',
 };
 
-// modeMixin provides common functionality to both the <goal> and the
-// <regular-goal> Vue components.
+/**
+ * modeMixin provides common functionality to both the <goal> and the
+ * <regular-goal> Vue components.
+ */
 let modeMixin = {
   computed: {
     viewing: function() {
@@ -721,8 +887,10 @@ let modeMixin = {
   },
 };
 
-// Registers the <objective> Vue component globally. This component renders an
-// objective and its goals.
+/**
+ * Registers the <objective> Vue component globally. This component renders an
+ * objective and its goals.
+ */
 Vue.component('objective', {
   mixins: [modeMixin],
 
@@ -736,7 +904,7 @@ Vue.component('objective', {
   },
 
   methods: {
-    // updateObjective makes changes to the objective in Firestore.
+    /** updateObjective makes changes to the objective in Firestore.  */
     updateObjective: function(update) {
       firebase.firestore()
           .collection('users')
@@ -746,7 +914,7 @@ Vue.component('objective', {
           .update(update);
     },
 
-    // createGoal adds a new goal to the objective in Firestore.
+    /** createGoal adds a new goal to the objective in Firestore. */
     createGoal: function() {
       let goalId = uuidv4();
       let now = new Date().getTime();
@@ -763,7 +931,9 @@ Vue.component('objective', {
       });
     },
 
-    // createRegularGoal adds a new regular goal to the objective in Firestore.
+    /**
+       createRegularGoal adds a new regular goal to the objective in Firestore.
+     */
     createRegularGoal: function() {
       let goalId = uuidv4();
       let now = new Date().getTime();
@@ -780,12 +950,12 @@ Vue.component('objective', {
       });
     },
 
-    // copyObjectiveIdToClipboard puts the objective ID into the clipboard.
+    /** copyObjectiveIdToClipboard puts the objective ID into the clipboard. */
     copyObjectiveIdToClipboard: function() {
       navigator.clipboard.writeText(this.objective.id);
     },
 
-    // incrementGoal increments the latest value of a goal by one.
+    /** incrementGoal increments the latest value of a goal by one. */
     incrementGoal(goal) {
       let t = _.cloneDeep(goal.trajectory);
       t.insert(new Date().getTime(), t.latest.value + 1);
@@ -796,7 +966,7 @@ Vue.component('objective', {
       });
     },
 
-    // decrementGoal decrements the latest value of a goal by one.
+    /** decrementGoal decrements the latest value of a goal by one. */
     decrementGoal(goal) {
       let t = _.cloneDeep(goal.trajectory);
       t.insert(new Date().getTime(), t.latest.value - 1);
@@ -807,19 +977,21 @@ Vue.component('objective', {
       });
     },
 
-    // updateGoalName renames the goal.
+    /** updateGoalName renames the goal. */
     updateGoalName(goal, name) {
       this.updateObjective({
         [`goals.${goal.id}.name`]: name,
       });
     },
 
-    // updateGoalStart changes the start date of the goal. It is not obvious
-    // what to do if the trajectory already contains point past the previous
-    // start date. Users should not change the start date for any goals after
-    // they already made progress on these goals.  If users still want to
-    // change the start date, they will have to reset the trajectory.  Smarter
-    // implementations are possible.
+    /**
+     * updateGoalStart changes the start date of the goal. It is not obvious
+     * what to do if the trajectory already contains point past the previous
+     * start date. Users should not change the start date for any goals after
+     * they already made progress on these goals.  If users still want to
+     * change the start date, they will have to reset the trajectory.  Smarter
+     * implementations are possible.
+     */
     updateGoalStart(goal, start) {
       if (!confirm(`Changing the baseline will delete the trajectory of "${
               goal.name}", proceed?`)) {
@@ -833,14 +1005,14 @@ Vue.component('objective', {
       });
     },
 
-    // updateGoalStart changes the end date of the goal.
+    /** updateGoalStart changes the end date of the goal. */
     updateGoalEnd(goal, end) {
       this.updateObjective({
         [`goals.${goal.id}.end`]: end,
       });
     },
 
-    // updateGoalBaseline changes the end date of the goal.
+    /** updateGoalBaseline changes the end date of the goal. */
     updateGoalBaseline(goal, baseline) {
       if (!confirm(`Changing the baseline will delete trajectory of "${
               goal.name}", proceed?`)) {
@@ -854,14 +1026,14 @@ Vue.component('objective', {
       });
     },
 
-    // updateGoalTarget changes the target of the goal.
+    /** updateGoalTarget changes the target of the goal. */
     updateGoalTarget(goal, target) {
       this.updateObjective({
         [`goals.${goal.id}.target`]: target,
       });
     },
 
-    // updateGoalCurrent changes the latest value of the goal.
+    /** updateGoalCurrent changes the latest value of the goal. */
     updateGoalCurrent(goal, current) {
       let t = _.cloneDeep(goal.trajectory);
       t.insert(new Date().getTime(), current);
@@ -872,14 +1044,14 @@ Vue.component('objective', {
       });
     },
 
-    // updateGoalUnit changes the unit of the goal.
+    /** updateGoalUnit changes the unit of the goal. */
     updateGoalUnit(goal, unit) {
       this.updateObjective({
         [`goals.${goal.id}.unit`]: unit,
       });
     },
 
-    // deleteGoal removes the goal from its objective.
+    /** deleteGoal removes the goal from its objective. */
     deleteGoal: function(goal) {
       if (confirm(`Really delete the goal "${goal.name}"?`)) {
         this.updateObjective(
@@ -887,8 +1059,10 @@ Vue.component('objective', {
       }
     },
 
-    // incrementRegularGoal increments the latest value of a regular goal by
-    // one.
+    /**
+     * incrementRegularGoal increments the latest value of a regular goal by
+     * one.
+     */
     incrementRegularGoal(goal) {
       let t = _.cloneDeep(goal.trajectory);
       t.insert(new Date().getTime(), t.latest.value + 1);
@@ -899,8 +1073,10 @@ Vue.component('objective', {
       });
     },
 
-    // decrementRegularGoal decrements the latest value of a regular goal by
-    // one.
+    /**
+     * decrementRegularGoal decrements the latest value of a regular goal by
+     * one.
+     */
     decrementRegularGoal(goal) {
       let t = _.cloneDeep(goal.trajectory);
       t.insert(new Date().getTime(), t.latest.value - 1);
@@ -911,49 +1087,55 @@ Vue.component('objective', {
       });
     },
 
-    // updateRegularGoalName renames a regular goal.
+    /** updateRegularGoalName renames a regular goal. */
     updateRegularGoalName(goal, name) {
       this.updateObjective({
         [`regular_goals.${goal.id}.name`]: name,
       });
     },
 
-    // updateRegularGoalDescription changes the description of a regular goal.
+    /**
+       updateRegularGoalDescription changes the description of a regular goal.
+     */
     updateRegularGoalDescription(goal, description) {
       this.updateObjective({
         [`regular_goals.${goal.id}.description`]: description,
       });
     },
 
-    // updateRegularGoalWindow changes the window of a regular goal.
+    /** updateRegularGoalWindow changes the window of a regular goal. */
     updateRegularGoalWindow(goal, window) {
       this.updateObjective({
         [`regular_goals.${goal.id}.window`]: window,
       });
     },
 
-    // updateRegularGoalTarget changes the target of a regular goal.
+    /** updateRegularGoalTarget changes the target of a regular goal. */
     updateRegularGoalTarget(goal, target) {
       this.updateObjective({
         [`regular_goals.${goal.id}.target`]: target,
       });
     },
 
-    // updateRegularGoalTotal changes the total of a regular goal.
+    /** updateRegularGoalTotal changes the total of a regular goal. */
     updateRegularGoalTotal(goal, total) {
       this.updateObjective({
         [`regular_goals.${goal.id}.total`]: total,
       });
     },
 
-    // updateRegularGoalUnit changes the unit of a regular goal.
+    /**
+     * updateRegularGoalUnit changes the unit of a regular goal.
+     * @param {RegularGoal} goal
+     * @param {string} unit
+     */
     updateRegularGoalUnit(goal, unit) {
       this.updateObjective({
         [`regular_goals.${goal.id}.unit`]: unit,
       });
     },
 
-    // updateRegularGoalCurrent changes the latest value of a regular goal.
+    /** updateRegularGoalCurrent changes the latest value of a regular goal. */
     updateRegularGoalCurrent(goal, current) {
       let t = _.cloneDeep(goal.trajectory);
       t.insert(new Date().getTime(), current);
@@ -964,7 +1146,7 @@ Vue.component('objective', {
       });
     },
 
-    // deleteGoal removes the goal from its objective.
+    /** deleteGoal removes the goal from its objective. */
     deleteRegularGoal: function(goal) {
       if (confirm(`Really delete the regular goal "${goal.name}"?`)) {
         this.updateObjective({
@@ -973,7 +1155,7 @@ Vue.component('objective', {
       }
     },
 
-    // deleteObjective removes the objective from the user's collection.
+    /** deleteObjective removes the objective from the user's collection. */
     deleteObjective: function() {
       if (confirm(
               `Really delete the objective named "${this.objective.name}"?`)) {
@@ -1040,8 +1222,10 @@ Vue.component('objective', {
   `,
 });
 
-// goalMixin provides common functionality to both the <goal> and the
-// <regular-goal> Vue components.
+/**
+ * goalMixin provides common functionality to both the <goal> and the
+ * <regular-goal> Vue components.
+ */
 let goalMixin = {
   props: ['goal', 'mode'],
 
@@ -1102,14 +1286,17 @@ let localeMixin = {
   props: ['locale', 'timezone'],
 
   methods: {
-    // inputformat takes a time specified in milliseconds since epoch, and
-    // returns the date formatted as a string ("yyyy-mm-dd"). This is useful
-    // when passing input to HTML <input> elements. I have no definite idea
-    // of what timezone <input type="date"> expects when <input> is given dates
-    // formatted as "yyyy-mm-dd" ... betting though that <input> interprets
-    // the given strings in local time ... oh, this method does not make me
-    // proud, but I don't want to install more libraries just to delegate this
-    // one problem away.
+    /**
+     * inputformat takes a time specified in milliseconds since epoch, and
+     * returns the date formatted as a string ("yyyy-mm-dd"). This is useful
+     * when passing input to HTML <input> elements. I have no definite idea
+     * of what timezone <input type="date"> expects when <input> is given dates
+     * formatted as "yyyy-mm-dd" ... betting though that <input> interprets
+     * the given strings in local time ... oh, this method does not make me
+     * proud, but I don't want to install more libraries just to delegate this
+     * one problem away.
+     * @param {number} millis
+     */
     inputformat: function(millis) {
       let parts =
           (new Date(millis).toLocaleDateString('de-DE').split('.').reverse());
@@ -1124,7 +1311,9 @@ let localeMixin = {
   },
 };
 
-// Registers the <goal> Vue component globally. This component renders a goal.
+/**
+ * Registers the <goal> Vue component globally. This component renders a goal.
+ */
 Vue.component('goal', {
   mixins: [goalMixin, localeMixin, modeMixin],
 
@@ -1333,8 +1522,10 @@ Vue.component('goal', {
   `,
 });
 
-// Registers the <goal> Vue component globally. This component renders a
-// regular goal.
+/**
+ * Registers the <goal> Vue component globally. This component renders a
+ * regular goal.
+ */
 Vue.component('regular-goal', {
   mixins: [goalMixin, modeMixin],
 
@@ -1342,7 +1533,7 @@ Vue.component('regular-goal', {
     barColor: function() {
       let now = new Date().getTime();
       return this.goal.budgetRemainingProrated(now) > 0 ? 'rgb(136,187,77)' :
-                                                            'rgb(187, 102, 77)'
+                                                          'rgb(187, 102, 77)'
     },
 
     barXPos: function() {
@@ -1518,32 +1709,46 @@ Vue.component('regular-goal', {
   `
 });
 
-// The main Vue instance that is driving the application.
+/**
+ * The main Vue instance that is driving the application.
+ */
 let vue = new Vue({
   mixins: [modeMixin],
 
   el: '#app',
 
   data: {
-    // See enum Mode.
+    /**
+     * See enum Mode.
+     * @type {Mode}
+     */
     mode: Mode.VIEW,
 
-    // objectives holds all of the objectives fetched from Firestore.
-    // objectives is considered immutable, all changes to an objective or its
-    // goals should be made directly in Firestore, relying on Firestore pushing
-    // such changes back to the client. See also: class Objective.
+    /**
+     * objectives holds all of the objectives fetched from Firestore.
+     * objectives is considered immutable, all changes to an objective or its
+     * goals should be made directly in Firestore, relying on Firestore pushing
+     * such changes back to the client. See also: class Objective.
+     * @type {Objective[]}
+     */
     objectives: [],
 
-    // user_id contains the ID of the Firebase user. If user_id is set, then
-    // this means that a user is signed in and the client authenticated with
-    // Firebase.
+    /**
+     * user_id contains the ID of the Firebase user. If user_id is set, then
+     * this means that a user is signed in and the client authenticated with
+     * Firebase.
+     * @type {string}
+     */
     user_id: '',
 
-    // loaded signals when the objectives have been fetched from Firestore for
-    // the first time. This is a useful signal for the application to make
-    // other parts of the user interface available in synchronization. This
-    // prevents the user interface from loading piece by piece. Instead, the
-    // user interface should load in logical chunks.
+    /**
+     * loaded signals when the objectives have been fetched from Firestore for
+     * the first time. This is a useful signal for the application to make
+     * other parts of the user interface available in synchronization. This
+     * prevents the user interface from loading piece by piece. Instead, the
+     * user interface should load in logical chunks.
+     * @type {boolean}
+     */
     loaded: false,
   },
 
@@ -1554,12 +1759,15 @@ let vue = new Vue({
   },
 
   methods: {
-    // copyUserIdToClipboard sets the clipboard to the ID of the signed-in user.
+    /**
+     * copyUserIdToClipboard sets the clipboard to the ID of the signed-in
+     * user.
+     */
     copyUserIdToClipboard: function() {
       navigator.clipboard.writeText(this.user_id);
     },
 
-    // createObjective adds a new objective to Firestore.
+    /** createObjective adds a new objective to Firestore. */
     createObjective: function() {
       let objective = new Objective({
         id: uuidv4(),
@@ -1577,11 +1785,11 @@ let vue = new Vue({
           .set(objective);
     },
 
-    // listenToObjectives ensures that whenever any of the objectives changes in
-    // Firestore, the
-    // objectives on the client application are refreshed; Firestore is
-    // considered the source of
-    // truth.
+    /**
+     * listenToObjectives ensures that whenever any of the objectives changes
+     * in Firestore, the objectives on the client application are refreshed;
+     * Firestore is considered the source of truth.
+     */
     listenToObjectives: function() {
       firebase.firestore()
           .collection('users')
@@ -1601,24 +1809,26 @@ let vue = new Vue({
           });
     },
 
-    // signIn authenticates the client using redirect flow. The result of this
-    // operation is handled in listener to onAuthStateChanged.
+    /**
+     * signIn authenticates the client using redirect flow. The result of this
+     * operation is handled in listener to onAuthStateChanged.
+     */
     signIn: function() {
       let provider = new firebase.auth.GoogleAuthProvider();
       firebase.auth().signInWithRedirect(provider);
     },
 
-    // view switches the user interface into viewing mode.
+    /** view switches the user interface into viewing mode. */
     view: function() {
       this.mode = Mode.VIEW;
     },
 
-    // track switches the user interface into tracking mode.
+    /** track switches the user interface into tracking mode. */
     track: function() {
       this.mode = Mode.TRACK;
     },
 
-    // plan switcches the user interface into planning mode.
+    /** plan switcches the user interface into planning mode. */
     plan: function() {
       this.mode = Mode.PLAN;
     },
@@ -1669,9 +1879,8 @@ let vue = new Vue({
   `
 });
 
-// Listen to the results of the sign-in flow.
-// Once, successfully authenticated, fetch the
-// objectives from Firestore.
+// Listen to the results of the sign-in flow. Once successfully authenticated,
+// fetch the objectives from Firestore.
 if (!testing) {
   firebase.auth().onAuthStateChanged((user) => {
     if (user) {
