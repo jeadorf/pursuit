@@ -45,9 +45,9 @@ describe('objective', () => {
   });
 
   it('is constructed with regular goals', () => {
-    let regular_goals = [new RegularGoal({})];
-    let objective = new Objective({regular_goals});
-    expect(objective.regular_goals).to.equal(regular_goals);
+    let regularGoals = [new RegularGoal({})];
+    let objective = new Objective({regularGoals});
+    expect(objective.regularGoals).to.equal(regularGoals);
   });
 });
 
@@ -152,7 +152,7 @@ describe('goal', () => {
       target: 100,
       trajectory: (new Trajectory().insert(0, 0).insert(5, 50)),
     });
-    expect(goal.relative_progress(5)).to.equal(1.0);
+    expect(goal.relativeProgress(5)).to.equal(1.0);
   });
 
   it('reports relative progress when 20% behind', () => {
@@ -162,7 +162,7 @@ describe('goal', () => {
       target: 100,
       trajectory: (new Trajectory().insert(0, 0).insert(5, 40)),
     });
-    expect(goal.relative_progress(5)).to.equal(0.8);
+    expect(goal.relativeProgress(5)).to.equal(0.8);
   });
 
   it('reports relative progress when 20% ahead', () => {
@@ -172,7 +172,7 @@ describe('goal', () => {
       target: 100,
       trajectory: (new Trajectory().insert(0, 0).insert(5, 60)),
     });
-    expect(goal.relative_progress(5)).to.equal(1.2);
+    expect(goal.relativeProgress(5)).to.equal(1.2);
   });
 
   it('reports relative progress as 100% before start date', () => {
@@ -182,7 +182,7 @@ describe('goal', () => {
       target: 100,
       trajectory: (new Trajectory().insert(1, 0).insert(5, 60)),
     });
-    expect(goal.relative_progress(0)).to.equal(1.0);
+    expect(goal.relativeProgress(0)).to.equal(1.0);
   });
 
   it('reports relative progress as 100% when complete after end date', () => {
@@ -192,7 +192,7 @@ describe('goal', () => {
       target: 100,
       trajectory: (new Trajectory().insert(1, 0).insert(9, 100)),
     });
-    expect(goal.relative_progress(11)).to.equal(1.0);
+    expect(goal.relativeProgress(11)).to.equal(1.0);
   });
 
   it('reports relative progress as 90% when incomplete after end date', () => {
@@ -202,7 +202,7 @@ describe('goal', () => {
       target: 100,
       trajectory: (new Trajectory().insert(1, 0).insert(5, 90)),
     });
-    expect(goal.relative_progress(11)).to.equal(0.9);
+    expect(goal.relativeProgress(11)).to.equal(0.9);
   });
 
   it('reports days until start as zero for start date', () => {
@@ -210,7 +210,7 @@ describe('goal', () => {
       start: 3 * DAY,
       end: 6 * DAY,
     });
-    expect(goal.days_until_start(goal.start)).to.equal(0.0);
+    expect(goal.daysUntilStart(goal.start)).to.equal(0.0);
   });
 
   it('reports days until start from now until start of goal', () => {
@@ -218,7 +218,7 @@ describe('goal', () => {
       start: 3 * DAY,
       end: 7 * DAY,
     });
-    expect(goal.days_until_start(DAY)).to.equal(2);
+    expect(goal.daysUntilStart(DAY)).to.equal(2);
   });
 
   it('reports days until start as negative for dates past start date', () => {
@@ -226,7 +226,7 @@ describe('goal', () => {
       start: 3 * DAY,
       end: 7 * DAY,
     });
-    expect(goal.days_until_start(goal.start + DAY)).to.equal(-1.0);
+    expect(goal.daysUntilStart(goal.start + DAY)).to.equal(-1.0);
   });
 
   it('reports days until end as zero for end date', () => {
@@ -234,7 +234,7 @@ describe('goal', () => {
       start: 0,
       end: 7.5 * DAY,
     });
-    expect(goal.days_until_end(goal.end)).to.equal(0.0);
+    expect(goal.daysUntilEnd(goal.end)).to.equal(0.0);
   });
 
   it('reports days until end from now until end of goal', () => {
@@ -242,7 +242,7 @@ describe('goal', () => {
       start: 3 * DAY,
       end: 7 * DAY,
     });
-    expect(goal.days_until_end(DAY)).to.equal(6);
+    expect(goal.daysUntilEnd(DAY)).to.equal(6);
   });
 
   it('reports days until end as negative for dates past end date', () => {
@@ -250,7 +250,7 @@ describe('goal', () => {
       start: 0,
       end: 3 * DAY,
     });
-    expect(goal.days_until_end(goal.end + DAY)).to.equal(-1.0);
+    expect(goal.daysUntilEnd(goal.end + DAY)).to.equal(-1.0);
   });
 
   it('has time spent percentage', () => {
@@ -258,8 +258,8 @@ describe('goal', () => {
       start: 637369200000,
       end: 958082400000,
     });
-    expect(goal.time_spent(goal.start)).to.equal(0.0);
-    expect(goal.time_spent(goal.end)).to.equal(1.0);
+    expect(goal.timeSpent(goal.start)).to.equal(0.0);
+    expect(goal.timeSpent(goal.end)).to.equal(1.0);
   });
 
   it('has 100% time spent if end date equals start date', () => {
@@ -267,8 +267,8 @@ describe('goal', () => {
       start: 637369200000,
       end: 637369200000,
     });
-    expect(goal.time_spent(goal.start)).to.equal(1.0);
-    expect(goal.time_spent(goal.end)).to.equal(1.0);
+    expect(goal.timeSpent(goal.start)).to.equal(1.0);
+    expect(goal.timeSpent(goal.end)).to.equal(1.0);
   });
 
   it('can determine whether on track', () => {
@@ -278,8 +278,8 @@ describe('goal', () => {
       target: 120,
       trajectory: (new Trajectory().insert(5000, 20).insert(6000, 30)),
     });
-    expect(goal.is_on_track(6000)).to.be.true;
-    expect(goal.is_on_track(6001)).to.be.false;
+    expect(goal.isOnTrack(6000)).to.be.true;
+    expect(goal.isOnTrack(6001)).to.be.false;
   });
 
   it('compares progress against end date in the past', () => {
@@ -289,8 +289,8 @@ describe('goal', () => {
       target: 120,
       trajectory: (new Trajectory().insert(5000, 20).insert(15000, 120)),
     });
-    expect(goal.is_on_track(15000)).to.be.true;
-    expect(goal.is_on_track(20000)).to.be.true;
+    expect(goal.isOnTrack(15000)).to.be.true;
+    expect(goal.isOnTrack(20000)).to.be.true;
   });
 
   it('can compute mean velocity', () => {
@@ -362,7 +362,7 @@ describe('regular goal', () => {
       total: 10,
       trajectory: (new Trajectory().insert(0, 0).insert(10 * DAY, 10)),
     });
-    expect(goal.budget_remaining(10 * DAY)).to.be.approximately(1, 0.000001);
+    expect(goal.budgetRemaining(10 * DAY)).to.be.approximately(1, 0.000001);
     expect(goal.value(10 * DAY)).to.be.approximately(10, 0.000001);
   });
 
@@ -373,7 +373,7 @@ describe('regular goal', () => {
       total: 10,
       trajectory: (new Trajectory().insert(0, 0).insert(10 * DAY, 8)),
     });
-    expect(goal.budget_remaining(10 * DAY)).to.be.approximately(0.20, 0.000001);
+    expect(goal.budgetRemaining(10 * DAY)).to.be.approximately(0.20, 0.000001);
     expect(goal.value(10 * DAY)).to.be.approximately(8, 0.000001);
   });
 
@@ -384,7 +384,7 @@ describe('regular goal', () => {
       total: 10,
       trajectory: (new Trajectory().insert(0, 0).insert(10 * DAY, 7.5)),
     });
-    expect(goal.budget_remaining(10 * DAY)).to.be.approximately(0, 0.000001);
+    expect(goal.budgetRemaining(10 * DAY)).to.be.approximately(0, 0.000001);
     expect(goal.value(10 * DAY)).to.be.approximately(7.5, 0.000001);
   });
 
@@ -395,8 +395,8 @@ describe('regular goal', () => {
       total: 10,
       trajectory: (new Trajectory().insert(0, 0))
     });
-    expect(goal.partial_data(10 * DAY - 1)).to.be.true;
-    expect(goal.partial_data(10 * DAY)).to.be.false;
+    expect(goal.partialData(10 * DAY - 1)).to.be.true;
+    expect(goal.partialData(10 * DAY)).to.be.false;
   });
 
   it('has budget remaining prorated if only partial data available', () => {
@@ -406,19 +406,19 @@ describe('regular goal', () => {
       total: 20,
       trajectory: (new Trajectory().insert(14 * DAY, 0).insert(28 * DAY, 8)),
     });
-    expect(goal.budget_remaining_prorated(28 * DAY))
+    expect(goal.budgetRemainingProrated(28 * DAY))
         .to.be.approximately(0.50, 0.000001);
     expect(goal.value(28 * DAY)).to.be.approximately(8, 0.000001);
   });
 
   it('has NaN as remaining budget when trajectory is empty', () => {
     let goal = new RegularGoal({});
-    expect(goal.budget_remaining(10)).to.be.NaN;
+    expect(goal.budgetRemaining(10)).to.be.NaN;
   });
 
   it('has NaN as prorated remaining budget when trajectory is empty', () => {
     let goal = new RegularGoal({});
-    expect(goal.budget_remaining_prorated(10)).to.be.NaN;
+    expect(goal.budgetRemainingProrated(10)).to.be.NaN;
   });
 });
 
@@ -505,7 +505,7 @@ describe('trajectory', () => {
                          .insert(2 * DAY + 1, 48)
     expect(trajectory.length).to.equal(5);
 
-    trajectory.compact_head(DAY);
+    trajectory.compactHead(DAY);
 
     expect(trajectory.at(0)).to.equal(10);
     expect(trajectory.at(DAY)).to.equal(12);
@@ -615,7 +615,10 @@ describe('objective converter', () => {
             window: 10,
             target: 0.75,
             total: 10,
-            trajectory: (new Trajectory().insert(0, 0).insert(10, 10)),
+            trajectory: [
+              {date: 2490, value: 0},
+              {date: 3622, value: 110},
+            ],
           },
         },
       })
@@ -633,7 +636,7 @@ describe('objective converter', () => {
         stage: Stage.ARCHIVED,
         trajectory: (new Trajectory().insert(2490, 0).insert(3622, 110))
       })],
-      regular_goals: [
+      regularGoals: [
         new RegularGoal({
           id: 'e156d27b-1182-433e-9ax3-f29c78b1a113',
           name: 'name',
@@ -642,7 +645,7 @@ describe('objective converter', () => {
           window: 10,
           target: 0.75,
           total: 10,
-          trajectory: (new Trajectory().insert(0, 0).insert(10, 10)),
+          trajectory: (new Trajectory().insert(2490, 0).insert(3622, 110))
         }),
       ],
     });
@@ -664,7 +667,7 @@ describe('objective converter', () => {
       name: 'name',
       description: 'description',
       goals: [],
-      regular_goals: [],
+      regularGoals: [],
     });
 
     expect(converter.fromFirestore(doc)).to.eql(expected);
@@ -686,7 +689,7 @@ describe('objective converter', () => {
         stage: Stage.ARCHIVED,
         trajectory: (new Trajectory().insert(2490, 0).insert(3622, 110)),
       })],
-      regular_goals: [
+      regularGoals: [
         new RegularGoal({
           id: 'e156d27b-1182-433e-9ax3-f29c78b1a113',
           name: 'name',
@@ -945,7 +948,7 @@ describe('objective component', () => {
       total: 10,
       trajectory: (new Trajectory().insert(0, 0).insert(10, 10)),
     });
-    let objective = new Objective({regular_goals: [goal]});
+    let objective = new Objective({regularGoals: [goal]});
 
     await c.$nextTick();
     expect(c.text()).not.to.contain(goalName);

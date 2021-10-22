@@ -19,16 +19,23 @@
 let HOUR = 60 * 60 * 1000;
 let DAY = 24 * HOUR;
 
-// Objective represents a set of goals. There are two kinds of goals: One-off
-// goals, and regular goals. One-off goals are scoped to a specific, fixed time
-// window. In contrast, regular goals are bound to a moving time window.
+/**
+ * Objective represents a set of goals. There are two kinds of goals: One-off
+ * goals, and regular goals. One-off goals are scoped to a specific, fixed time
+ * window. In contrast, regular goals are bound to a moving time window.
+ */
 class Objective {
-  constructor({id, name, description, goals, regular_goals}) {
+  constructor({id, name, description, goals, regularGoals}) {
+    /** @private */
     this._id = id;
+    /** @private */
     this._name = name;
+    /** @private */
     this._description = description;
+    /** @private */
     this._goals = goals;
-    this._regular_goals = regular_goals;
+    /** @private */
+    this._regularGoals = regularGoals;
   }
 
   // id uniquely identifies the objective, and is typically assigned by the
@@ -54,10 +61,10 @@ class Objective {
     return this._goals;
   }
 
-  // regular_goals is the list of regular goals of this objective. All
+  // regularGoals is the list of regular goals of this objective. All
   // instances in this list must be of type RegularGoal. See class RegularGoal.
-  get regular_goals() {
-    return this._regular_goals;
+  get regularGoals() {
+    return this._regularGoals;
   }
 
   // goals replaces the set of one-off goals in this objective. See the
@@ -66,10 +73,10 @@ class Objective {
     this._goals = goals;
   }
 
-  // regular_goals replaces the set of regular goals in this objective. See the
+  // regularGoals replaces the set of regular goals in this objective. See the
   // corresponding getter.
-  set regular_goals(regular_goals) {
-    this._regular_goals = regular_goals;
+  set regularGoals(regularGoals) {
+    this._regularGoals = regularGoals;
   }
 }
 
@@ -87,22 +94,31 @@ const Stage = {
 // start and end date, a target value which needs to be reached by the end
 // date, and the timeseries recording past progress (or regression).
 class Goal {
-
-  constructor({id = '',
-               name = '',
-               unit = '',
-               target = 1.0,
-               start = 0,
-               end = 0,
-               stage = Stage.PLEDGED,
-               trajectory = new Trajectory()}) {
+  constructor({
+    id = '',
+    name = '',
+    unit = '',
+    target = 1.0,
+    start = 0,
+    end = 0,
+    stage = Stage.PLEDGED,
+    trajectory = new Trajectory()
+  }) {
+     /** @private */
     this._id = id;
+     /** @private */
     this._name = name;
+     /** @private */
     this._unit = unit;
+     /** @private */
     this._target = target;
+     /** @private */
     this._start = start;
+     /** @private */
     this._end = end;
+     /** @private */
     this._stage = stage;
+     /** @private */
     this._trajectory = trajectory;
   }
 
@@ -167,51 +183,53 @@ class Goal {
     if (!this.trajectory.length) {
       return NaN;
     }
-    
+
     return (
-      (this.trajectory.latest.value - this.baseline) /
-      (this.target - this.baseline));
+        (this.trajectory.latest.value - this.baseline) /
+        (this.target - this.baseline));
   }
 
-  // time_spent the percent of time that has passed at a given point in time
+  // timeSpent the percent of time that has passed at a given point in time
   // (by_date) since the start date, relative to the fixed time window set by
   // the start and end dates of the goal. 0% is the start date, 100% is the end
   // date.
-  time_spent(by_date) {
+  timeSpent(by_date) {
     let total = this._end - this._start;
     let spent = by_date - this._start;
     return total == 0 ? 1.0 : spent / total;
   }
 
-  // days_until_start returns the number of days that remain at a given point
+  // daysUntilStart returns the number of days that remain at a given point
   // in time until the start date.
-  days_until_start(by_date) {
+  daysUntilStart(by_date) {
     return (this.start - by_date) / DAY;
   }
 
-  // days_until_end returns the number of days that remain at a given point in
+  // daysUntilEnd returns the number of days that remain at a given point in
   // time until the end date.
-  days_until_end(by_date) {
+  daysUntilEnd(by_date) {
     return (this.end - by_date) / DAY;
   }
 
-  // relative_progress returns the progress towards the goal relative to the
+  // relativeProgress returns the progress towards the goal relative to the
   // time that has passed. The exact rationale behind the formula was
   // forgotten, but the idea was to indicate how much progress was made towards
   // the target compared to how much time has been spent since the start.
-  relative_progress(by_date) {
-    if (by_date <= this.start) { return 1.0; }
+  relativeProgress(by_date) {
+    if (by_date <= this.start) {
+      return 1.0;
+    }
     let p = this.trajectory.at(by_date) / (this.target - this.baseline);
-    let t = this.time_spent(Math.min(this.end, by_date));
+    let t = this.timeSpent(Math.min(this.end, by_date));
     return p / t;
   }
 
-  // is_on_track is true if and only if the progress towards the goal is at
+  // isOnTrack is true if and only if the progress towards the goal is at
   // least as fast as the passing of time. For example, if halfway between the
   // start and end date, the trajectory hais not proceeded at least halfway
   // from the baseline to the target, then the goal is off track.
-  is_on_track(by_date) {
-    return this.progress >= this.time_spent(Math.min(this.end, by_date));
+  isOnTrack(by_date) {
+    return this.progress >= this.timeSpent(Math.min(this.end, by_date));
   }
 
   // velocity estimates the velocity of progress towards the target. See method
@@ -222,16 +240,17 @@ class Goal {
 
   // velocity estimates the velocity of progress towards the target over a 30
   // day window. See method Trajectory.velocity.
-  velocity_30d(by_date) {
-    return this.trajectory.velocity(Math.max(this.start, by_date - 30 * DAY), by_date);
+  velocity30d(by_date) {
+    return this.trajectory.velocity(
+        Math.max(this.start, by_date - 30 * DAY), by_date);
   }
-  
+
   // velocity _required estimates the velocity of progress that is required in
   // order to reach the target by the end date, i.e. to complete the goal in
   // time. For example, if you have 8 chapters left in a book, and 4 days left
   // on your holiday, then you need to read with a velocity of 2 chapters a day
   // in order to complete the book on your vacation.
-  velocity_required(by_date) {
+  velocityRequired(by_date) {
     return (this.target - this.trajectory.at(by_date)) / (this.end - by_date);
   }
 }
@@ -243,22 +262,31 @@ class Goal {
 // a target, which specifies the percentage of the total, at which we still
 // consider the goal to be reached.
 class RegularGoal {
-
-  constructor({id = '',
-               name = '',
-               description = '',
-               unit = '',
-               window = 28,
-               target = 0.0,
-               total = 0.0,
-               trajectory = new Trajectory()}) {
+  constructor({
+    id = '',
+    name = '',
+    description = '',
+    unit = '',
+    window = 28,
+    target = 0.0,
+    total = 0.0,
+    trajectory = new Trajectory()
+  }) {
+     /** @private */
     this._id = id;
+     /** @private */
     this._name = name;
-    this._description = description,
-    this._unit = unit,
+     /** @private */
+    this._description = description;
+    /** @private */
+    this._unit = unit;
+    /** @private */
     this._window = window;
+    /** @private */
     this._target = target;
+    /** @private */
     this._total = total;
+    /** @private */
     this._trajectory = trajectory;
   }
 
@@ -313,34 +341,37 @@ class RegularGoal {
   // number of pizzas eaten is 21 at the end of the window, the value is 21 -
   // 12 = 9.
   value(by_date) {
-    return (this.trajectory.at(by_date) - this.trajectory.at(by_date - this.window * DAY));
+    return (
+        this.trajectory.at(by_date) -
+        this.trajectory.at(by_date - this.window * DAY));
   }
 
   // budget_remaining returns the percentage of the permissible shortfall from
   // the total; this budget is equivalent to the error budget of a Service
   // Level Objectives (SLO).
-  budget_remaining(by_date) {
+  budgetRemaining(by_date) {
     return (this.value(by_date) - this.target) / (this.total - this.target);
   }
 
   // budget_remaining_prorated is like budget_remaining, but adjusts for
   // partial data, i.e. when the moving window extends to earlier dates than
   // where recordings were available.
-  budget_remaining_prorated(by_date) {
+  budgetRemainingProrated(by_date) {
     if (!this.trajectory.earliest) {
       return NaN;
     }
-    if (this.partial_data(by_date)) {
+    if (this.partialData(by_date)) {
       let r = (by_date - this.trajectory.earliest.date) / (this.window * DAY);
-      let b = (this.value(by_date) - r * this.target) / (r * this.total - r * this.target);
+      let b = (this.value(by_date) - r * this.target) /
+          (r * this.total - r * this.target);
       return Math.min(1.0, b);
     }
-    return this.budget_remaining(by_date);
+    return this.budgetRemaining(by_date);
   }
 
-  // partial_data returns true if the trajectory does not contain any point
+  // partialData returns true if the trajectory does not contain any point
   // earlier than the start of the moving time window.
-  partial_data(by_date) {
+  partialData(by_date) {
     if (!this.trajectory.earliest) {
       return NaN;
     }
@@ -352,6 +383,7 @@ class RegularGoal {
 // Trajectory is a timeseries, i.e. a list of dated values.
 class Trajectory {
   constructor() {
+    /** @private */
     this._line = [];
   }
 
@@ -359,13 +391,12 @@ class Trajectory {
   // out-of-order.
   insert(date, value) {
     let p = this._line.length;
-    while (p > 0 && this._line[p-1].date >= date) {
+    while (p > 0 && this._line[p - 1].date >= date) {
       --p;
-		}
+    }
     this._line.splice(
-      p,
-      p < this._line.length && this._line[p].date == date ? 1 : 0,
-			{date, value});
+        p, p < this._line.length && this._line[p].date == date ? 1 : 0,
+        {date, value});
     return this;
   }
 
@@ -389,7 +420,9 @@ class Trajectory {
 
     // interpolate
     let i0;
-    for (i0 = 0; i0 < this._line.length - 1 && this._line[i0 + 1].date <= date; i0++) {}
+    for (i0 = 0; i0 < this._line.length - 1 && this._line[i0 + 1].date <= date;
+         i0++) {
+    }
     let i2 = i0 + 1;
     let t0 = this._line[i0].date;
     let t2 = this._line[i2].date;
@@ -408,19 +441,18 @@ class Trajectory {
     }
   }
 
-  // Removes entries from the timeline that happened within an hour of the
+  // compactHead removes entries from the timeline that happened within an hour of the
   // latest entry. Never removes the earliest or latest entry from the
   // trajectory.
-  // 
-  // Calling compact_head() after insertions into the trajectory helps reducing
+  //
+  // Calling compactHead() after insertions into the trajectory helps reducing
   // the rate of changes recorded and ensures that transient states while the
   // user is editing the goal are discarded.
-  compact_head(duration = HOUR) {
+  compactHead(duration = HOUR) {
     let head = this._line.pop();
     for (let i = this._line.length - 1;
-         i > 0 && head.date - this._line[i].date <= DAY;
-         i--) {
-      this._line.pop(); 
+         i > 0 && head.date - this._line[i].date <= DAY; i--) {
+      this._line.pop();
     }
     this._line.splice(this._line.length, 0, head);
   }
@@ -476,9 +508,9 @@ class ObjectiveConverter {
         trajectory: Array.from(g.trajectory),
       };
     }
-    let regular_goals = {};
-    for (let g of objective.regular_goals) {
-      regular_goals[g.id] = {
+    let regularGoals = {};
+    for (let g of objective.regularGoals) {
+      regularGoals[g.id] = {
         id: g.id,
         name: g.name,
         description: g.description,
@@ -493,7 +525,7 @@ class ObjectiveConverter {
       name: objective.name,
       description: objective.description,
       goals: goals,
-      regular_goals: regular_goals,
+      regular_goals: regularGoals,
     };
   }
 
@@ -521,7 +553,7 @@ class ObjectiveConverter {
       }));
     }
 
-    let regular_goals = [];
+    let regularGoals = [];
     for (let id in objective.regular_goals) {
       let g = objective.regular_goals[id];
       let t = new Trajectory();
@@ -530,7 +562,7 @@ class ObjectiveConverter {
           t.insert(date, value);
         }
       }
-      regular_goals.push(new RegularGoal({
+      regularGoals.push(new RegularGoal({
         id: id,
         name: g.name,
         description: g.description,
@@ -547,7 +579,7 @@ class ObjectiveConverter {
       name: objective.name,
       description: objective.description,
       goals: goals,
-      regular_goals: regular_goals,
+      regularGoals: regularGoals,
     });
   }
 }
@@ -561,7 +593,14 @@ class SafeMarkdownRenderer {
     let rawHtml = marked(markdown);
     return sanitizeHtml(rawHtml, {
       allowedTags: [
-        'a', 'p', 'code', 'em', 'strong', 'ul', 'ol', 'li',
+        'a',
+        'p',
+        'code',
+        'em',
+        'strong',
+        'ul',
+        'ol',
+        'li',
       ],
       allowedAttributes: {
         'a': ['href'],
@@ -574,7 +613,10 @@ class SafeMarkdownRenderer {
         'li': [],
       },
       allowedSchemesByTag: {
-        'a': [ 'http', 'https', ],
+        'a': [
+          'http',
+          'https',
+        ],
       },
     });
   }
@@ -582,18 +624,21 @@ class SafeMarkdownRenderer {
 
 class VelocityReport {
   report(goal, by_date) {
-    let v = goal.velocity_30d(by_date) * DAY;
-    let rv = goal.velocity_required(by_date) * DAY;
+    let v = goal.velocity30d(by_date) * DAY;
+    let rv = goal.velocityRequired(by_date) * DAY;
     let round = (f) => f.toFixed(1);
     // Attempt to choose a time period where there was at least one unit of
     // progress. There are alternative ways of choosing a sensible period of
     // time, e.g. based on the rate (target - baseline) / (end - start).
     if (v >= 1 || rv >= 1) {
-      return `30d: ${round(v)} ${goal.unit} per day; now need ${round(rv)} ${goal.unit} per day`;
+      return `30d: ${round(v)} ${goal.unit} per day; now need ${round(rv)} ${
+          goal.unit} per day`;
     } else if (v * 7 >= 1 || rv * 7 >= 1) {
-      return `30d: ${round(v * 7)} ${goal.unit} per week; now need ${round(rv * 7)} ${goal.unit} per week`;
+      return `30d: ${round(v * 7)} ${goal.unit} per week; now need ${
+          round(rv * 7)} ${goal.unit} per week`;
     } else {
-      return `30d: ${round(v * 30)} ${goal.unit} per month; now need ${round(rv * 30)} ${goal.unit} per month`;
+      return `30d: ${round(v * 30)} ${goal.unit} per month; now need ${
+          round(rv * 30)} ${goal.unit} per month`;
     }
   }
 }
@@ -601,7 +646,7 @@ class VelocityReport {
 class ProgressReport {
   progressFillColor(goal, by_date) {
     let s = 0.8;
-    let w = (goal.relative_progress(by_date) - s) / (1.0 - s);
+    let w = (goal.relativeProgress(by_date) - s) / (1.0 - s);
     w = Math.min(1.0, w);
     w = Math.max(0.0, w);
     let r = (1.0 - w) * 187 + w * 136;
@@ -611,26 +656,28 @@ class ProgressReport {
   }
 
   progressStatus(goal, by_date) {
-    let days_until_start = goal.days_until_start(by_date);
-    let days_until_end = goal.days_until_end(by_date);
+    let daysUntilStart = goal.daysUntilStart(by_date);
+    let daysUntilEnd = goal.daysUntilEnd(by_date);
     if (by_date < goal.start) {
-        return `${days_until_start.toFixed(0)} days until start, nothing to do`;
+      return `${daysUntilStart.toFixed(0)} days until start, nothing to do`;
     } else if (goal.progress >= 1.0) {
-        if (by_date < goal.end) {
+      if (by_date < goal.end) {
         return 'complete, ahead';
-        } else {
+      } else {
         return 'complete';
-        }
+      }
     } else {
-        if (by_date >= goal.end) {
-            return 'incomplete';
+      if (by_date >= goal.end) {
+        return 'incomplete';
+      } else {
+        if (goal.isOnTrack(by_date)) {
+          return `${daysUntilEnd.toFixed(0)} days left, on track @ ${
+              (100 * goal.progress).toFixed(1)}%`;
         } else {
-            if (goal.is_on_track(by_date)) {
-                return `${days_until_end.toFixed(0)} days left, on track @ ${(100 * goal.progress).toFixed(1)}%`;
-            } else {
-                return `${days_until_end.toFixed(0)} days left, behind @ ${(100 * goal.progress).toFixed(1)}%`;
-            }
+          return `${daysUntilEnd.toFixed(0)} days left, behind @ ${
+              (100 * goal.progress).toFixed(1)}%`;
         }
+      }
     }
   }
 }
@@ -692,11 +739,11 @@ Vue.component('objective', {
     // updateObjective makes changes to the objective in Firestore.
     updateObjective: function(update) {
       firebase.firestore()
-        .collection('users')
-        .doc(this.user_id)
-        .collection('objectives')
-        .doc(this.objective.id)
-        .update(update);
+          .collection('users')
+          .doc(this.user_id)
+          .collection('objectives')
+          .doc(this.objective.id)
+          .update(update);
     },
 
     // createGoal adds a new goal to the objective in Firestore.
@@ -721,16 +768,16 @@ Vue.component('objective', {
       let goalId = uuidv4();
       let now = new Date().getTime();
       this.updateObjective({
-          [`regular_goals.${goalId}.name`]: 'AA New regular goal',
-          [`regular_goals.${goalId}.description`]: '',
-          [`regular_goals.${goalId}.unit`]: '',
-          [`regular_goals.${goalId}.total`]: 100,
-          [`regular_goals.${goalId}.target`]: 0.9,
-          [`regular_goals.${goalId}.window`]: 28,
-          [`regular_goals.${goalId}.trajectory`]: [
-            {date: now, value: 0},
-          ],
-        });
+        [`regular_goals.${goalId}.name`]: 'AA New regular goal',
+        [`regular_goals.${goalId}.description`]: '',
+        [`regular_goals.${goalId}.unit`]: '',
+        [`regular_goals.${goalId}.total`]: 100,
+        [`regular_goals.${goalId}.target`]: 0.9,
+        [`regular_goals.${goalId}.window`]: 28,
+        [`regular_goals.${goalId}.trajectory`]: [
+          {date: now, value: 0},
+        ],
+      });
     },
 
     // copyObjectiveIdToClipboard puts the objective ID into the clipboard.
@@ -742,7 +789,7 @@ Vue.component('objective', {
     incrementGoal(goal) {
       let t = _.cloneDeep(goal.trajectory);
       t.insert(new Date().getTime(), t.latest.value + 1);
-      t.compact_head(HOUR);
+      t.compactHead(HOUR);
 
       this.updateObjective({
         [`goals.${goal.id}.trajectory`]: Array.from(t),
@@ -753,7 +800,7 @@ Vue.component('objective', {
     decrementGoal(goal) {
       let t = _.cloneDeep(goal.trajectory);
       t.insert(new Date().getTime(), t.latest.value - 1);
-      t.compact_head(HOUR);
+      t.compactHead(HOUR);
 
       this.updateObjective({
         [`goals.${goal.id}.trajectory`]: Array.from(t),
@@ -774,7 +821,8 @@ Vue.component('objective', {
     // change the start date, they will have to reset the trajectory.  Smarter
     // implementations are possible.
     updateGoalStart(goal, start) {
-      if (!confirm(`Changing the baseline will delete the trajectory of "${goal.name}", proceed?`)) {
+      if (!confirm(`Changing the baseline will delete the trajectory of "${
+              goal.name}", proceed?`)) {
         return;
       }
       let t = new Trajectory();
@@ -794,7 +842,8 @@ Vue.component('objective', {
 
     // updateGoalBaseline changes the end date of the goal.
     updateGoalBaseline(goal, baseline) {
-      if (!confirm(`Changing the baseline will delete trajectory of "${goal.name}", proceed?`)) {
+      if (!confirm(`Changing the baseline will delete trajectory of "${
+              goal.name}", proceed?`)) {
         return;
       }
       let t = new Trajectory();
@@ -816,7 +865,7 @@ Vue.component('objective', {
     updateGoalCurrent(goal, current) {
       let t = _.cloneDeep(goal.trajectory);
       t.insert(new Date().getTime(), current);
-      t.compact_head(HOUR);
+      t.compactHead(HOUR);
 
       this.updateObjective({
         [`goals.${goal.id}.trajectory`]: Array.from(t),
@@ -833,9 +882,8 @@ Vue.component('objective', {
     // deleteGoal removes the goal from its objective.
     deleteGoal: function(goal) {
       if (confirm(`Really delete the goal "${goal.name}"?`)) {
-        this.updateObjective({
-          [`goals.${goal.id}`]: firebase.firestore.FieldValue.delete()
-        });
+        this.updateObjective(
+            {[`goals.${goal.id}`]: firebase.firestore.FieldValue.delete()});
       }
     },
 
@@ -844,7 +892,7 @@ Vue.component('objective', {
     incrementRegularGoal(goal) {
       let t = _.cloneDeep(goal.trajectory);
       t.insert(new Date().getTime(), t.latest.value + 1);
-      t.compact_head(HOUR);
+      t.compactHead(HOUR);
 
       this.updateObjective({
         [`regular_goals.${goal.id}.trajectory`]: Array.from(t),
@@ -856,7 +904,7 @@ Vue.component('objective', {
     decrementRegularGoal(goal) {
       let t = _.cloneDeep(goal.trajectory);
       t.insert(new Date().getTime(), t.latest.value - 1);
-      t.compact_head(HOUR);
+      t.compactHead(HOUR);
 
       this.updateObjective({
         [`regular_goals.${goal.id}.trajectory`]: Array.from(t),
@@ -909,7 +957,7 @@ Vue.component('objective', {
     updateRegularGoalCurrent(goal, current) {
       let t = _.cloneDeep(goal.trajectory);
       t.insert(new Date().getTime(), current);
-      t.compact_head(HOUR);
+      t.compactHead(HOUR);
 
       this.updateObjective({
         [`regular_goals.${goal.id}.trajectory`]: Array.from(t),
@@ -927,13 +975,14 @@ Vue.component('objective', {
 
     // deleteObjective removes the objective from the user's collection.
     deleteObjective: function() {
-      if (confirm(`Really delete the objective named "${this.objective.name}"?`)) {
+      if (confirm(
+              `Really delete the objective named "${this.objective.name}"?`)) {
         firebase.firestore()
-          .collection('users')
-          .doc(this.user_id)
-          .collection('objectives')
-          .doc(this.objective.id)
-          .delete();
+            .collection('users')
+            .doc(this.user_id)
+            .collection('objectives')
+            .doc(this.objective.id)
+            .delete();
       }
     },
   },
@@ -972,7 +1021,7 @@ Vue.component('objective', {
         v-on:delete="deleteGoal($event)"
       ></goal>
       <regular-goal
-        v-for="g in objective.regular_goals"
+        v-for="g in objective.regularGoals"
         v-bind:goal="g"
         v-bind:mode='mode'
         v-bind:key="g.id"
@@ -999,22 +1048,21 @@ let goalMixin = {
   computed: {
     trajectory_last_updated: function() {
       let format_date = (millis) => {
-				let is = (a, b) => {
-					return (
-						a.getDate() == b.getDate() &&
-						a.getMonth() == b.getMonth() &&
-						a.getFullYear() == b.getFullYear());
-				};
+        let is = (a, b) => {
+          return (
+              a.getDate() == b.getDate() && a.getMonth() == b.getMonth() &&
+              a.getFullYear() == b.getFullYear());
+        };
         let date = new Date(millis);
         let today = new Date();
         let yesterday = new Date(today.getTime() - DAY);
-				let suffix = '';
-				if (is(date, today)) {
-					suffix = ' (today)';
-				}
-				if (is(date, yesterday)) {
-					suffix = ' (yesterday)';
-				}
+        let suffix = '';
+        if (is(date, today)) {
+          suffix = ' (today)';
+        }
+        if (is(date, yesterday)) {
+          suffix = ' (yesterday)';
+        }
         return new Date(date).toLocaleString() + suffix;
       };
 
@@ -1032,12 +1080,14 @@ let goalMixin = {
         }
         return this.goal.trajectory.latest.value;
       },
-      set: _.debounce(function(current) {
-        this.$emit('update-current', {
-          goal: this.goal,
-          current: current,
-        });
-      }, 1000),
+      set: _.debounce(
+          function(current) {
+            this.$emit('update-current', {
+              goal: this.goal,
+              current: current,
+            });
+          },
+          1000),
     },
   },
 
@@ -1061,18 +1111,15 @@ let localeMixin = {
     // proud, but I don't want to install more libraries just to delegate this
     // one problem away.
     inputformat: function(millis) {
-        let parts =
-            (new Date(millis)
-                .toLocaleDateString('de-DE')
-                .split('.')
-                .reverse());
-        if (parts[1].length == 1) {
-          parts[1] = '0' + parts[1];
-        }
-        if (parts[2].length == 1) {
-          parts[2] = '0' + parts[2];
-        }
-        return parts.join('-');
+      let parts =
+          (new Date(millis).toLocaleDateString('de-DE').split('.').reverse());
+      if (parts[1].length == 1) {
+        parts[1] = '0' + parts[1];
+      }
+      if (parts[2].length == 1) {
+        parts[2] = '0' + parts[2];
+      }
+      return parts.join('-');
     },
   },
 };
@@ -1084,11 +1131,13 @@ Vue.component('goal', {
   computed: {
     currentXPos: function() {
       let now = new Date().getTime();
-      return (100 * this.goal.time_spent(now) - 0.25) + '%';
+      return (100 * this.goal.timeSpent(now) - 0.25) + '%';
     },
 
     endDate: function() {
-      return new Date(this.goal.end).toLocaleDateString(this.locale, {timeZone: this.timezone});
+      return new Date(this.goal.end).toLocaleDateString(this.locale, {
+        timeZone: this.timezone
+      });
     },
 
     progressFillColor: function() {
@@ -1108,19 +1157,21 @@ Vue.component('goal', {
     },
 
     startDate: function() {
-      return new Date(this.goal.start).toLocaleDateString(this.locale, {timeZone: this.timezone});
+      return new Date(this.goal.start).toLocaleDateString(this.locale, {
+        timeZone: this.timezone
+      });
     },
 
     velocityReport: function() {
       let now = new Date().getTime();
       if (this.goal.stage != Stage.ARCHIVED) {
-          if (this.goal.end < now) {
-            return '';
-          }
-          let velocity = new VelocityReport();
-          return velocity.report(this.goal, now);
-      } else {
+        if (this.goal.end < now) {
           return '';
+        }
+        let velocity = new VelocityReport();
+        return velocity.report(this.goal, now);
+      } else {
+        return '';
       }
     },
 
@@ -1128,72 +1179,84 @@ Vue.component('goal', {
       get: function() {
         return this.goal.name;
       },
-      set: _.debounce(function(name) {
-        this.$emit('update-name', {
-          goal: this.goal,
-          name: name,
-        });
-      }, 1000),
+      set: _.debounce(
+          function(name) {
+            this.$emit('update-name', {
+              goal: this.goal,
+              name: name,
+            });
+          },
+          1000),
     },
 
     start: {
       get: function() {
         return this.inputformat(this.goal.start);
       },
-      set: _.debounce(function(start) {
-        this.$emit('update-start', {
-          goal: this.goal,
-          start: new Date(start).getTime(),
-        });
-      }, 1000),
+      set: _.debounce(
+          function(start) {
+            this.$emit('update-start', {
+              goal: this.goal,
+              start: new Date(start).getTime(),
+            });
+          },
+          1000),
     },
 
     end: {
       get: function() {
         return this.inputformat(this.goal.end);
       },
-      set: _.debounce(function(end) {
-        this.$emit('update-end', {
-          goal: this.goal,
-          end: new Date(end).getTime(),
-        });
-      }, 1000),
+      set: _.debounce(
+          function(end) {
+            this.$emit('update-end', {
+              goal: this.goal,
+              end: new Date(end).getTime(),
+            });
+          },
+          1000),
     },
 
     baseline: {
       get: function() {
         return this.goal.baseline;
       },
-      set: _.debounce(function(baseline) {
-        this.$emit('update-baseline', {
-          goal: this.goal,
-          baseline: baseline,
-        });
-      }, 1000),
+      set: _.debounce(
+          function(baseline) {
+            this.$emit('update-baseline', {
+              goal: this.goal,
+              baseline: baseline,
+            });
+          },
+          1000),
     },
 
     target: {
       get: function() {
         return this.goal.target;
       },
-      set: _.debounce(function(target) {
-        this.$emit('update-target', {
-          goal: this.goal,
-          target: target,
-        });
-      }, 1000),
+      set: _.debounce(
+          function(target) {
+            this.$emit('update-target', {
+              goal: this.goal,
+              target: target,
+            });
+          },
+          1000),
     },
 
     unit: {
       get: function() {
         return this.goal.unit
       },
-      set: _.debounce(function(unit) {
-        this.$emit('update-unit', {
-          goal: this.goal,
-          unit: unit,
-        });
-      }, 1000),
+      set: _.debounce(
+          function(unit) {
+            this.$emit('update-unit', {
+              goal: this.goal,
+              unit: unit,
+            });
+          },
+          1000),
     },
   },
 
@@ -1278,28 +1341,29 @@ Vue.component('regular-goal', {
   computed: {
     barColor: function() {
       let now = new Date().getTime();
-      return this.goal.budget_remaining_prorated(now) > 0 ? 'rgb(136,187,77)' : 'rgb(187, 102, 77)'
+      return this.goal.budgetRemainingProrated(now) > 0 ? 'rgb(136,187,77)' :
+                                                            'rgb(187, 102, 77)'
     },
 
     barXPos: function() {
       let now = new Date().getTime();
-      let b = this.goal.budget_remaining_prorated(now);
+      let b = this.goal.budgetRemainingProrated(now);
       if (b > 0) {
         return '0%';
       } else {
-        return (100-Math.max(0, Math.min(100, Math.abs((100 * b))))) + '%';
+        return (100 - Math.max(0, Math.min(100, Math.abs((100 * b))))) + '%';
       }
     },
 
     barWidth: function() {
       let now = new Date().getTime();
-      let b = this.goal.budget_remaining_prorated(now);
+      let b = this.goal.budgetRemainingProrated(now);
       return Math.max(0, Math.min(100, Math.abs((100 * b)))) + '%';
     },
 
     budgetClass: function() {
       let now = new Date().getTime();
-      if (this.goal.budget_remaining_prorated(now) > 0) {
+      if (this.goal.budgetRemainingProrated(now) > 0) {
         return 'within-budget';
       } else {
         return 'out-of-budget';
@@ -1308,7 +1372,7 @@ Vue.component('regular-goal', {
 
     budgetRemaining: function() {
       let now = new Date().getTime();
-      return (100 * this.goal.budget_remaining_prorated(now)).toFixed(0) + '%';
+      return (100 * this.goal.budgetRemainingProrated(now)).toFixed(0) + '%';
     },
 
     descriptionHtml: function() {
@@ -1317,8 +1381,8 @@ Vue.component('regular-goal', {
     },
 
     partialData: function() {
-;      let now = new Date().getTime();
-      if (this.goal.partial_data(now)) {
+      let now = new Date().getTime();
+      if (this.goal.partialData(now)) {
         return '(partial data)';
       } else {
         return '';
@@ -1328,7 +1392,8 @@ Vue.component('regular-goal', {
     status: function() {
       let now = new Date().getTime();
       return `@ ${this.goal.value(now).toFixed(2)},
-              targeting ${(this.goal.target).toFixed(2)} / ${this.goal.total} ${this.goal.unit}
+              targeting ${(this.goal.target).toFixed(2)} / ${this.goal.total} ${
+          this.goal.unit}
               over ${this.goal.window}-day window`;
     },
 
@@ -1336,72 +1401,84 @@ Vue.component('regular-goal', {
       get: function() {
         return this.goal.name;
       },
-      set: _.debounce(function(name) {
-        this.$emit('update-name', {
-          goal: this.goal,
-          name: name,
-        });
-      }, 1000),
+      set: _.debounce(
+          function(name) {
+            this.$emit('update-name', {
+              goal: this.goal,
+              name: name,
+            });
+          },
+          1000),
     },
 
     description: {
       get: function() {
         return this.goal.description;
       },
-      set: _.debounce(function(description) {
-        this.$emit('update-description', {
-          goal: this.goal,
-          description: description,
-        });
-      }, 1000),
+      set: _.debounce(
+          function(description) {
+            this.$emit('update-description', {
+              goal: this.goal,
+              description: description,
+            });
+          },
+          1000),
     },
 
     window: {
       get: function() {
         return this.goal.window;
       },
-      set: _.debounce(function(window) {
-        this.$emit('update-window', {
-          goal: this.goal,
-          window: window,
-        });
-      }, 1000),
+      set: _.debounce(
+          function(window) {
+            this.$emit('update-window', {
+              goal: this.goal,
+              window: window,
+            });
+          },
+          1000),
     },
 
     target: {
       get: function() {
         return this.goal.target;
       },
-      set: _.debounce(function(target) {
-        this.$emit('update-target', {
-          goal: this.goal,
-          target: target,
-        });
-      }, 1000),
+      set: _.debounce(
+          function(target) {
+            this.$emit('update-target', {
+              goal: this.goal,
+              target: target,
+            });
+          },
+          1000),
     },
 
     total: {
       get: function() {
         return this.goal.total;
       },
-      set: _.debounce(function(total) {
-        this.$emit('update-total', {
-          goal: this.goal,
-          total: total,
-        });
-      }, 1000),
+      set: _.debounce(
+          function(total) {
+            this.$emit('update-total', {
+              goal: this.goal,
+              total: total,
+            });
+          },
+          1000),
     },
 
     unit: {
       get: function() {
         return this.goal.unit
       },
-      set: _.debounce(function(unit) {
-        this.$emit('update-unit', {
-          goal: this.goal,
-          unit: unit,
-        });
-      }, 1000),
+      set: _.debounce(
+          function(unit) {
+            this.$emit('update-unit', {
+              goal: this.goal,
+              unit: unit,
+            });
+          },
+          1000),
     },
   },
 
@@ -1469,112 +1546,6 @@ let vue = new Vue({
     // user interface should load in logical chunks.
     loaded: false,
   },
-  
-  computed: {
-    signedIn: function() {
-      return this.user_id != '';
-    },
-  },
-
-  methods: {
-    // copyUserIdToClipboard sets the clipboard to the ID of the signed-in user.
-    copyUserIdToClipboard: function() {
-      navigator.clipboard.writeText(this.user_id);
-    },
-
-    // createObjective adds a new objective to Firestore.
-    createObjective: function() {
-      let objective = new Objective({
-        id: uuidv4(),
-        name: 'AA New objective',
-        description: '',
-        goals: [],
-        regular_goals: [],
-      });
-      firebase.firestore()
-        .collection('users')
-        .doc(this.user_id)
-        .collection('objectives')
-        .doc(objective.id)
-        .withConverter(new ObjectiveConverter())
-        .set(objective);
-    },
-
-    // listenToObjectives ensures that whenever any of the objectives changes in Firestore, the 
-    // objectives on the client application are refreshed; Firestore is considered the source of
-    // truth.
-    listenToObjectives: function() {
-      firebase.firestore()
-        .collection('users')
-        .doc(this.user_id)
-        .collection('objectives')
-        .withConverter(new ObjectiveConverter())
-        .onSnapshot((snapshot) => {
-          let objectives = [];
-          snapshot.forEach((d) => {
-            let o = d.data();
-            o.goals = _.sortBy(o.goals, ['name', 'id']);
-            o.regular_goals = _.sortBy(o.regular_goals, ['name', 'id']);
-            objectives.push(o);
-          });
-          this.objectives = _.sortBy(objectives, ['name', 'id']);
-          this.loaded = true;
-        });
-    },
-
-    // signIn authenticates the client using redirect flow. The result of this
-    // operation is handled in listener to onAuthStateChanged.
-    signIn: function() {
-      let provider = new firebase.auth.GoogleAuthProvider();
-      firebase.auth().signInWithRedirect(provider);
-    },
-
-    // view switches the user interface into viewing mode.
-    view: function() {
-      this.mode = Mode.VIEW;
-    },
-    
-    // track switches the user interface into tracking mode.
-    track: function() {
-      this.mode = Mode.TRACK;
-    },
-
-    // plan switcches the user interface into planning mode.
-    plan: function() {
-      this.mode = Mode.PLAN;
-    },
-  },
-
-  template: `
-
-// The main Vue instance that is driving the application.
-let vue = new Vue({
-  mixins: [modeMixin],
-
-  el: '#app',
-
-  data: {
-    // See enum Mode.
-    mode: Mode.VIEW,
-
-    // objectives holds all of the objectives fetched from Firestore.
-    // objectives is considered immutable, all changes to an objective or its
-    // goals should be made directly in Firestore, relying on Firestore pushing
-    // such changes back to the client. See also: class Objective.
-    objectives: [],
-
-    // user_id contains the ID of the Firebase user. If user_id is set, then
-    // this means that a user is signed in and the client authenticated with
-    // Firebase.
-    user_id: '',
-
-    // loaded signals when the objectives have been fetched from Firestore for
-    // the first time. This is a useful signal for the application to make
-    // other parts of the user interface available in synchronization. This
-    // prevents the user interface from loading piece by piece. Instead, the
-    // user interface should load in logical chunks.
-    loaded: false,
-  },
 
   computed: {
     signedIn: function() {
@@ -1595,7 +1566,7 @@ let vue = new Vue({
         name: 'AA New objective',
         description: '',
         goals: [],
-        regular_goals: [],
+        regularGoals: [],
       });
       firebase.firestore()
           .collection('users')
@@ -1622,7 +1593,7 @@ let vue = new Vue({
             snapshot.forEach((d) => {
               let o = d.data();
               o.goals = _.sortBy(o.goals, ['name', 'id']);
-              o.regular_goals = _.sortBy(o.regular_goals, ['name', 'id']);
+              o.regularGoals = _.sortBy(o.regularGoals, ['name', 'id']);
               objectives.push(o);
             });
             this.objectives = _.sortBy(objectives, ['name', 'id']);
