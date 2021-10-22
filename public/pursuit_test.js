@@ -1012,7 +1012,7 @@ describe('objective component', () => {
     expect(c.text()).to.contain(goalName);
   });
 
-  it('shows regular goal', async () => {
+  it('shows regular goal to user', async () => {
     let goalName = 'find a rainbow';
     let goal = new RegularGoal({
       name: goalName,
@@ -1250,5 +1250,34 @@ describe('regular goal component', () => {
 
     await c.$nextTick();
     expect(c.text()).not.to.contain(id);
+  });
+
+  it('indicates to user if data is only partially available', async () => {
+    let now = new Date().getTime();
+    c.goal = new RegularGoal({
+      window: 2,
+      total: 2,
+      target: 1,
+      trajectory: (
+        new Trajectory()
+          .insert(now - DAY, 0)
+          .insert(now, 1)),
+    });
+
+    await c.$nextTick();
+    expect(c.text()).to.contain('budget remaining (partial data)');
+
+    c.goal = new RegularGoal({
+      window: 2,
+      total: 2,
+      target: 1,
+      trajectory: (
+        new Trajectory()
+          .insert(now - 2 * DAY, 0)
+          .insert(now, 1)),
+    });
+
+    await c.$nextTick();
+    expect(c.text()).not.to.contain('budget remaining (partial data)');
   });
 });
