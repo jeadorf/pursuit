@@ -395,76 +395,80 @@ describe('regular goal', () => {
   it('has all budget remaining', () => {
     let goal = new RegularGoal({
       window: 10,
-      target: 0.75,
+      target: 7.5,
       total: 10,
       trajectory: (
         new Trajectory()
           .insert(0, 0)
-          .insert(10, 10)),
+          .insert(10 * DAY, 10)),
     });
-    expect(goal.budget_remaining(10)).to.be.approximately(1, 0.000001);
-    expect(goal.value(10)).to.be.approximately(10, 0.000001);
+    expect(goal.budget_remaining(10 * DAY)).to.be.approximately(1, 0.000001);
+    expect(goal.value(10 * DAY)).to.be.approximately(10, 0.000001);
   });
 
   it('has 20% budget remaining', () => {
     let goal = new RegularGoal({
       window: 10,
-      target: 0.75,
+      target: 7.5,
       total: 10,
       trajectory: (
         new Trajectory()
           .insert(0, 0)
-          .insert(10, 8)),
+          .insert(10 * DAY, 8)),
     });
-    expect(goal.budget_remaining(10)).to.be.approximately(0.20, 0.000001);
-    expect(goal.value(10)).to.be.approximately(8, 0.000001);
+    expect(goal.budget_remaining(10 * DAY)).to.be.approximately(0.20, 0.000001);
+    expect(goal.value(10 * DAY)).to.be.approximately(8, 0.000001);
   });
 
   it('has zero budget remaining', () => {
     let goal = new RegularGoal({
       window: 10,
-      target: 0.75,
+      target: 7.5,
       total: 10,
       trajectory: (
         new Trajectory()
           .insert(0, 0)
-          .insert(10, 7.5)),
+          .insert(10 * DAY, 7.5)),
     });
-    expect(goal.budget_remaining(10)).to.be.approximately(0, 0.000001);
-    expect(goal.value(10)).to.be.approximately(7.5, 0.000001);
+    expect(goal.budget_remaining(10 * DAY)).to.be.approximately(0, 0.000001);
+    expect(goal.value(10 * DAY)).to.be.approximately(7.5, 0.000001);
   });
 
-  it('has -20% budget remaining', () => {
+  it('has partial data up until window', () => {
     let goal = new RegularGoal({
       window: 10,
-      target: 0.75,
+      target: 7.5,
       total: 10,
       trajectory: (
         new Trajectory()
-          .insert(0, 0)
-          .insert(10, 7)),
+          .insert(0, 0))
     });
-    expect(goal.budget_remaining(10)).to.be.approximately(-0.20, 0.000001);
-    expect(goal.value(10)).to.be.approximately(7, 0.000001);
+    expect(goal.partial_data(10 * DAY - 1)).to.be.true;
+    expect(goal.partial_data(10 * DAY)).to.be.false;
   });
 
-  it('has budget remaining if partial data available', () => {
+  it('has budget remaining prorated if only partial data available', () => {
     let goal = new RegularGoal({
       window: 28,
-      target: 0.6,
+      target: 12,
       total: 20,
       trajectory: (
         new Trajectory()
           .insert(14 * DAY, 0)
           .insert(28 * DAY, 8)),
     });
-    expect(goal.budget_remaining_adjusted(28 * DAY)).to.be.approximately(0.50, 0.000001);
+    expect(goal.budget_remaining_prorated(28 * DAY)).to.be.approximately(0.50, 0.000001);
     expect(goal.value(28 * DAY)).to.be.approximately(8, 0.000001);
   });
 
   it('has NaN as remaining budget when trajectory is empty', () => {
     let goal = new RegularGoal({});
     expect(goal.budget_remaining(10)).to.be.NaN;
+  });
+
+  it('has NaN as prorated remaining budget when trajectory is empty', () => {
+    let goal = new RegularGoal({});
+    expect(goal.budget_remaining_prorated(10)).to.be.NaN;
   });
 });
 

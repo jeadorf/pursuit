@@ -320,21 +320,20 @@ class RegularGoal {
   // the total; this budget is equivalent to the error budget of a Service
   // Level Objectives (SLO).
   budget_remaining(by_date) {
-    let actual = this.value(by_date) / this.total;
-    return (actual - this.target) / (1.0 - this.target);
+    return (this.value(by_date) - this.target) / (this.total - this.target);
   }
 
-  // budget_remaining_adjusted is like budget_remaining, but adjusts for
+  // budget_remaining_prorated is like budget_remaining, but adjusts for
   // partial data, i.e. when the moving window extends to earlier dates than
   // where recordings were available.
-  budget_remaining_adjusted(by_date) {
+  budget_remaining_prorated(by_date) {
     if (!this.trajectory.earliest) {
       return NaN;
     }
     if (this.partial_data(by_date)) {
-      let adjusted_total = 1.0 * Math.max(DAY, by_date - this.trajectory.earliest.date) / (this.window * DAY) * this.total;
-      let actual = this.value(by_date) / adjusted_total;
-      return Math.max(0.0, Math.min(1.0, (actual - this.target) / (1.0 - this.target)));
+      let r = (by_date - this.trajectory.earliest.date) / (this.window * DAY);
+      let b = (this.value(by_date) - r * this.target) / (r * this.total - r * this.target);
+      return Math.min(1.0, b);
     }
     return this.budget_remaining(by_date);
   }
@@ -347,7 +346,6 @@ class RegularGoal {
     }
     return this.trajectory.earliest.date > (by_date - this.window * DAY);
   }
-
 }
 
 
@@ -1280,12 +1278,12 @@ Vue.component('regular-goal', {
   computed: {
     barColor: function() {
       let now = new Date().getTime();
-      return this.goal.budget_remaining_adjusted(now) > 0 ? 'rgb(136,187,77)' : 'rgb(187, 102, 77)'
+      return this.goal.budget_remaining_prorated(now) > 0 ? 'rgb(136,187,77)' : 'rgb(187, 102, 77)'
     },
 
     barXPos: function() {
       let now = new Date().getTime();
-      let b = this.goal.budget_remaining_adjusted(now);
+      let b = this.goal.budget_remaining_prorated(now);
       if (b > 0) {
         return '0%';
       } else {
@@ -1295,13 +1293,13 @@ Vue.component('regular-goal', {
 
     barWidth: function() {
       let now = new Date().getTime();
-      let b = this.goal.budget_remaining_adjusted(now);
+      let b = this.goal.budget_remaining_prorated(now);
       return Math.max(0, Math.min(100, Math.abs((100 * b)))) + '%';
     },
 
     budgetClass: function() {
       let now = new Date().getTime();
-      if (this.goal.budget_remaining_adjusted(now) > 0) {
+      if (this.goal.budget_remaining_prorated(now) > 0) {
         return 'within-budget';
       } else {
         return 'out-of-budget';
@@ -1310,7 +1308,7 @@ Vue.component('regular-goal', {
 
     budgetRemaining: function() {
       let now = new Date().getTime();
-      return (100 * this.goal.budget_remaining_adjusted(now)).toFixed(0) + '%';
+      return (100 * this.goal.budget_remaining_prorated(now)).toFixed(0) + '%';
     },
 
     descriptionHtml: function() {
@@ -1330,7 +1328,7 @@ Vue.component('regular-goal', {
     status: function() {
       let now = new Date().getTime();
       return `@ ${this.goal.value(now).toFixed(2)} of ${this.goal.total} ${this.goal.unit},
-              targeting ${(this.goal.target * this.goal.total).toFixed(2)}
+              targeting ${(this.goal.target).toFixed(2)}
               over ${this.goal.window}-day window`;
     },
 
