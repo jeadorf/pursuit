@@ -946,7 +946,7 @@ Vue.component('objective', {
         {{ objective.name }}
         <button
             class="id"
-            v-show="planning"
+            v-if="planning"
             v-on:click="copyObjectiveIdToClipboard()">
           {{ objective.id }}
         </button>
@@ -1050,9 +1050,38 @@ let goalMixin = {
   },
 };
 
+let localeMixin = {
+  props: ['locale', 'timezone'],
+
+  methods: {
+    // inputformat takes a time specified in milliseconds since epoch, and
+    // returns the date formatted as a string ("yyyy-mm-dd"). This is useful
+    // when passing input to HTML <input> elements. I have no definite idea
+    // of what timezone <input type="date"> expects when <input> is given dates
+    // formatted as "yyyy-mm-dd" ... betting though that <input> interprets
+    // the given strings in local time ... oh, this method does not make me
+    // proud, but I don't want to install more libraries just to delegate this
+    // one problem away.
+    inputformat: function(millis) {
+        let parts =
+            (new Date(millis)
+                .toLocaleDateString('de-DE')
+                .split('.')
+                .reverse());
+        if (parts[1].length == 1) {
+          parts[1] = '0' + parts[1];
+        }
+        if (parts[2].length == 1) {
+          parts[2] = '0' + parts[2];
+        }
+        return parts.join('-');
+    },
+  },
+};
+
 // Registers the <goal> Vue component globally. This component renders a goal.
 Vue.component('goal', {
-  mixins: [goalMixin, modeMixin],
+  mixins: [goalMixin, localeMixin, modeMixin],
 
   computed: {
     currentXPos: function() {
@@ -1061,7 +1090,7 @@ Vue.component('goal', {
     },
 
     endDate: function() {
-      return new Date(this.goal.end).toISOString().slice(0, 10);
+      return new Date(this.goal.end).toLocaleDateString(this.locale, {timeZone: this.timezone});
     },
 
     progressFillColor: function() {
@@ -1081,7 +1110,7 @@ Vue.component('goal', {
     },
 
     startDate: function() {
-      return new Date(this.goal.start).toISOString().slice(0, 10);
+      return new Date(this.goal.start).toLocaleDateString(this.locale, {timeZone: this.timezone});
     },
 
     velocityReport: function() {
@@ -1111,7 +1140,7 @@ Vue.component('goal', {
 
     start: {
       get: function() {
-        return new Date(this.goal.start).toISOString().slice(0, 10);
+        return this.inputformat(this.goal.start);
       },
       set: _.debounce(function(start) {
         this.$emit('update-start', {
@@ -1123,7 +1152,7 @@ Vue.component('goal', {
 
     end: {
       get: function() {
-        return new Date(this.goal.end).toISOString().slice(0, 10);
+        return this.inputformat(this.goal.end);
       },
       set: _.debounce(function(end) {
         this.$emit('update-end', {
@@ -1172,13 +1201,13 @@ Vue.component('goal', {
 
   template: `
     <div class='goal'>
-      <div class='name'>{{ goal.name }} <button class="id" v-show="planning" v-on:click="copyGoalIdToClipboard()">{{ goal.id }}</button></div>
+      <div class='name'>{{ goal.name }} <button class="id" v-if="planning" v-on:click="copyGoalIdToClipboard()">{{ goal.id }}</button></div>
       <div v-show="planning">
         <button v-on:click="$emit('delete', goal)">delete</button>
       </div>
-      <div v-show="tracking">
-        <button v-on:click="$emit('increment', goal)">increment</button>
-        <button v-on:click="$emit('decrement', goal)">decrement</button>
+      <div v-if="tracking">
+        <button v-on:click="$emit('increment', goal)" title='increment'>increment</button>
+        <button v-on:click="$emit('decrement', goal)" title='decrement'>decrement</button>
         <span class="last-updated">{{ trajectory_last_updated }}</span>
       </div>
       <svg class='chart' preserveAspectRatio='none'>
@@ -1381,13 +1410,13 @@ Vue.component('regular-goal', {
   template: `
     <div class="regular-goal">
       <div :class="budgetClass">
-        <div class="name">{{ goal.name }} <button class="id" v-show="planning" v-on:click="copyGoalIdToClipboard()">{{ goal.id }}</button></div>
+        <div class="name">{{ goal.name }} <button class="id" v-if="planning" v-on:click="copyGoalIdToClipboard()">{{ goal.id }}</button></div>
         <div v-show="planning">
           <button v-on:click="$emit('delete', goal)">delete</button>
         </div>
-        <div v-show="tracking">
-          <button v-on:click="$emit('increment', goal)">increment</button>
-          <button v-on:click="$emit('decrement', goal)">decrement</button>
+        <div v-if="tracking">
+          <button v-on:click="$emit('increment', goal)" title='increment'>increment</button>
+          <button v-on:click="$emit('decrement', goal)" title='decrement'>decrement</button>
           <span class="last-updated">{{ trajectory_last_updated }}</span>
         </div>
         <div class="goal-description"><span v-html='descriptionHtml'></span></div>
@@ -1401,7 +1430,7 @@ Vue.component('regular-goal', {
           </svg>
         </div>
       </div>
-      <div class='edit' v-show="planning">
+      <div class='edit' v-if="planning">
         <div><div>Name</div> <input type="text" v-model="name"></div>
         <div><div>Description</div> <input type="text" v-model="description"></div>
         <div><div>Window</div> <input type="number" v-model.number="window"></div>
@@ -1544,7 +1573,7 @@ let vue = new Vue({
         </button>
         <button
             class="id"
-            v-show="planning"
+            v-if="planning"
             v-on:click="copyUserIdToClipboard()">
           {{ user_id }}
         </button>

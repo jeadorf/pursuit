@@ -952,41 +952,46 @@ describe('safe markdown renderer', () => {
 });
 
 describe('objective component', () => {
-  let vue = null;
+  let c = null;
 
   beforeEach(() => {
-    vue = new Vue({
+    c = new Vue({
       el: document.createElement('div'),
       data: {
         objective: new Objective({}),
+      },
+      methods: {
+        text: function() {
+          return this.$el.innerText;
+        }
       },
       template: `<objective v-bind:objective='objective'></objective>`
     });
   });
 
-  it('shows name', async () => {
+  it('shows name to user', async () => {
     let name = 'one giant leap';
     let objective = new Objective({name});
 
-    await vue.$nextTick();
-    expect(vue.$el.innerText).not.to.contain(name);
-    vue.objective = objective;
-    await vue.$nextTick();
-    expect(vue.$el.innerText).to.contain(name);
+    await c.$nextTick();
+    expect(c.text()).not.to.contain(name);
+    c.objective = objective;
+    await c.$nextTick();
+    expect(c.text()).to.contain(name);
   });
 
-  it('shows description', async () => {
+  it('shows description to user', async () => {
     let description = 'one giant leap';
     let objective = new Objective({description});
 
-    await vue.$nextTick();
-    expect(vue.$el.innerText).not.to.contain(description);
-    vue.objective = objective;
-    await vue.$nextTick();
-    expect(vue.$el.innerText).to.contain(description);
+    await c.$nextTick();
+    expect(c.text()).not.to.contain(description);
+    c.objective = objective;
+    await c.$nextTick();
+    expect(c.text()).to.contain(description);
   });
 
-  it('shows goal', async () => {
+  it('shows goal to user', async () => {
     let goalName = 'find a rainbow';
     let goal = new Goal({
       name: goalName,
@@ -1000,11 +1005,11 @@ describe('objective component', () => {
     });
     let objective = new Objective({goals: [goal]});
 
-    await vue.$nextTick();
-    expect(vue.$el.innerText).not.to.contain(goalName);
-    vue.objective = objective;
-    await vue.$nextTick();
-    expect(vue.$el.innerText).to.contain(goalName);
+    await c.$nextTick();
+    expect(c.text()).not.to.contain(goalName);
+    c.objective = objective;
+    await c.$nextTick();
+    expect(c.text()).to.contain(goalName);
   });
 
   it('shows regular goal', async () => {
@@ -1021,60 +1026,229 @@ describe('objective component', () => {
     });
     let objective = new Objective({regular_goals: [goal]});
 
-    await vue.$nextTick();
-    expect(vue.$el.innerText).not.to.contain(goalName);
-    vue.objective = objective;
-    await vue.$nextTick();
-    expect(vue.$el.innerText).to.contain(goalName);
+    await c.$nextTick();
+    expect(c.text()).not.to.contain(goalName);
+    c.objective = objective;
+    await c.$nextTick();
+    expect(c.text()).to.contain(goalName);
   });
 });
 
 describe('goal component', () => {
-  let vue = null;
+  let c = null;
 
   beforeEach(() => {
-    vue = new Vue({
+    c = new Vue({
       el: document.createElement('div'),
       data: {
         goal: new Goal({}),
+        mode: 'view',
+        locale: 'de-CH',
+        timezone: 'Europe/Zurich',
       },
-      template: `<goal v-bind:goal='goal'></goal>`
+      methods: {
+        text: function() {
+          return this.$el.innerText;
+        }
+      },
+      template: `<goal v-bind:goal='goal' v-bind:mode='mode' v-bind:locale='locale' v-bind:timezone='timezone'></goal>`
     });
   });
 
-  it('shows name', async () => {
+  it('shows name to user', async () => {
     let name = 'one giant leap';
     let goal = new Goal({name});
 
-    await vue.$nextTick();
-    expect(vue.$el.innerText).not.to.contain(name);
-    vue.goal = goal;
-    await vue.$nextTick();
-    expect(vue.$el.innerText).to.contain(name);
+    await c.$nextTick();
+    expect(c.text()).not.to.contain(name);
+    c.goal = goal;
+    await c.$nextTick();
+    expect(c.text()).to.contain(name);
+  });
+
+  it('shows start date in local timezone to user', async () => {
+    let start = new Date(1634860022344);
+    let goal = new Goal({start});
+
+    c.goal = goal;
+    c.locale = 'de-CH';
+    c.timezone = 'Europe/Zurich';
+    await c.$nextTick();
+    expect(c.text()).not.to.contain('21.10.2021');
+    expect(c.text()).to.contain('22.10.2021');
+
+    c.locale = 'en-US';
+    c.timezone = 'America/Los_Angeles';
+    await c.$nextTick();
+    expect(c.text()).to.contain('10/21/2021');
+    expect(c.text()).not.to.contain('10/22/2021');
+  });
+
+  it('shows end date in local timezone to user', async () => {
+    let end = new Date(1634860022344);
+    let goal = new Goal({end});
+
+    c.goal = goal;
+    c.locale = 'de-CH';
+    c.timezone = 'Europe/Zurich';
+    await c.$nextTick();
+    expect(c.text()).not.to.contain('21.10.2021');
+    expect(c.text()).to.contain('22.10.2021');
+
+    c.locale = 'en-US';
+    c.timezone = 'America/Los_Angeles';
+    await c.$nextTick();
+    expect(c.text()).to.contain('10/21/2021');
+    expect(c.text()).not.to.contain('10/22/2021');
+  });
+
+  it('allows user to increment or decrement when tracking', async () => {
+    c.mode = 'track';
+    await c.$nextTick();
+    expect(c.text()).to.contain('increment');
+    expect(c.text()).to.contain('decrement');
+  });
+
+  it('does not allow user to increment or decrement when viewing', async () => {
+    c.mode = 'view';
+    await c.$nextTick();
+    expect(c.text()).to.not.contain('increment');
+    expect(c.text()).to.not.contain('decrement');
+  });
+
+  it('does not allow user to increment or decrement when planning', async () => {
+    c.mode = 'plan';
+    await c.$nextTick();
+    expect(c.text()).to.not.contain('increment');
+    expect(c.text()).to.not.contain('decrement');
+  });
+
+  it('shows user the id when planning', async () => {
+    let id = '1234567890';
+    let goal = new Goal({id});
+    c.mode = 'plan';
+
+    c.goal = goal;
+
+    await c.$nextTick();
+    expect(c.text()).to.contain(id);
+  });
+
+  it('does not show the id to user when viewing', async () => {
+    let id = '1234567890';
+    let goal = new Goal({id});
+    c.mode = 'view';
+
+    c.goal = goal;
+
+    await c.$nextTick();
+    expect(c.text()).not.to.contain(id);
+  });
+
+  it('does not show the id to user when tracking', async () => {
+    let id = '1234567890';
+    let goal = new Goal({id});
+    c.mode = 'track';
+
+    c.goal = goal;
+
+    await c.$nextTick();
+    expect(c.text()).not.to.contain(id);
   });
 });
 
 describe('regular goal component', () => {
-  let vue = null;
+  let c = null;
 
   beforeEach(() => {
-    vue = new Vue({
+    c = new Vue({
       el: document.createElement('div'),
       data: {
         goal: new RegularGoal({}),
+        mode: 'view',
       },
-      template: `<regular-goal v-bind:goal='goal'></regular-goal>`
+      methods: {
+        text: function() {
+          return this.$el.innerText;
+        }
+      },
+      template: `<regular-goal v-bind:goal='goal' v-bind:mode='mode'></regular-goal>`
     });
   });
 
-  it('shows name', async () => {
-    let name = 'one giant leap';
+  it('shows name to user', async () => {
+    let name = 'squat jump';
     let goal = new RegularGoal({name});
 
-    await vue.$nextTick();
-    expect(vue.$el.innerText).not.to.contain(name);
-    vue.goal = goal;
-    await vue.$nextTick();
-    expect(vue.$el.innerText).to.contain(name);
+    await c.$nextTick();
+    expect(c.text()).not.to.contain(name);
+    c.goal = goal;
+    await c.$nextTick();
+    expect(c.text()).to.contain(name);
+  });
+
+  it('shows description to user', async () => {
+    let description = 'one giant leap';
+    let goal = new RegularGoal({description});
+
+    await c.$nextTick();
+    expect(c.text()).not.to.contain(description);
+    c.goal = goal;
+    await c.$nextTick();
+    expect(c.text()).to.contain(description);
+  });
+
+  it('allows user to increment or decrement when tracking', async () => {
+    c.mode = 'track';
+    await c.$nextTick();
+    expect(c.text()).to.contain('increment');
+    expect(c.text()).to.contain('decrement');
+  });
+
+  it('does not allow user to increment or decrement when viewing', async () => {
+    c.mode = 'view';
+    await c.$nextTick();
+    expect(c.text()).to.not.contain('increment');
+    expect(c.text()).to.not.contain('decrement');
+  });
+
+  it('does not allow user to increment or decrement when planning', async () => {
+    c.mode = 'plan';
+    await c.$nextTick();
+    expect(c.text()).to.not.contain('increment');
+    expect(c.text()).to.not.contain('decrement');
+  });
+
+  it('shows user the id when planning', async () => {
+    let id = '1234567890';
+    let goal = new RegularGoal({id});
+    c.mode = 'plan';
+
+    c.goal = goal;
+
+    await c.$nextTick();
+    expect(c.text()).to.contain(id);
+  });
+
+  it('does not show the id to user when viewing', async () => {
+    let id = '1234567890';
+    let goal = new RegularGoal({id});
+    c.mode = 'view';
+
+    c.goal = goal;
+    
+    await c.$nextTick();
+    expect(c.text()).not.to.contain(id);
+  });
+
+  it('does not show the id to user when tracking', async () => {
+    let id = '1234567890';
+    let goal = new RegularGoal({id});
+    c.mode = 'track';
+
+    c.goal = goal;
+
+    await c.$nextTick();
+    expect(c.text()).not.to.contain(id);
   });
 });
