@@ -255,3 +255,14 @@ button.id {
   color: darkslategray;
   font-size: 12px;
 }
+
+.popup {
+  position: fixed;
+  top: 0;
+  right: 0;
+  background: white;
+  padding: 10px 20px;
+  border: 1px solid lightgray;
+  font-size: 12px;
+  background-color: lightgoldenrodyellow;
+}
