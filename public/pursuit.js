@@ -1470,7 +1470,6 @@ Vue.component('goal', {
       <div v-if="tracking">
         <button v-on:click="$emit('increment', goal)" title='increment'>increment</button>
         <button v-on:click="$emit('decrement', goal)" title='decrement'>decrement</button>
-        <span class="last-updated">{{ trajectory_last_updated }}</span>
       </div>
       <svg class='chart' preserveAspectRatio='none'>
         <text
@@ -1521,6 +1520,9 @@ Vue.component('goal', {
           x='100%'
           y=48>{{ goal.target }} {{ goal.unit }}</text>
       </svg>
+      <div>
+        <span class="last-updated">{{ trajectory_last_updated }}</span>
+      </div>
       <div class='edit' v-show="planning">
         <div><div>Name</div> <input type="text" v-model="name"></div>
         <div><div>Start</div> <input type="date" v-model="start"></div>
@@ -1695,7 +1697,6 @@ Vue.component('regular-goal', {
         <div v-if="tracking">
           <button v-on:click="$emit('increment', goal)" title='increment'>increment</button>
           <button v-on:click="$emit('decrement', goal)" title='decrement'>decrement</button>
-          <span class="last-updated">{{ trajectory_last_updated }}</span>
         </div>
         <div class="goal-description"><span v-html='descriptionHtml'></span></div>
         <div class="level">
@@ -1706,6 +1707,9 @@ Vue.component('regular-goal', {
             <rect y="2" height="2" width="100%" fill="#ccc"></rect>
             <rect y="0" height="6" :x="barXPos" :width="barWidth" :fill="barColor"></rect>
           </svg>
+        </div>
+        <div>
+          <span class="last-updated">{{ trajectory_last_updated }}</span>
         </div>
       </div>
       <div class='edit' v-if="planning">
