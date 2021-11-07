@@ -741,7 +741,7 @@ class SafeMarkdownRenderer {
     if (!markdown) {
       return '';
     }
-    let rawHtml = marked(markdown);
+    let rawHtml = marked.parse(markdown);
     return sanitizeHtml(rawHtml, {
       allowedTags: [
         'a',
