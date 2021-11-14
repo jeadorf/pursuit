@@ -913,6 +913,32 @@ Vue.component('objective', {
       let markdown = new SafeMarkdownRenderer();
       return markdown.render(this.objective.description);
     },
+
+    name: {
+      get: function() {
+        return this.objective.name;
+      },
+      set: _.debounce(
+          function(name) {
+            this.updateObjective({
+              [`name`]: name,
+            });
+          },
+          1000),
+    },
+  
+    description: {
+      get: function() {
+        return this.objective.description;
+      },
+      set: _.debounce(
+          function(description) {
+            this.updateObjective({
+              [`description`]: description,
+            });
+          },
+          1000),
+    },
   },
 
   methods: {
@@ -1219,6 +1245,10 @@ Vue.component('objective', {
         <button v-on:click='createRegularGoal'>Add regular goal</button>
         <button v-on:click="paste">Paste goal</button>
         <button v-on:click='deleteObjective'>Delete objective</button>
+      </div>
+      <div v-show="planning" class="edit">
+        <div><div>Name</div> <input type="text" v-model="name"></div>
+        <div><div>Description</div> <textarea type="text" v-model="description"></textarea></div>
       </div>
       <div class='objective-description'><span v-html='descriptionHtml'></span></div>
       <goal
