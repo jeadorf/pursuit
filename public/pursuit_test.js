@@ -890,7 +890,7 @@ describe('objective component', () => {
         objective: new Objective({}),
       },
       methods: {
-        text: function() {
+        text() {
           return this.$el.innerText;
         }
       },
@@ -971,7 +971,7 @@ describe('goal component', () => {
         timezone: 'Europe/Zurich',
       },
       methods: {
-        text: function() {
+        text() {
           return this.$el.innerText;
         }
       },
@@ -1094,7 +1094,7 @@ describe('regular goal component', () => {
         mode: 'view',
       },
       methods: {
-        text: function() {
+        text() {
           return this.$el.innerText;
         }
       },

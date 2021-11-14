@@ -885,15 +885,15 @@ const Mode = {
  */
 let modeMixin = {
   computed: {
-    viewing: function() {
+    viewing() {
       return this.mode == Mode.VIEW;
     },
 
-    tracking: function() {
+    tracking() {
       return this.mode == Mode.TRACK;
     },
 
-    planning: function() {
+    planning() {
       return this.mode == Mode.PLAN;
     },
   },
@@ -909,13 +909,13 @@ Vue.component('objective', {
   props: ['objective', 'mode', 'user_id'],
 
   computed: {
-    descriptionHtml: function() {
+    descriptionHtml() {
       let markdown = new SafeMarkdownRenderer();
       return markdown.render(this.objective.description);
     },
 
     name: {
-      get: function() {
+      get() {
         return this.objective.name;
       },
       set: _.debounce(
@@ -928,7 +928,7 @@ Vue.component('objective', {
     },
   
     description: {
-      get: function() {
+      get() {
         return this.objective.description;
       },
       set: _.debounce(
@@ -943,7 +943,7 @@ Vue.component('objective', {
 
   methods: {
     /** updateObjective makes changes to the objective in Firestore.  */
-    updateObjective: function(update) {
+    updateObjective(update) {
       firebase.firestore()
           .collection('users')
           .doc(this.user_id)
@@ -953,7 +953,7 @@ Vue.component('objective', {
     },
 
     /** createGoal adds a new goal to the objective in Firestore. */
-    createGoal: function() {
+    createGoal() {
       let goalId = uuidv4();
       let now = new Date().getTime();
       this.updateObjective({
@@ -972,7 +972,7 @@ Vue.component('objective', {
     /**
      * createRegularGoal adds a new regular goal to the objective in Firestore.
      */
-    createRegularGoal: function() {
+    createRegularGoal() {
       let goalId = uuidv4();
       let now = new Date().getTime();
       this.updateObjective({
@@ -989,7 +989,7 @@ Vue.component('objective', {
     },
 
     /** copyObjectiveIdToClipboard puts the objective ID into the clipboard. */
-    copyObjectiveIdToClipboard: function() {
+    copyObjectiveIdToClipboard() {
       navigator.clipboard.writeText(this.objective.id);
     },
 
@@ -1090,7 +1090,7 @@ Vue.component('objective', {
     },
 
     /** cutGoal emits an event about cutting the goal from the objective. */
-    cutGoal: function(goal) {
+    cutGoal(goal) {
       this.$emit('cut', {
         fromObjective: this.objective,
         goal: goal,
@@ -1098,7 +1098,7 @@ Vue.component('objective', {
     },
 
     /** deleteGoal removes the goal from its objective. */
-    deleteGoal: function(goal) {
+    deleteGoal(goal) {
       if (confirm(`Really delete the goal "${goal.name}"?`)) {
         this.updateObjective(
             {[`goals.${goal.id}`]: firebase.firestore.FieldValue.delete()});
@@ -1194,7 +1194,7 @@ Vue.component('objective', {
 
     /** cutRegularGoal emits an event about cutting the regular goal from the
      * objective. */
-    cutRegularGoal: function(goal) {
+    cutRegularGoal(goal) {
       this.$emit('cut', {
         fromObjective: this.objective,
         regularGoal: goal,
@@ -1202,7 +1202,7 @@ Vue.component('objective', {
     },
 
     /** deleteGoal removes the goal from its objective. */
-    deleteRegularGoal: function(goal) {
+    deleteRegularGoal(goal) {
       if (confirm(`Really delete the regular goal "${goal.name}"?`)) {
         this.updateObjective({
           [`regular_goals.${goal.id}`]: firebase.firestore.FieldValue.delete()
@@ -1211,12 +1211,12 @@ Vue.component('objective', {
     },
 
     /** paste */
-    paste: function() {
+    paste() {
       this.$emit('paste', this.objective);
     },
 
     /** deleteObjective removes the objective from the user's collection. */
-    deleteObjective: function() {
+    deleteObjective() {
       if (confirm(
               `Really delete the objective named "${this.objective.name}"?`)) {
         firebase.firestore()
@@ -1297,7 +1297,7 @@ let goalMixin = {
   props: ['goal', 'mode'],
 
   computed: {
-    trajectory_last_updated: function() {
+    trajectory_last_updated() {
       let format_date = (millis) => {
         let is = (a, b) => {
           return (
@@ -1325,7 +1325,7 @@ let goalMixin = {
     },
 
     current: {
-      get: function() {
+      get() {
         if (!this.goal.trajectory.latest) {
           return NaN;
         }
@@ -1343,7 +1343,7 @@ let goalMixin = {
   },
 
   methods: {
-    copyGoalIdToClipboard: function() {
+    copyGoalIdToClipboard() {
       navigator.clipboard.writeText(this.goal.id);
     },
   },
@@ -1364,7 +1364,7 @@ let localeMixin = {
      * one problem away.
      * @param {number} millis
      */
-    inputformat: function(millis) {
+    inputformat(millis) {
       let parts =
           (new Date(millis).toLocaleDateString('de-DE').split('.').reverse());
       if (parts[1].length == 1) {
@@ -1385,40 +1385,40 @@ Vue.component('goal', {
   mixins: [goalMixin, localeMixin, modeMixin],
 
   computed: {
-    currentXPos: function() {
+    currentXPos() {
       let now = new Date().getTime();
       return (100 * this.goal.timeSpent(now) - 0.25) + '%';
     },
 
-    endDate: function() {
+    endDate() {
       return new Date(this.goal.end).toLocaleDateString(this.locale, {
         timeZone: this.timezone
       });
     },
 
-    progressFillColor: function() {
+    progressFillColor() {
       let now = new Date().getTime();
       let progressReport = new ProgressReport();
       return progressReport.progressFillColor(this.goal, now);
     },
 
-    progressReport: function() {
+    progressReport() {
       let now = new Date().getTime();
       let progressReport = new ProgressReport();
       return progressReport.progressStatus(this.goal, now);
     },
 
-    progressPercentBounded: function() {
+    progressPercentBounded() {
       return (100 * Math.max(Math.min(this.goal.progress, 1), 0)) + '%';
     },
 
-    startDate: function() {
+    startDate() {
       return new Date(this.goal.start).toLocaleDateString(this.locale, {
         timeZone: this.timezone
       });
     },
 
-    velocityReport: function() {
+    velocityReport() {
       let now = new Date().getTime();
       if (this.goal.stage != Stage.ARCHIVED) {
         if (this.goal.end < now) {
@@ -1432,7 +1432,7 @@ Vue.component('goal', {
     },
 
     name: {
-      get: function() {
+      get() {
         return this.goal.name;
       },
       set: _.debounce(
@@ -1446,7 +1446,7 @@ Vue.component('goal', {
     },
 
     start: {
-      get: function() {
+      get() {
         return this.inputformat(this.goal.start);
       },
       set: _.debounce(
@@ -1460,7 +1460,7 @@ Vue.component('goal', {
     },
 
     end: {
-      get: function() {
+      get() {
         return this.inputformat(this.goal.end);
       },
       set: _.debounce(
@@ -1474,7 +1474,7 @@ Vue.component('goal', {
     },
 
     baseline: {
-      get: function() {
+      get() {
         return this.goal.baseline;
       },
       set: _.debounce(
@@ -1488,7 +1488,7 @@ Vue.component('goal', {
     },
 
     target: {
-      get: function() {
+      get() {
         return this.goal.target;
       },
       set: _.debounce(
@@ -1502,7 +1502,7 @@ Vue.component('goal', {
     },
 
     unit: {
-      get: function() {
+      get() {
         return this.goal.unit
       },
       set: _.debounce(
@@ -1600,13 +1600,13 @@ Vue.component('regular-goal', {
   mixins: [goalMixin, modeMixin],
 
   computed: {
-    barColor: function() {
+    barColor() {
       let now = new Date().getTime();
       return this.goal.budgetRemainingProrated(now) > 0 ? 'rgb(136,187,77)' :
                                                           'rgb(187, 102, 77)'
     },
 
-    barXPos: function() {
+    barXPos() {
       let now = new Date().getTime();
       let b = this.goal.budgetRemainingProrated(now);
       if (b > 0) {
@@ -1616,13 +1616,13 @@ Vue.component('regular-goal', {
       }
     },
 
-    barWidth: function() {
+    barWidth() {
       let now = new Date().getTime();
       let b = this.goal.budgetRemainingProrated(now);
       return Math.max(0, Math.min(100, Math.abs((100 * b)))) + '%';
     },
 
-    budgetClass: function() {
+    budgetClass() {
       let now = new Date().getTime();
       if (this.goal.budgetRemainingProrated(now) > 0) {
         return 'within-budget';
@@ -1631,17 +1631,17 @@ Vue.component('regular-goal', {
       }
     },
 
-    budgetRemaining: function() {
+    budgetRemaining() {
       let now = new Date().getTime();
       return (100 * this.goal.budgetRemainingProrated(now)).toFixed(0) + '%';
     },
 
-    descriptionHtml: function() {
+    descriptionHtml() {
       let markdown = new SafeMarkdownRenderer();
       return markdown.render(this.goal.description);
     },
 
-    partialData: function() {
+    partialData() {
       let now = new Date().getTime();
       if (this.goal.partialData(now)) {
         return '(partial data)';
@@ -1650,7 +1650,7 @@ Vue.component('regular-goal', {
       }
     },
 
-    status: function() {
+    status() {
       let now = new Date().getTime();
       return `@ ${this.goal.value(now).toFixed(2)},
               targeting ${(this.goal.target).toFixed(2)} / ${this.goal.total} ${
@@ -1659,7 +1659,7 @@ Vue.component('regular-goal', {
     },
 
     name: {
-      get: function() {
+      get() {
         return this.goal.name;
       },
       set: _.debounce(
@@ -1673,7 +1673,7 @@ Vue.component('regular-goal', {
     },
 
     description: {
-      get: function() {
+      get() {
         return this.goal.description;
       },
       set: _.debounce(
@@ -1687,7 +1687,7 @@ Vue.component('regular-goal', {
     },
 
     window: {
-      get: function() {
+      get() {
         return this.goal.window;
       },
       set: _.debounce(
@@ -1701,7 +1701,7 @@ Vue.component('regular-goal', {
     },
 
     target: {
-      get: function() {
+      get() {
         return this.goal.target;
       },
       set: _.debounce(
@@ -1715,7 +1715,7 @@ Vue.component('regular-goal', {
     },
 
     total: {
-      get: function() {
+      get() {
         return this.goal.total;
       },
       set: _.debounce(
@@ -1729,7 +1729,7 @@ Vue.component('regular-goal', {
     },
 
     unit: {
-      get: function() {
+      get() {
         return this.goal.unit
       },
       set: _.debounce(
@@ -1831,7 +1831,7 @@ let vue = new Vue({
   },
 
   computed: {
-    signedIn: function() {
+    signedIn() {
       return this.user_id != '';
     },
   },
@@ -1841,12 +1841,12 @@ let vue = new Vue({
      * copyUserIdToClipboard sets the clipboard to the ID of the signed-in
      * user.
      */
-    copyUserIdToClipboard: function() {
+    copyUserIdToClipboard() {
       navigator.clipboard.writeText(this.user_id);
     },
 
     /** createObjective adds a new objective to Firestore. */
-    createObjective: function() {
+    createObjective() {
       let objective = new Objective({
         id: uuidv4(),
         name: 'AA New objective',
@@ -1868,7 +1868,7 @@ let vue = new Vue({
      * in Firestore, the objectives on the client application are refreshed;
      * Firestore is considered the source of truth.
      */
-    listenToObjectives: function() {
+    listenToObjectives() {
       firebase.firestore()
           .collection('users')
           .doc(this.user_id)
@@ -1891,33 +1891,33 @@ let vue = new Vue({
      * signIn authenticates the client using redirect flow. The result of this
      * operation is handled in listener to onAuthStateChanged.
      */
-    signIn: function() {
+    signIn() {
       let provider = new firebase.auth.GoogleAuthProvider();
       firebase.auth().signInWithRedirect(provider);
     },
 
     /** view switches the user interface into viewing mode. */
-    view: function() {
+    view() {
       this.mode = Mode.VIEW;
     },
 
     /** track switches the user interface into tracking mode. */
-    track: function() {
+    track() {
       this.mode = Mode.TRACK;
     },
 
     /** plan switches the user interface into planning mode. */
-    plan: function() {
+    plan() {
       this.mode = Mode.PLAN;
     },
 
     /** cut puts a goal into the "clipboard" */
-    cut: function(cutEvent) {
+    cut(cutEvent) {
       this.clippedGoal = cutEvent;
     },
 
     /** paste moves the goal from "clipboard" into another objective */
-    paste: function(toObjective) {
+    paste(toObjective) {
       if (!this.clippedGoal) {
         // The "clipboard" is empty.
         return;
