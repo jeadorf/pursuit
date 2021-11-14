@@ -980,7 +980,7 @@ Vue.component('objective', {
         [`regular_goals.${goalId}.description`]: '',
         [`regular_goals.${goalId}.unit`]: '',
         [`regular_goals.${goalId}.total`]: 100,
-        [`regular_goals.${goalId}.target`]: 0.9,
+        [`regular_goals.${goalId}.target`]: 0,
         [`regular_goals.${goalId}.window`]: 28,
         [`regular_goals.${goalId}.trajectory`]: [
           {date: now, value: 0},
