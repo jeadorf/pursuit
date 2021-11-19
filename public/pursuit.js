@@ -286,8 +286,8 @@ class Goal {
     if (by_date <= this.start) {
       return 1.0;
     }
-    let p = this.trajectory.at(by_date) / (this.target - this.baseline);
-    let t = this.timeSpent(Math.min(this.end, by_date));
+    let p = (this.trajectory.at(by_date) - this.baseline) / (this.target - this.baseline);
+    let t = this.timeSpent(Math.min(by_date, this.end));
     return p / t;
   }
 
