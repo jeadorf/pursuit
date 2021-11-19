@@ -841,7 +841,7 @@ class ProgressReport {
       } else {
         if (goal.isOnTrack(by_date)) {
           return `${daysUntilEnd.toFixed(0)} days left, on track @ ${
-              (100 * goal.progress).toFixed(1)}% (${goal.trajectory.latest.value.toFixed(1)g})`;
+              (100 * goal.progress).toFixed(1)}% (${goal.trajectory.latest.value.toFixed(1)})`;
         } else {
           return `${daysUntilEnd.toFixed(0)} days left, behind @ ${
               (100 * goal.progress).toFixed(1)}% (${goal.trajectory.latest.value.toFixed(1)})`;
