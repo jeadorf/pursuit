@@ -900,6 +900,23 @@ let modeMixin = {
 };
 
 /**
+ * Mode represents different UI: viewing, tracking, or planning.
+ * @enum {string}
+ */
+const ClipboardAction = {
+  /**
+   * CUT indicates that the goal should be moved rather than copied.
+   */
+  CUT: 'cut',
+
+  /**
+   * COPY indicates that the goal should be cloned rather than moved.
+   */
+  COPY: 'copy',
+};
+
+
+/**
  * Registers the <objective> Vue component globally. This component renders an
  * objective and its goals.
  */
@@ -1089,11 +1106,21 @@ Vue.component('objective', {
       });
     },
 
+    /** copyGoal emits an event about copying the goal from the objective. */
+    copyGoal(goal) {
+      this.$emit('copy', {
+        fromObjective: this.objective,
+        goal: goal,
+        action: ClipboardAction.COPY,
+      });
+    },
+
     /** cutGoal emits an event about cutting the goal from the objective. */
     cutGoal(goal) {
       this.$emit('cut', {
         fromObjective: this.objective,
         goal: goal,
+        action: ClipboardAction.CUT,
       });
     },
 
@@ -1192,12 +1219,23 @@ Vue.component('objective', {
       });
     },
 
+    /** copyRegularGoal emits an event about copying the regular goal from the
+     * objective. */
+    copyRegularGoal(goal) {
+      this.$emit('copy', {
+        fromObjective: this.objective,
+        regularGoal: goal,
+        action: ClipboardAction.COPY,
+      });
+    },
+
     /** cutRegularGoal emits an event about cutting the regular goal from the
      * objective. */
     cutRegularGoal(goal) {
       this.$emit('cut', {
         fromObjective: this.objective,
         regularGoal: goal,
+        action: ClipboardAction.CUT,
       });
     },
 
@@ -1265,6 +1303,7 @@ Vue.component('objective', {
         v-on:update-target="updateGoalTarget($event.goal, $event.target)"
         v-on:update-current="updateGoalCurrent($event.goal, $event.current)"
         v-on:update-unit="updateGoalUnit($event.goal, $event.unit)"
+        v-on:copy="copyGoal($event)"
         v-on:cut="cutGoal($event)"
         v-on:delete="deleteGoal($event)"
       ></goal>
@@ -1282,6 +1321,7 @@ Vue.component('objective', {
         v-on:update-total="updateRegularGoalTotal($event.goal, $event.total)"
         v-on:update-current="updateRegularGoalCurrent($event.goal, $event.current)"
         v-on:update-unit="updateRegularGoalUnit($event.goal, $event.unit)"
+        v-on:copy="copyRegularGoal($event)"
         v-on:cut="cutRegularGoal($event)"
         v-on:delete="deleteRegularGoal($event)"
       ></regular-goal>
@@ -1520,6 +1560,7 @@ Vue.component('goal', {
     <div class='goal'>
       <div class='name'>{{ goal.name }} <button class="id" v-if="planning" v-on:click="copyGoalIdToClipboard()">{{ goal.id }}</button></div>
       <div v-show="planning">
+        <button v-on:click="$emit('copy', goal)">copy</button>
         <button v-on:click="$emit('cut', goal)">cut</button>
         <button v-on:click="$emit('delete', goal)">delete</button>
       </div>
@@ -1748,6 +1789,7 @@ Vue.component('regular-goal', {
       <div :class="budgetClass">
         <div class="name">{{ goal.name }} <button class="id" v-if="planning" v-on:click="copyGoalIdToClipboard()">{{ goal.id }}</button></div>
         <div v-show="planning">
+          <button v-on:click="$emit('copy', goal)">copy</button>
           <button v-on:click="$emit('cut', goal)">cut</button>
           <button v-on:click="$emit('delete', goal)">delete</button>
         </div>
@@ -1825,7 +1867,7 @@ let vue = new Vue({
     loaded: false,
 
     /**
-     * clippedGoal may contain a goal that was cut from some objective.
+     * clippedGoal may contain a goal that was copied/cut from some objective.
      */
     clippedGoal: null,
   },
@@ -1911,6 +1953,11 @@ let vue = new Vue({
       this.mode = Mode.PLAN;
     },
 
+    /** copy puts a goal into the "clipboard" */
+    copy(copyEvent) {
+      this.clippedGoal = copyEvent;
+    },
+
     /** cut puts a goal into the "clipboard" */
     cut(cutEvent) {
       this.clippedGoal = cutEvent;
@@ -1933,12 +1980,6 @@ let vue = new Vue({
         throw 'Error: clippedGoal has both goal and regularGoal set.';
       }
 
-      if (this.clippedGoal.fromObjective.id == toObjective.id) {
-        // Nothing to do; more importantly, without this check the goal would
-        // be removed from the objective, leading to data loss.
-        return;
-      }
-
       let regular = Boolean(this.clippedGoal.regularGoal);
 
       let goalId = (regular
@@ -1959,29 +2000,63 @@ let vue = new Vue({
 
       let prefix = regular ? 'regular_goals' : 'goals';
 
-      firebase.firestore().runTransaction((tx) => {
-        return tx.get(from).then((s) => {
-          if (!s.exists) {
-            throw 'objective does not exist';
-          }
-          let g = s.data()[prefix][goalId];
-          if (!g) {
-            throw 'goal does not exist';
-          }
-          let add = {
-            [`${prefix}.${goalId}`]: g,
-          };
-          let remove = {
-            [`${prefix}.${goalId}`]: firebase.firestore.FieldValue.delete(),
-          };
-          tx.update(to, add).update(from, remove);
+      if (this.clippedGoal.action == ClipboardAction.COPY) {
+        firebase.firestore().runTransaction((tx) => {
+          return tx.get(from).then((s) => {
+            if (!s.exists) {
+              throw 'objective does not exist';
+            }
+            let g = s.data()[prefix][goalId];
+            if (!g) {
+              throw 'goal does not exist';
+            }
+        		let newGoalId = uuidv4();
+            g.name = `${g.name} (copy)`;
+            let add = {
+              [`${prefix}.${newGoalId}`]: g,
+            };
+            tx.update(to, add);
+          });
+        }).then(() => {
+          this.clippedGoal = null;
+          console.log("Transaction successfully committed!");
+        }).catch((error) => {
+          console.log("Transaction failed: ", error);
         });
-      }).then(() => {
-        this.clippedGoal = null;
-        console.log("Transaction successfully committed!");
-      }).catch((error) => {
-        console.log("Transaction failed: ", error);
-      });
+      } else if (this.clippedGoal.action == ClipboardAction.CUT) {
+        if (this.clippedGoal.fromObjective.id == toObjective.id) {
+          // Nothing to do; more importantly, without this check the goal would
+          // be removed from the objective, leading to data loss.
+          return;
+        }
+
+        firebase.firestore().runTransaction((tx) => {
+          return tx.get(from).then((s) => {
+            if (!s.exists) {
+              throw 'objective does not exist';
+            }
+            let g = s.data()[prefix][goalId];
+            if (!g) {
+              throw 'goal does not exist';
+            }
+            let add = {
+              [`${prefix}.${goalId}`]: g,
+            };
+            let remove = {
+              [`${prefix}.${goalId}`]: firebase.firestore.FieldValue.delete(),
+            };
+            tx.update(to, add).update(from, remove);
+          });
+        }).then(() => {
+          this.clippedGoal = null;
+          console.log("Transaction successfully committed!");
+        }).catch((error) => {
+          console.log("Transaction failed: ", error);
+        });
+      } else {
+        // This is a bug.
+        throw `Error: unknown action ${this.clippedGoal.action}`;
+      }
     },
   },
 
@@ -2025,6 +2100,7 @@ let vue = new Vue({
           v-bind:user_id='user_id'
           v-bind:mode='mode'
           v-bind:key="o.id"
+          v-on:copy="copy($event)"
           v-on:cut="cut($event)"
           v-on:paste="paste($event)">
       </objective>
