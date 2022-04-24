@@ -1472,8 +1472,8 @@ Vue.component('objective', {
   },
 
   template: `
-    <div class='objective'>
-      <div class='objective-name'>
+    <div class="objective">
+      <div class="objective-name">
         {{ objective.name }}
         <button
             class="id"
@@ -1482,22 +1482,22 @@ Vue.component('objective', {
           {{ objective.id }}
         </button>
       </div>
-      <div v-show='planning'>
-        <button v-on:click='createGoal'>Add goal</button>
-        <button v-on:click='createRegularGoal'>Add regular goal</button>
-        <button v-on:click='createBudgetGoal'>Add budget goal</button>
+      <div v-show="planning">
+        <button v-on:click="createGoal">Add goal</button>
+        <button v-on:click="createRegularGoal">Add regular goal</button>
+        <button v-on:click="createBudgetGoal">Add budget goal</button>
         <button v-on:click="paste">Paste goal</button>
-        <button v-on:click='deleteObjective'>Delete objective</button>
+        <button v-on:click="deleteObjective">Delete objective</button>
       </div>
       <div v-show="planning" class="edit">
         <div><div>Name</div> <input type="text" v-model="name"></div>
         <div><div>Description</div> <textarea type="text" v-model="description"></textarea></div>
       </div>
-      <div class='objective-description'><span v-html='descriptionHtml'></span></div>
+      <div class="objective-description"><span v-html="descriptionHtml"></span></div>
       <goal
         v-for="g in objective.goals"
         v-bind:goal="g"
-        v-bind:mode='mode'
+        v-bind:mode="mode"
         v-bind:key="g.id"
         v-on:increment="incrementGoal($event)"
         v-on:decrement="decrementGoal($event)"
@@ -1515,7 +1515,7 @@ Vue.component('objective', {
       <regular-goal
         v-for="g in objective.regularGoals"
         v-bind:goal="g"
-        v-bind:mode='mode'
+        v-bind:mode="mode"
         v-bind:key="g.id"
         v-on:increment="incrementRegularGoal($event)"
         v-on:decrement="decrementRegularGoal($event)"
@@ -1533,7 +1533,7 @@ Vue.component('objective', {
       <budget-goal
         v-for="g in objective.budgetGoals"
         v-bind:goal="g"
-        v-bind:mode='mode'
+        v-bind:mode="mode"
         v-bind:key="g.id"
         v-on:update-name="updateBudgetGoalName($event.goal, $event.name)"
         v-on:update-description="updateBudgetGoalDescription($event.goal, $event.description)"
@@ -1773,70 +1773,70 @@ Vue.component('goal', {
   },
 
   template: `
-    <div class='goal'>
-      <div class='name'>{{ goal.name }} <button class="id" v-if="planning" v-on:click="copyGoalIdToClipboard()">{{ goal.id }}</button></div>
+    <div class="goal">
+      <div class="name">{{ goal.name }} <button class="id" v-if="planning" v-on:click="copyGoalIdToClipboard()">{{ goal.id }}</button></div>
       <div v-show="planning">
         <button v-on:click="$emit('copy', goal)">copy</button>
         <button v-on:click="$emit('cut', goal)">cut</button>
         <button v-on:click="$emit('delete', goal)">delete</button>
       </div>
       <div v-if="tracking">
-        <button v-on:click="$emit('increment', goal)" title='increment'>increment</button>
-        <button v-on:click="$emit('decrement', goal)" title='decrement'>decrement</button>
+        <button v-on:click="$emit('increment', goal)" title="increment">increment</button>
+        <button v-on:click="$emit('decrement', goal)" title="decrement">decrement</button>
       </div>
-      <svg class='chart' preserveAspectRatio='none'>
+      <svg class="chart" preserveAspectRatio="none">
         <text
-            class='status'
-            text-anchor='middle'
-            x='50%'
-            y='20'>{{ progressReport }}</text>
+            class="status"
+            text-anchor="middle"
+            x="50%"
+            y="20">{{ progressReport }}</text>
         <rect
-            width='100%'
+            width="100%"
             height=2
-            fill='lightgrey'
+            fill="lightgrey"
             y=28></rect>
         <rect
-            class='current'
-            :width='progressPercentBounded'
+            class="current"
+            :width="progressPercentBounded"
             height=6
-            :fill='progressFillColor'
+            :fill="progressFillColor"
             y=26></rect>
         <rect
-            class='today'
-            width='0.5%'
+            class="today"
+            width="0.5%"
             height=14
-            :x='currentXPos'
+            :x="currentXPos"
             :y=22></rect>
         <text
-            class='start'
-            text-anchor='start'
+            class="start"
+            text-anchor="start"
             x=0
             y=20>{{ startDate }}</text>
         <text
-            class='end'
-            text-anchor='end'
-            x='100%'
+            class="end"
+            text-anchor="end"
+            x="100%"
             y=20>{{ endDate }}</text>
         <text
-          class='baseline'
-          text-anchor='start'
+          class="baseline"
+          text-anchor="start"
           x=0
           y=48>{{ goal.baseline }}</text>
         <text
-            class='velocity'
-            text-anchor='middle'
-            x='50%'
-            y='48'>{{ velocityReport }}</text>
+            class="velocity"
+            text-anchor="middle"
+            x="50%"
+            y="48">{{ velocityReport }}</text>
         <text
-          class='target'
-          text-anchor='end'
-          x='100%'
+          class="target"
+          text-anchor="end"
+          x="100%"
           y=48>{{ goal.target }} {{ goal.unit }}</text>
       </svg>
       <div>
         <span class="last-updated">{{ trajectory_last_updated }}</span>
       </div>
-      <div class='edit' v-show="planning">
+      <div class="edit" v-show="planning">
         <div><div>Name</div> <input type="text" v-model="name"></div>
         <div><div>Start</div> <input type="date" v-model="start"></div>
         <div><div>End</div> <input type="date" v-model="end"></div>
@@ -2010,15 +2010,15 @@ Vue.component('regular-goal', {
           <button v-on:click="$emit('delete', goal)">delete</button>
         </div>
         <div v-if="tracking">
-          <button v-on:click="$emit('increment', goal)" title='increment'>increment</button>
-          <button v-on:click="$emit('decrement', goal)" title='decrement'>decrement</button>
+          <button v-on:click="$emit('increment', goal)" title="increment">increment</button>
+          <button v-on:click="$emit('decrement', goal)" title="decrement">decrement</button>
         </div>
-        <div class="goal-description"><span v-html='descriptionHtml'></span></div>
+        <div class="goal-description"><span v-html="descriptionHtml"></span></div>
         <div class="level">
           <span class="budget">{{ budgetRemaining }}</span>
           <span class="window"> of budget remaining {{ partialData }}</span>
           <span class="value">{{ status }}</span>
-          <svg class="chart" preserveAspectRatio='none' style="height: 6px">
+          <svg class="chart" preserveAspectRatio="none" style="height: 6px">
             <rect y="2" height="2" width="100%" fill="#ccc"></rect>
             <rect y="0" height="6" :x="barXPos" :width="barWidth" :fill="barColor"></rect>
           </svg>
@@ -2027,7 +2027,7 @@ Vue.component('regular-goal', {
           <span class="last-updated">{{ trajectory_last_updated }}</span>
         </div>
       </div>
-      <div class='edit' v-if="planning">
+      <div class="edit" v-if="planning">
         <div><div>Name</div> <input type="text" v-model="name"></div>
         <div><div>Description</div> <input type="text" v-model="description"></div>
         <div><div>Window</div> <input type="number" v-model.number="window"></div>
@@ -2156,24 +2156,24 @@ Vue.component('regular-goal', {
           <button v-on:click="$emit('cut', goal)">cut</button>
           <button v-on:click="$emit('delete', goal)">delete</button>
         </div>
-        <div class="goal-description"><span v-html='descriptionHtml'></span></div>
+        <div class="goal-description"><span v-html="descriptionHtml"></span></div>
         <div class="level">
           <span class="budget">{{ budgetRemaining }}</span>
           <span class="window"> of budget remaining</span>
-          <svg class="chart" preserveAspectRatio='none' style="height: 24px">
+          <svg class="chart" preserveAspectRatio="none" style="height: 24px">
             <rect y="2" height="2" width="100%" fill="#ccc"></rect>
             <rect y="0" height="6" :x="barXPos" :width="barWidth" :fill="barColor"></rect>
             <text
-                class='velocity'
-                text-anchor='middle'
-                x='50%'
-                y='20'>
+                class="status"
+                text-anchor="middle"
+                x="50%"
+                y="22">
                   current: {{ (100 * goal.current).toFixed(1) }}%;
                   target: {{ (100 * goal.target).toFixed(1) }}%
             </text>
           </svg>
         </div>
-        <div class='edit' v-if="planning">
+        <div class="edit" v-if="planning">
           <div><div>Name</div> <input type="text" v-model="name"></div>
           <div><div>Description</div> <input type="text" v-model="description"></div>
           <div><div>Target</div> <input type="number" v-model.number="target"></div>
@@ -2414,27 +2414,27 @@ let vue = new Vue({
   },
 
   template: `
-    <div class='app'>
+    <div class="app">
       <button
-          id='signin'
-          v-show='!signedIn'
+          id="signin"
+          v-show="!signedIn"
           v-on:click="signIn">
         Sign in with Google
       </button>
-      <div class='toolbar' v-show='loaded'>
+      <div class="toolbar" v-show="loaded">
         <button
-            :disabled='viewing'
-            v-on:click='view'>
+            :disabled="viewing"
+            v-on:click="view">
           View
         </button>
         <button
-            :disabled='tracking'
-            v-on:click='track'>
+            :disabled="tracking"
+            v-on:click="track">
           Track
         </button>
         <button
-            :disabled='planning'
-            v-on:click='plan'>
+            :disabled="planning"
+            v-on:click="plan">
           Plan
         </button>
         <button
@@ -2444,20 +2444,20 @@ let vue = new Vue({
           {{ user_id }}
         </button>
       </div>
-      <div class='toolbar' v-show='planning'>
-        <button v-on:click='createObjective'>Add objective</button>
+      <div class="toolbar" v-show="planning">
+        <button v-on:click="createObjective">Add objective</button>
       </div>
       <objective
           v-for="o in objectives"
           v-bind:objective="o"
-          v-bind:user_id='user_id'
-          v-bind:mode='mode'
+          v-bind:user_id="user_id"
+          v-bind:mode="mode"
           v-bind:key="o.id"
           v-on:copy="copy($event)"
           v-on:cut="cut($event)"
           v-on:paste="paste($event)">
       </objective>
-      <div class='popup' v-if='clippedGoal'>
+      <div class="popup" v-if="clippedGoal">
         <em>"{{ clippedGoal.goal.name }}"</em> ready to paste.
       </div>
     </div>
