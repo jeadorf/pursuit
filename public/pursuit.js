@@ -25,7 +25,7 @@ let DAY = 24 * HOUR;
  * window. In contrast, regular goals are bound to a moving time window.
  */
 class Objective {
-  constructor({id, name, description, goals, regularGoals}) {
+  constructor({id, name, description, goals, regularGoals, budgetGoals}) {
     /** @private */
     this._id = id;
     /** @private */
@@ -36,6 +36,8 @@ class Objective {
     this._goals = goals;
     /** @private */
     this._regularGoals = regularGoals;
+    /** @private */
+    this._budgetGoals = budgetGoals;
   }
 
   /**
@@ -83,6 +85,15 @@ class Objective {
   }
 
   /**
+   * budgetGoals is the list of budget goals of this objective. All
+   * instances in this list must be of type BudgetGoal. See class BudgetGoal.
+   * @type {BudgetGoal[]}
+   */
+   get budgetGoals() {
+    return this._budgetGoals;
+  }
+
+  /**
    * goals replaces the set of one-off goals in this objective. See the
    * corresponding getter.
    * @param {Goal[]} goals
@@ -98,6 +109,15 @@ class Objective {
    */
   set regularGoals(regularGoals) {
     this._regularGoals = regularGoals;
+  }
+
+  /**
+   * budgetGoals replaces the set of budget goals in this objective. See the
+   * corresponding getter.
+   * @param {BudgetGoal[]} budgetGoals
+   */
+   set budgetGoals(budgetGoals) {
+    this._budgetGoals = budgetGoals;
   }
 }
 
@@ -471,6 +491,83 @@ class RegularGoal {
 }
 
 
+/**
+ * BudgetGoal aims at keeping an indicator within a certain budget.
+ * This is loosely modeled after service-level objectives, see
+ * https://sre.google/sre-book/service-level-objectives/.
+ */
+ class BudgetGoal {
+  constructor({
+    id = '',
+    name = '',
+    description = '',
+    target = 0.0,
+    current = 0.0,
+  }) {
+    /** @private */
+    this._id = id;
+    /** @private */
+    this._name = name;
+    /** @private */
+    this._description = description;
+    /** @private */
+    this._target = target;
+    /** @private */
+    this._current = current;
+  }
+
+  /**
+   * id uniquely identifies the (budget) goal.
+   * @type {string}
+   */
+   get id() {
+    return this._id;
+  }
+
+  /**
+   * name is the title of the budget goal.
+   * @type {string}
+   */
+  get name() {
+    return this._name;
+  }
+
+  /**
+   * description provides a more detailed narrative of what is to be achieved.
+   * @type {string}
+   */
+   get description() {
+    return this._description;
+  }
+
+  /**
+   * target specifies when the goal is met, i.e. the goal is met if and only if
+   * current >= target. Constraint: 0 <= target <= 1.   
+   * @type {number}
+   */
+   get target() {
+    return this._target;
+  }
+
+  /**
+   * current is the latest value of the indicator.
+   * @type {number}
+   */
+   get current() {
+    return this._current;
+  }
+
+  /**
+   * budget is equal to 1 - target, and describes how much shortfall from 100%
+   * is acceptable.
+   * @type {number}
+   */
+   get budget() {
+    return 1.0 - this.target;
+  }
+}
+
+
 /** Trajectory is a timeseries, i.e. a list of dated values. */
 class Trajectory {
   constructor() {
@@ -644,11 +741,22 @@ class ObjectiveConverter {
         trajectory: Array.from(g.trajectory),
       };
     }
+    let budgetGoals = {};
+    for (let g of objective.budgetGoals) {
+      budgetGoals[g.id] = {
+        id: g.id,
+        name: g.name,
+        description: g.description,
+        target: g.target,
+        current: g.current,
+      };
+    }
     return {
       name: objective.name,
       description: objective.description,
       goals: goals,
       regular_goals: regularGoals,
+      budget_goals: budgetGoals,
     };
   }
 
@@ -696,12 +804,25 @@ class ObjectiveConverter {
       }));
     }
 
+    let budgetGoals = [];
+    for (let id in objective.budget_goals) {
+      let g = objective.budget_goals[id];
+      budgetGoals.push(new BudgetGoal({
+        id: id,
+        name: g.name,
+        description: g.description,
+        target: g.target,
+        current: g.current,
+      }));
+    }
+
     return new Objective({
       id: snapshot.id,
       name: objective.name,
       description: objective.description,
       goals: goals,
       regularGoals: regularGoals,
+      budgetGoals: budgetGoals,
     });
   }
 }
@@ -857,6 +978,8 @@ const Mode = {
  * <regular-goal> Vue components.
  */
 let modeMixin = {
+  props: ['mode'],
+
   computed: {
     viewing() {
       return this.mode == Mode.VIEW;
@@ -896,7 +1019,7 @@ const ClipboardAction = {
 Vue.component('objective', {
   mixins: [modeMixin],
 
-  props: ['objective', 'mode', 'user_id'],
+  props: ['objective', 'user_id'],
 
   computed: {
     descriptionHtml() {
@@ -974,6 +1097,19 @@ Vue.component('objective', {
         [`regular_goals.${goalId}.trajectory`]: [
           {date: now, value: 0},
         ],
+      });
+    },
+
+    /**
+     * createBudgetGoal adds a new budget goal to the objective in Firestore.
+     */
+     createBudgetGoal() {
+      let goalId = uuidv4();
+      this.updateObjective({
+        [`budget_goals.${goalId}.name`]: 'AA New budget goal',
+        [`budget_goals.${goalId}.description`]: '',
+        [`budget_goals.${goalId}.target`]: 0.0,
+        [`budget_goals.${goalId}.current`]: 0.0,
       });
     },
 
@@ -1211,11 +1347,20 @@ Vue.component('objective', {
       });
     },
 
-    /** deleteGoal removes the goal from its objective. */
+    /** deleteRegularGoal removes the goal from its objective. */
     deleteRegularGoal(goal) {
       if (confirm(`Really delete the regular goal "${goal.name}"?`)) {
         this.updateObjective({
           [`regular_goals.${goal.id}`]: firebase.firestore.FieldValue.delete()
+        });
+      }
+    },
+
+    /** deleteBudgetGoal removes the goal from its objective. */
+    deleteBudgetGoal(goal) {
+      if (confirm(`Really delete the budget goal "${goal.name}"?`)) {
+        this.updateObjective({
+          [`budget_goals.${goal.id}`]: firebase.firestore.FieldValue.delete()
         });
       }
     },
@@ -1253,6 +1398,7 @@ Vue.component('objective', {
       <div v-show='planning'>
         <button v-on:click='createGoal'>Add goal</button>
         <button v-on:click='createRegularGoal'>Add regular goal</button>
+        <button v-on:click='createBudgetGoal'>Add budget goal</button>
         <button v-on:click="paste">Paste goal</button>
         <button v-on:click='deleteObjective'>Delete objective</button>
       </div>
@@ -1297,6 +1443,13 @@ Vue.component('objective', {
         v-on:cut="cutRegularGoal($event)"
         v-on:delete="deleteRegularGoal($event)"
       ></regular-goal>
+      <budget-goal
+        v-for="g in objective.budgetGoals"
+        v-bind:goal="g"
+        v-bind:mode='mode'
+        v-bind:key="g.id"
+        v-on:delete="deleteBudgetGoal($event)"
+      ></budget-goal>
     </div>
   `,
 });
@@ -1306,7 +1459,7 @@ Vue.component('objective', {
  * <regular-goal> Vue components.
  */
 let goalMixin = {
-  props: ['goal', 'mode'],
+  props: ['goal'],
 
   computed: {
     trajectory_last_updated() {
@@ -1602,7 +1755,7 @@ Vue.component('goal', {
 });
 
 /**
- * Registers the <goal> Vue component globally. This component renders a
+ * Registers the <regular-goal> Vue component globally. This component renders a
  * regular goal.
  */
 Vue.component('regular-goal', {
@@ -1755,7 +1908,7 @@ Vue.component('regular-goal', {
   template: `
     <div class="regular-goal">
       <div :class="budgetClass">
-        <div class="name">{{ goal.name }} <button class="id" v-if="planning" v-on:click="copyGoalIdToClipboard()">{{ goal.id }}</button></div>
+        <div class="name">{{ goal.name }}<button class="id" v-if="planning" v-on:click="copyGoalIdToClipboard()">{{ goal.id }}</button></div>
         <div v-show="planning">
           <button v-on:click="$emit('copy', goal)">copy</button>
           <button v-on:click="$emit('cut', goal)">cut</button>
@@ -1792,6 +1945,58 @@ Vue.component('regular-goal', {
   `
 });
 
+
+/**
+ * Registers the <budget-goal> Vue component globally. This component renders a
+ * budget goal.
+ */
+ Vue.component('budget-goal', {
+  mixins: [modeMixin],
+
+  props: ['goal'],
+
+  computed: {
+    descriptionHtml() {
+      let markdown = new SafeMarkdownRenderer();
+      return markdown.render(this.goal.description);
+    },
+
+    name: {
+      get() {
+        return this.goal.name;
+      },
+    },
+
+    description: {
+      get() {
+        return this.goal.description;
+      },
+    },
+
+    target: {
+      get() {
+        return this.goal.target;
+      },
+    },
+  },
+
+  template: `
+    <div class="budget-goal">
+      <div>
+        <div class="name">{{ goal.name }}</div>
+        <div v-show="planning">
+          <button v-on:click="$emit('delete', goal)">delete</button>
+        </div>
+        <div class="goal-description"><span v-html='descriptionHtml'></span></div>
+        <div>Target: {{ goal.target }}</div>
+        <div>Budget: {{ goal.budget }}</div>
+        <div>Current: {{ goal.current }}</div>
+      </div>
+    </div>
+  `
+});
+
+
 /**
  * The main Vue instance that is driving the application.
  */
@@ -1801,12 +2006,6 @@ let vue = new Vue({
   el: '#app',
 
   data: {
-    /**
-     * See enum Mode.
-     * @type {Mode}
-     */
-    mode: Mode.VIEW,
-
     /**
      * objectives holds all of the objectives fetched from Firestore.
      * objectives is considered immutable, all changes to an objective or its
@@ -1863,6 +2062,7 @@ let vue = new Vue({
         description: '',
         goals: [],
         regularGoals: [],
+        budgetGoals: [],
       });
       firebase.firestore()
           .collection('users')
@@ -1890,6 +2090,7 @@ let vue = new Vue({
               let o = d.data();
               o.goals = _.sortBy(o.goals, ['name', 'id']);
               o.regularGoals = _.sortBy(o.regularGoals, ['name', 'id']);
+              o.budgetGoals = _.sortBy(o.budgetGoals, ['name', 'id']);
               objectives.push(o);
             });
             this.objectives = _.sortBy(objectives, ['name', 'id']);

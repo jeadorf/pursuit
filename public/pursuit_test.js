@@ -49,6 +49,12 @@ describe('objective', () => {
     let objective = new Objective({regularGoals});
     expect(objective.regularGoals).to.equal(regularGoals);
   });
+
+  it('is constructed with budget goals', () => {
+    let budgetGoals = [new BudgetGoal({})];
+    let objective = new Objective({budgetGoals});
+    expect(objective.budgetGoals).to.equal(budgetGoals);
+  });
 });
 
 
@@ -418,6 +424,45 @@ describe('regular goal', () => {
 });
 
 
+describe('budget goal', () => {
+  it('is constructed with a name', () => {
+    let name = 'Distance';
+    let goal = new BudgetGoal({name});
+    expect(goal.name).to.equal(name);
+  });
+
+  it('is constructed with an identifier', () => {
+    let id = 'e156d27b-1182-433e-9ax3-f29c78b1a113';
+    let goal = new BudgetGoal({id});
+    expect(goal.id).to.equal(id);
+  });
+
+  it('is constructed with a description', () => {
+    let description = 'Get high-quality sleep on most days of the week.';
+    let goal = new BudgetGoal({description});
+    expect(goal.description).to.equal(description);
+  });
+
+  it('is constructed with a target', () => {
+    let target = 0.7;
+    let goal = new BudgetGoal({target});
+    expect(goal.target).to.equal(target);
+  });
+
+  it('is constructed with a current value', () => {
+    let current = 0.8;
+    let goal = new BudgetGoal({current});
+    expect(goal.current).to.equal(current);
+  });
+
+  it('is constructed with a budget', () => {
+    let target = 0.95;
+    let goal = new BudgetGoal({target});
+    expect(goal.budget).to.be.closeTo(0.05, 0.0001);
+  });
+});
+
+
 describe('trajectory', () => {
   it('has length zero if empty', () => {
     let trajectory = new Trajectory();
@@ -615,6 +660,14 @@ describe('objective converter', () => {
             ],
           },
         },
+        budget_goals: {
+          '9cdb7b1b-272a-4986-9522-211b21de99a3': {
+            name: 'name',
+            description: 'description',
+            target: 0.75,
+            current: 0.88,
+          },
+        },
       })
     };
     let expected = new Objective({
@@ -641,6 +694,15 @@ describe('objective converter', () => {
           trajectory: (new Trajectory().insert(2490, 0).insert(3622, 110))
         }),
       ],
+      budgetGoals: [
+        new BudgetGoal({
+          id: '9cdb7b1b-272a-4986-9522-211b21de99a3',
+          name: 'name',
+          description: 'description',
+          target: 0.75,
+          current: 0.88,
+        }),
+      ],
     });
 
     expect(converter.fromFirestore(doc)).to.eql(expected);
@@ -661,6 +723,7 @@ describe('objective converter', () => {
       description: 'description',
       goals: [],
       regularGoals: [],
+      budgetGoals: [],
     });
 
     expect(converter.fromFirestore(doc)).to.eql(expected);
@@ -691,6 +754,15 @@ describe('objective converter', () => {
           target: 0.75,
           total: 10,
           trajectory: (new Trajectory().insert(0, 0).insert(10, 10)),
+        }),
+      ],
+      budgetGoals: [
+        new BudgetGoal({
+          id: '9cdb7b1b-272a-4986-9522-211b21de99a3',
+          name: 'name',
+          description: 'description',
+          target: 0.75,
+          current: 0.88,
         }),
       ],
     });
@@ -724,6 +796,15 @@ describe('objective converter', () => {
             {date: 0, value: 0},
             {date: 10, value: 10},
           ],
+        }
+      },
+      budget_goals: {
+        ['9cdb7b1b-272a-4986-9522-211b21de99a3']: {
+          id: '9cdb7b1b-272a-4986-9522-211b21de99a3',
+          name: 'name',
+          description: 'description',
+          target: 0.75,
+          current: 0.88,
         }
       },
     };
@@ -940,6 +1021,20 @@ describe('objective component', () => {
       trajectory: (new Trajectory().insert(0, 0).insert(10, 10)),
     });
     let objective = new Objective({regularGoals: [goal]});
+
+    await c.$nextTick();
+    expect(c.text()).not.to.contain(goalName);
+    c.objective = objective;
+    await c.$nextTick();
+    expect(c.text()).to.contain(goalName);
+  });
+
+  it('shows budget goal to user', async () => {
+    let goalName = 'find a rainbow';
+    let goal = new BudgetGoal({
+      name: goalName,
+    });
+    let objective = new Objective({budgetGoals: [goal]});
 
     await c.$nextTick();
     expect(c.text()).not.to.contain(goalName);
