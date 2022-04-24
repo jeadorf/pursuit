@@ -11,6 +11,7 @@ type Objective struct {
 	Description  string                 `firestore:"description,omitempty"`
 	Goals        map[string]Goal        `firestore:"goals,omitempty"`
 	RegularGoals map[string]RegularGoal `firestore:"regular_goals,omitempty"`
+	BudgetGoals  map[string]BudgetGoal  `firestore:"budget_goals,omitempty"`
 }
 
 // Goal for Firestore serialization/deserialization.
@@ -35,6 +36,14 @@ type RegularGoal struct {
 	Trajectory  Trajectory `firestore:"trajectory,omitempty"`
 }
 
+// BudgetGoal for Firestore serialization/deserialization.
+type BudgetGoal struct {
+	Name        string  `firestore:"name,omitempty"`
+	Description string  `firestore:"description,omitempty"`
+	Target      float32 `firestore:"target,omitempty"`
+	Current     float32 `firestore:"current,omitempty"`
+}
+
 // Trajectory for Firestore serialization/deserialization.
 type Trajectory []DateValue
 
@@ -49,7 +58,7 @@ type DateValue struct {
 func (o *Objective) SetGoalValue(goalID string, value float32) error {
 	g, ok := o.Goals[goalID]
 	if !ok {
-		return fmt.Errorf("No such goal: %q", goalID)
+		return fmt.Errorf("no such goal: %q", goalID)
 	}
 	g.SetValue(value)
 	o.Goals[goalID] = g
@@ -61,10 +70,21 @@ func (o *Objective) SetGoalValue(goalID string, value float32) error {
 func (o *Objective) SetRegularGoalValue(goalID string, value float32) error {
 	g, ok := o.RegularGoals[goalID]
 	if !ok {
-		return fmt.Errorf("No such regular goal: %q", goalID)
+		return fmt.Errorf("no such regular goal: %q", goalID)
 	}
 	g.SetValue(value)
 	o.RegularGoals[goalID] = g
+	return nil
+}
+
+// SetBudgetGoalValue sets the current value on a budget goal.
+func (o *Objective) SetBudgetGoalValue(goalID string, value float32) error {
+	g, ok := o.BudgetGoals[goalID]
+	if !ok {
+		return fmt.Errorf("no such regular goal: %q", goalID)
+	}
+	g.SetValue(value)
+	o.BudgetGoals[goalID] = g
 	return nil
 }
 
@@ -73,7 +93,7 @@ func (o *Objective) SetRegularGoalValue(goalID string, value float32) error {
 func (o *Objective) IncrementGoalValue(goalID string, delta float32) error {
 	g, ok := o.Goals[goalID]
 	if !ok {
-		return fmt.Errorf("No such goal: %q", goalID)
+		return fmt.Errorf("no such goal: %q", goalID)
 	}
 	g.IncrementValue(delta)
 	o.Goals[goalID] = g
@@ -85,7 +105,7 @@ func (o *Objective) IncrementGoalValue(goalID string, delta float32) error {
 func (o *Objective) IncrementRegularGoalValue(goalID string, delta float32) error {
 	g, ok := o.RegularGoals[goalID]
 	if !ok {
-		return fmt.Errorf("No such regular goal: %q", goalID)
+		return fmt.Errorf("no such regular goal: %q", goalID)
 	}
 	g.IncrementValue(delta)
 	o.RegularGoals[goalID] = g
@@ -102,6 +122,11 @@ func (g *Goal) SetValue(value float32) {
 // using the current timestamp.
 func (g *RegularGoal) SetValue(value float32) {
 	g.Trajectory.SetValue(value)
+}
+
+// SetValue sets the current value of the budget goal.
+func (g *BudgetGoal) SetValue(value float32) {
+	g.Current = value
 }
 
 // SetValue adds a new value to the trajectory,

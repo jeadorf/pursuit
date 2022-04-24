@@ -58,6 +58,16 @@ func (s Storage) SetRegularGoalValue(userID, objectiveID, goalID string, value f
 	return s.updateRegularGoalTrajectory(userID, objectiveID, goalID, objective.Goals[goalID].Trajectory)
 }
 
+// SetBudgetGoalValue sets the current value of the budget goal.
+func (s Storage) SetBudgetGoalValue(userID, objectiveID, goalID string, value float32) error {
+	ref := s.client.Collection("users").Doc(userID).Collection("objectives").Doc(objectiveID)
+	update := firestore.Update{
+		Path:  fmt.Sprintf("budget_goals.%s.current", goalID),
+		Value: value}
+	_, err := ref.Update(s.ctx, []firestore.Update{update})
+	return err
+}
+
 // IncrementGoalValue adds a new value to the trajectory of the goal,
 // using the current timestamp.
 func (s Storage) IncrementGoalValue(userID, objectiveID, goalID string, delta float32) error {
@@ -88,19 +98,13 @@ func (s Storage) readObjective(userID string, objectiveID string) (Objective, er
 	ref := s.client.Collection("users").Doc(userID).Collection("objectives").Doc(objectiveID)
 	doc, err := ref.Get(s.ctx)
 	if err != nil {
-		return Objective{}, fmt.Errorf("Error reading objective %q for user %q: %v", userID, objectiveID, err)
+		return Objective{}, fmt.Errorf("error reading objective %q for user %q: %v", userID, objectiveID, err)
 	}
 	var objective Objective
 	if err := doc.DataTo(&objective); err != nil {
 		return Objective{}, err
 	}
 	return objective, nil
-}
-
-func (s Storage) writeObjective(userID string, objectiveID string, objective Objective) error {
-	ref := s.client.Collection("users").Doc(userID).Collection("objectives").Doc(objectiveID)
-	_, err := ref.Set(s.ctx, objective)
-	return err
 }
 
 func (s Storage) updateGoalTrajectory(userID string, objectiveID string, goalID string, trajectory Trajectory) error {
