@@ -99,11 +99,6 @@ describe('goal', () => {
     expect(goal.progress).to.be.NaN;
   });
 
-  it('is pledged by default', () => {
-    let goal = new Goal({});
-    expect(goal.stage).to.equal(Stage.PLEDGED);
-  });
-
   it('has progress', () => {
     let goal = new Goal({
       start: 0,
@@ -600,7 +595,6 @@ describe('objective converter', () => {
             target: 2300,
             start: 2490,
             end: 5439,
-            stage: Stage.ARCHIVED,
             trajectory: [
               {date: 2490, value: 0},
               {date: 3622, value: 110},
@@ -633,7 +627,6 @@ describe('objective converter', () => {
         target: 2300,
         start: 2490,
         end: 5439,
-        stage: Stage.ARCHIVED,
         trajectory: (new Trajectory().insert(2490, 0).insert(3622, 110))
       })],
       regularGoals: [
@@ -686,7 +679,6 @@ describe('objective converter', () => {
         target: 2300,
         start: 2490,
         end: 5439,
-        stage: Stage.ARCHIVED,
         trajectory: (new Trajectory().insert(2490, 0).insert(3622, 110)),
       })],
       regularGoals: [
@@ -713,7 +705,6 @@ describe('objective converter', () => {
           target: 2300,
           start: 2490,
           end: 5439,
-          stage: Stage.ARCHIVED,
           trajectory: [
             {date: 2490, value: 0},
             {date: 3622, value: 110},

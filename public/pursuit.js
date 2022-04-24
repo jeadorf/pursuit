@@ -102,20 +102,6 @@ class Objective {
 }
 
 /**
- * Stage enumerates all different states a goal can be in. The stage is
- * currently not surfaced or editable in the user interface.
- * @enum {string}
- */
-const Stage = {
-  /** DRAFT indicates that the goal has not yet been pledged. */
-  DRAFT: 'draft',
-  /** PLEDGED indicates commitment to the goal. */
-  PLEDGED: 'pledged',
-  /** ARCHIVED indicates that the goal is no longer actively pursued. */
-  ARCHIVED: 'archived',
-};
-
-/**
  * Goal represents a one-off goal, defined by a fixed time window between a
  * start and end date, a target value which needs to be reached by the end date,
  * and the timeseries recording past progress (or regression).
@@ -128,7 +114,6 @@ class Goal {
     target = 1.0,
     start = 0,
     end = 0,
-    stage = Stage.PLEDGED,
     trajectory = new Trajectory()
   }) {
     /** @private */
@@ -143,8 +128,6 @@ class Goal {
     this._start = start;
     /** @private */
     this._end = end;
-    /** @private */
-    this._stage = stage;
     /** @private */
     this._trajectory = trajectory;
   }
@@ -200,14 +183,6 @@ class Goal {
    */
   get end() {
     return this._end;
-  }
-
-  /**
-   * stage specifies the level of commitment to the goal.
-   * @type {Stage}
-   */
-  get stage() {
-    return this._stage;
   }
 
   /**
@@ -653,7 +628,6 @@ class ObjectiveConverter {
         start: g.start,
         end: g.end,
         target: g.target,
-        stage: g.stage,
         trajectory: Array.from(g.trajectory),
       };
     }
@@ -697,7 +671,6 @@ class ObjectiveConverter {
         start: g.start,
         end: g.end,
         target: g.target,
-        stage: g.stage,
         trajectory: t,
       }));
     }
@@ -979,7 +952,6 @@ Vue.component('objective', {
         [`goals.${goalId}.start`]: now,
         [`goals.${goalId}.end`]: now + 7 * DAY,
         [`goals.${goalId}.target`]: 100,
-        [`goals.${goalId}.stage`]: Stage.PLEDGED,
         [`goals.${goalId}.trajectory`]: [
           {date: now, value: 0},
         ],
@@ -1460,15 +1432,11 @@ Vue.component('goal', {
 
     velocityReport() {
       let now = new Date().getTime();
-      if (this.goal.stage != Stage.ARCHIVED) {
-        if (this.goal.end < now) {
-          return '';
-        }
-        let velocity = new VelocityReport();
-        return velocity.report(this.goal, now);
-      } else {
+      if (this.goal.end < now) {
         return '';
       }
+      let velocity = new VelocityReport();
+      return velocity.report(this.goal, now);
     },
 
     name: {
