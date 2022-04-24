@@ -1289,3 +1289,80 @@ describe('regular goal component', () => {
     expect(c.text()).not.to.contain('budget remaining (partial data)');
   });
 });
+
+
+describe('budget goal component', () => {
+  let c = null;
+
+  beforeEach(() => {
+    c = new Vue({
+      el: document.createElement('div'),
+      data: {
+        goal: new BudgetGoal({}),
+        mode: 'view',
+      },
+      methods: {
+        text() {
+          return this.$el.innerText;
+        }
+      },
+      template:
+          `<budget-goal v-bind:goal='goal' v-bind:mode='mode'></budget-goal>`
+    });
+  });
+
+  it('shows name to user', async () => {
+    let name = 'squat jump';
+    let goal = new BudgetGoal({name});
+
+    await c.$nextTick();
+    expect(c.text()).not.to.contain(name);
+    c.goal = goal;
+    await c.$nextTick();
+    expect(c.text()).to.contain(name);
+  });
+
+  it('shows description to user', async () => {
+    let description = 'one giant leap';
+    let goal = new BudgetGoal({description});
+
+    await c.$nextTick();
+    expect(c.text()).not.to.contain(description);
+    c.goal = goal;
+    await c.$nextTick();
+    expect(c.text()).to.contain(description);
+  });
+
+  it('shows user the id when planning', async () => {
+    let id = '1234567890';
+    let goal = new BudgetGoal({id});
+    c.mode = 'plan';
+
+    c.goal = goal;
+
+    await c.$nextTick();
+    expect(c.text()).to.contain(id);
+  });
+
+  it('does not show the id to user when viewing', async () => {
+    let id = '1234567890';
+    let goal = new BudgetGoal({id});
+    c.mode = 'view';
+
+    c.goal = goal;
+
+    await c.$nextTick();
+    expect(c.text()).not.to.contain(id);
+  });
+
+  it('does not show the id to user when tracking', async () => {
+    let id = '1234567890';
+    let goal = new BudgetGoal({id});
+    c.mode = 'track';
+
+    c.goal = goal;
+
+    await c.$nextTick();
+    expect(c.text()).not.to.contain(id);
+  });
+});

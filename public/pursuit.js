@@ -565,7 +565,38 @@ class RegularGoal {
    get budget() {
     return 1.0 - this.target;
   }
+
+  /**
+   * budgetRemaining returns the fraction of how much of the budget remains,
+   * equivalent to (current - target) / budget. Negative, if no budget remains.
+   * @type {number}
+   */
+   get budgetRemaining() {
+      return (this.current - this.target) / this.budget;
+   }
 }
+
+
+/**
+ * GoalType represents which .
+ * @enum {string}
+ */
+ const GoalType = {
+  /**
+   * ONE_OFF indicates instance of {@type Goal}.
+   */
+  ONE_OFF: 'one-off',
+
+  /**
+   * REGULAR indicates instance of {@type RegularGoal}.
+   */
+  REGULAR: 'regular',
+
+  /**
+   * BUDGET indicates instance of {@type BudgetGoal}.
+   */
+  BUDGET: 'budget',
+};
 
 
 /** Trajectory is a timeseries, i.e. a list of dated values. */
@@ -1220,6 +1251,7 @@ Vue.component('objective', {
         fromObjective: this.objective,
         goal: goal,
         action: ClipboardAction.COPY,
+        type: GoalType.ONE_OFF,
       });
     },
 
@@ -1229,6 +1261,7 @@ Vue.component('objective', {
         fromObjective: this.objective,
         goal: goal,
         action: ClipboardAction.CUT,
+        type: GoalType.ONE_OFF,
       });
     },
 
@@ -1332,8 +1365,9 @@ Vue.component('objective', {
     copyRegularGoal(goal) {
       this.$emit('copy', {
         fromObjective: this.objective,
-        regularGoal: goal,
+        goal: goal,
         action: ClipboardAction.COPY,
+        type: GoalType.REGULAR,
       });
     },
 
@@ -1342,8 +1376,9 @@ Vue.component('objective', {
     cutRegularGoal(goal) {
       this.$emit('cut', {
         fromObjective: this.objective,
-        regularGoal: goal,
+        goal: goal,
         action: ClipboardAction.CUT,
+        type: GoalType.REGULAR,
       });
     },
 
@@ -1354,6 +1389,58 @@ Vue.component('objective', {
           [`regular_goals.${goal.id}`]: firebase.firestore.FieldValue.delete()
         });
       }
+    },
+
+    /** updateBudgetGoalName renames a budget goal. */
+    updateBudgetGoalName(goal, name) {
+      this.updateObjective({
+        [`budget_goals.${goal.id}.name`]: name,
+      });
+    },
+
+    /**
+       updateBudgetGoalDescription changes the description of a budget goal.
+     */
+       updateBudgetGoalDescription(goal, description) {
+      this.updateObjective({
+        [`budget_goals.${goal.id}.description`]: description,
+      });
+    },
+
+    /** updateBudgetGoalTarget changes the target of a budget goal. */
+    updateBudgetGoalTarget(goal, target) {
+      this.updateObjective({
+        [`budget_goals.${goal.id}.target`]: target,
+      });
+    },
+
+    /** updateBudgetGoalCurrent changes the current value of a budget goal. */
+    updateBudgetGoalCurrent(goal, current) {
+      this.updateObjective({
+        [`budget_goals.${goal.id}.current`]: current,
+      });
+    },
+
+    /** copyBudgetGoal emits an event about copying the budget goal from the
+     * objective. */
+     copyBudgetGoal(goal) {
+      this.$emit('copy', {
+        fromObjective: this.objective,
+        goal: goal,
+        action: ClipboardAction.COPY,
+        type: GoalType.BUDGET,
+      });
+    },
+
+    /** cutBudgetGoal emits an event about cutting the regular goal from the
+     * objective. */
+    cutBudgetGoal(goal) {
+      this.$emit('cut', {
+        fromObjective: this.objective,
+        goal: goal,
+        action: ClipboardAction.CUT,
+        type: GoalType.BUDGET,
+      });
     },
 
     /** deleteBudgetGoal removes the goal from its objective. */
@@ -1448,6 +1535,12 @@ Vue.component('objective', {
         v-bind:goal="g"
         v-bind:mode='mode'
         v-bind:key="g.id"
+        v-on:update-name="updateBudgetGoalName($event.goal, $event.name)"
+        v-on:update-description="updateBudgetGoalDescription($event.goal, $event.description)"
+        v-on:update-target="updateBudgetGoalTarget($event.goal, $event.target)"
+        v-on:update-current="updateBudgetGoalCurrent($event.goal, $event.current)"
+        v-on:copy="copyBudgetGoal($event)"
+        v-on:cut="cutBudgetGoal($event)"
         v-on:delete="deleteBudgetGoal($event)"
       ></budget-goal>
     </div>
@@ -1514,6 +1607,7 @@ let goalMixin = {
   },
 };
 
+
 let localeMixin = {
   props: ['locale', 'timezone'],
 
@@ -1542,6 +1636,7 @@ let localeMixin = {
     },
   },
 };
+
 
 /**
  * Registers the <goal> Vue component globally. This component renders a goal.
@@ -1965,32 +2060,125 @@ Vue.component('regular-goal', {
       get() {
         return this.goal.name;
       },
+      set: _.debounce(
+          function(name) {
+            this.$emit('update-name', {
+              goal: this.goal,
+              name: name,
+            });
+          },
+          1000),
     },
 
     description: {
       get() {
         return this.goal.description;
       },
+      set: _.debounce(
+          function(description) {
+            this.$emit('update-description', {
+              goal: this.goal,
+              description: description,
+            });
+          },
+          1000),
     },
 
     target: {
       get() {
         return this.goal.target;
       },
+      set: _.debounce(
+          function(target) {
+            this.$emit('update-target', {
+              goal: this.goal,
+              target: target,
+            });
+          },
+          1000),
+    },
+
+    current: {
+      get() {
+        return this.goal.current;
+      },
+      set: _.debounce(
+          function(current) {
+            this.$emit('update-current', {
+              goal: this.goal,
+              current: current,
+            });
+          },
+          1000),
+    },
+
+    barColor() {
+      return this.goal.budgetRemaining > 0 ? 'rgb(136,187,77)' : 'rgb(187, 102, 77)'
+    },
+
+    barXPos() {
+      if (this.goal.budgetRemaining) {
+        return '0%';
+      } else {
+        return (100 - Math.max(0, Math.min(100, Math.abs((100 * this.goal.budgetRemaining))))) + '%';
+      }
+    },
+
+    barWidth() {
+      return Math.max(0, Math.min(100, Math.abs((100 * this.goal.budgetRemaining)))) + '%';
+    },
+
+    budgetClass() {
+      if (this.goal.budgetRemaining > 0) {
+        return 'within-budget';
+      } else {
+        return 'out-of-budget';
+      }
+    },
+
+    budgetRemaining() {
+      return (100 * this.goal.budgetRemaining ).toFixed(0) + '%';
+    },
+  },
+
+  methods: {
+    copyGoalIdToClipboard() {
+      navigator.clipboard.writeText(this.goal.id);
     },
   },
 
   template: `
     <div class="budget-goal">
-      <div>
-        <div class="name">{{ goal.name }}</div>
+      <div :class="budgetClass">
+        <div class="name">{{ goal.name }}<button class="id" v-if="planning" v-on:click="copyGoalIdToClipboard()">{{ goal.id }}</button></div>
         <div v-show="planning">
+          <button v-on:click="$emit('copy', goal)">copy</button>
+          <button v-on:click="$emit('cut', goal)">cut</button>
           <button v-on:click="$emit('delete', goal)">delete</button>
         </div>
         <div class="goal-description"><span v-html='descriptionHtml'></span></div>
-        <div>Target: {{ goal.target }}</div>
-        <div>Budget: {{ goal.budget }}</div>
-        <div>Current: {{ goal.current }}</div>
+        <div class="level">
+          <span class="budget">{{ budgetRemaining }}</span>
+          <span class="window"> of budget remaining</span>
+          <svg class="chart" preserveAspectRatio='none' style="height: 24px">
+            <rect y="2" height="2" width="100%" fill="#ccc"></rect>
+            <rect y="0" height="6" :x="barXPos" :width="barWidth" :fill="barColor"></rect>
+            <text
+                class='velocity'
+                text-anchor='middle'
+                x='50%'
+                y='20'>
+                  current: {{ (100 * goal.current).toFixed(1) }}%;
+                  target: {{ (100 * goal.target).toFixed(1) }}%
+            </text>
+          </svg>
+        </div>
+        <div class='edit' v-if="planning">
+          <div><div>Name</div> <input type="text" v-model="name"></div>
+          <div><div>Description</div> <input type="text" v-model="description"></div>
+          <div><div>Target</div> <input type="number" v-model.number="target"></div>
+          <div><div>Current</div> <input type="number" v-model.number="current"></div>
+        </div>
       </div>
     </div>
   `
@@ -2139,21 +2327,7 @@ let vue = new Vue({
         return;
       }
 
-      if (!this.clippedGoal.goal && !this.clippedGoal.regularGoal) {
-        // The "clipboard" contains invalid input. This is a bug.
-        throw 'Error: clippedGoal contains invalid input.';
-      }
-
-      if (this.clippedGoal.goal && this.clippedGoal.regularGoal) {
-        // The "clipboard" contains invalid input. This is a bug.
-        throw 'Error: clippedGoal has both goal and regularGoal set.';
-      }
-
-      let regular = Boolean(this.clippedGoal.regularGoal);
-
-      let goalId = (regular
-        ? this.clippedGoal.regularGoal.id
-        : this.clippedGoal.goal.id);
+      let goalId = this.clippedGoal.goal.id;
 
       let from = firebase.firestore()
         .collection('users')
@@ -2167,7 +2341,17 @@ let vue = new Vue({
         .collection('objectives')
         .doc(toObjective.id);
 
-      let prefix = regular ? 'regular_goals' : 'goals';
+      let prefix = '';
+      if (this.clippedGoal.type == GoalType.ONE_OFF) {
+        prefix = 'goals';
+      } else if (this.clippedGoal.type == GoalType.REGULAR) {
+        prefix = 'regular_goals';
+      } else if (this.clippedGoal.type == GoalType.BUDGET) {
+        prefix = 'budget_goals';
+      } else {
+        // This is a bug.
+        throw `Error: unknown type ${this.clippedGoal.type}`;
+      }
 
       if (this.clippedGoal.action == ClipboardAction.COPY) {
         firebase.firestore().runTransaction((tx) => {
@@ -2177,7 +2361,7 @@ let vue = new Vue({
             }
             let g = s.data()[prefix][goalId];
             if (!g) {
-              throw 'goal does not exist';
+              throw `goal does not exist: ${goalId}`;
             }
         		let newGoalId = uuidv4();
             g.name = `${g.name} (copy)`;
@@ -2274,7 +2458,7 @@ let vue = new Vue({
           v-on:paste="paste($event)">
       </objective>
       <div class='popup' v-if='clippedGoal'>
-        <em>"{{ clippedGoal.regularGoal ? clippedGoal.regularGoal.name : clippedGoal.goal.name }}"</em> ready to paste.
+        <em>"{{ clippedGoal.goal.name }}"</em> ready to paste.
       </div>
     </div>
   `
