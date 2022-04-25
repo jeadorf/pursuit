@@ -42,6 +42,7 @@ type BudgetGoal struct {
 	Description string  `firestore:"description,omitempty"`
 	Target      float32 `firestore:"target,omitempty"`
 	Current     float32 `firestore:"current,omitempty"`
+	LastUpdated int64   `firestore:"last_updated,omitempty"`
 }
 
 // Trajectory for Firestore serialization/deserialization.
@@ -124,9 +125,11 @@ func (g *RegularGoal) SetValue(value float32) {
 	g.Trajectory.SetValue(value)
 }
 
-// SetValue sets the current value of the budget goal.
+// SetValue sets the current value of the budget goal, as well as the
+// last updated timestamp.
 func (g *BudgetGoal) SetValue(value float32) {
 	g.Current = value
+	g.LastUpdated = time.Now().UnixNano() / 1000 / 1000
 }
 
 // SetValue adds a new value to the trajectory,

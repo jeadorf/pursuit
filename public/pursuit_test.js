@@ -455,6 +455,11 @@ describe('budget goal', () => {
     expect(goal.current).to.equal(current);
   });
 
+  it('is constructed with a negative value for last updated', () => {
+    let goal = new BudgetGoal({});
+    expect(goal.lastUpdated).to.equal(-1);
+  });
+
   it('is constructed with a budget', () => {
     let target = 0.95;
     let goal = new BudgetGoal({target});
@@ -666,6 +671,7 @@ describe('objective converter', () => {
             description: 'description',
             target: 0.75,
             current: 0.88,
+            last_updated: 1632,
           },
         },
       })
@@ -701,6 +707,7 @@ describe('objective converter', () => {
           description: 'description',
           target: 0.75,
           current: 0.88,
+          lastUpdated: 1632,
         }),
       ],
     });
@@ -763,6 +770,7 @@ describe('objective converter', () => {
           description: 'description',
           target: 0.75,
           current: 0.88,
+          lastUpdated: 1632,
         }),
       ],
     });
@@ -805,6 +813,7 @@ describe('objective converter', () => {
           description: 'description',
           target: 0.75,
           current: 0.88,
+          last_updated: 1632,
         }
       },
     };

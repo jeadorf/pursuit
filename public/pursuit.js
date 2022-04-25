@@ -503,6 +503,7 @@ class RegularGoal {
     description = '',
     target = 0.0,
     current = 0.0,
+    lastUpdated = -1,
   }) {
     /** @private */
     this._id = id;
@@ -514,6 +515,8 @@ class RegularGoal {
     this._target = target;
     /** @private */
     this._current = current;
+    /** @private */
+    this._lastUpdated = lastUpdated;
   }
 
   /**
@@ -555,6 +558,14 @@ class RegularGoal {
    */
    get current() {
     return this._current;
+  }
+
+  /**
+   * lastUpdated describes the time the value (current) received the most recent update.
+   * @type {number}
+   */
+   get lastUpdated() {
+    return this._lastUpdated;
   }
 
   /**
@@ -780,6 +791,7 @@ class ObjectiveConverter {
         description: g.description,
         target: g.target,
         current: g.current,
+        last_updated: g.lastUpdated,
       };
     }
     return {
@@ -844,6 +856,7 @@ class ObjectiveConverter {
         description: g.description,
         target: g.target,
         current: g.current,
+        lastUpdated: g.last_updated,
       }));
     }
 
@@ -2139,6 +2152,34 @@ Vue.component('regular-goal', {
     budgetRemaining() {
       return (100 * this.goal.budgetRemaining ).toFixed(0) + '%';
     },
+
+    lastUpdated() {
+      // TODO: Remove duplication in code
+      let format_date = (millis) => {
+        let is = (a, b) => {
+          return (
+              a.getDate() == b.getDate() && a.getMonth() == b.getMonth() &&
+              a.getFullYear() == b.getFullYear());
+        };
+        let date = new Date(millis);
+        let today = new Date();
+        let yesterday = new Date(today.getTime() - DAY);
+        let suffix = '';
+        if (is(date, today)) {
+          suffix = ' (today)';
+        }
+        if (is(date, yesterday)) {
+          suffix = ' (yesterday)';
+        }
+        return new Date(date).toLocaleString() + suffix;
+      };
+
+      if (this.goal.lastUpdated < 0) {
+        return `last updated: unknown`;
+      }
+
+      return `last updated ${format_date(this.goal.lastUpdated)}`;
+    },
   },
 
   methods: {
@@ -2169,7 +2210,7 @@ Vue.component('regular-goal', {
             <rect y="0" height="6" :x="barXPos" :width="barWidth" :fill="barColor"></rect>
           </svg>
           <div>
-            <span class="last-updated">&nbsp;</div>
+            <span class="last-updated">{{ lastUpdated }}</div>
           </div>
         </div>
         <div class="edit" v-if="planning">

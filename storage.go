@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"cloud.google.com/go/firestore"
 
@@ -61,10 +62,13 @@ func (s Storage) SetRegularGoalValue(userID, objectiveID, goalID string, value f
 // SetBudgetGoalValue sets the current value of the budget goal.
 func (s Storage) SetBudgetGoalValue(userID, objectiveID, goalID string, value float32) error {
 	ref := s.client.Collection("users").Doc(userID).Collection("objectives").Doc(objectiveID)
-	update := firestore.Update{
+	current := firestore.Update{
 		Path:  fmt.Sprintf("budget_goals.%s.current", goalID),
 		Value: value}
-	_, err := ref.Update(s.ctx, []firestore.Update{update})
+	lastUpdated := firestore.Update{
+		Path:  fmt.Sprintf("budget_goals.%s.last_updated", goalID),
+		Value: time.Now().UnixNano() / 1000 / 1000}
+	_, err := ref.Update(s.ctx, []firestore.Update{current, lastUpdated})
 	return err
 }
 
