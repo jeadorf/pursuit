@@ -2160,18 +2160,17 @@ Vue.component('regular-goal', {
         <div class="level">
           <span class="budget">{{ budgetRemaining }}</span>
           <span class="window"> of budget remaining</span>
-          <svg class="chart" preserveAspectRatio="none" style="height: 24px">
+          <span class="value">
+            @ {{ (100 * goal.current).toFixed(1) }}%,
+            targeting {{ (100 * goal.target).toFixed(1) }}%
+          </span>
+          <svg class="chart" preserveAspectRatio="none" style="height: 6px">
             <rect y="2" height="2" width="100%" fill="#ccc"></rect>
             <rect y="0" height="6" :x="barXPos" :width="barWidth" :fill="barColor"></rect>
-            <text
-                class="status"
-                text-anchor="middle"
-                x="50%"
-                y="22">
-                  current: {{ (100 * goal.current).toFixed(1) }}%;
-                  target: {{ (100 * goal.target).toFixed(1) }}%
-            </text>
           </svg>
+          <div>
+            <span class="last-updated">&nbsp;</div>
+          </div>
         </div>
         <div class="edit" v-if="planning">
           <div><div>Name</div> <input type="text" v-model="name"></div>
