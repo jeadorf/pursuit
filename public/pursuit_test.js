@@ -44,12 +44,6 @@ describe('objective', () => {
     expect(objective.goals).to.equal(goals);
   });
 
-  it('is constructed with regular goals', () => {
-    let regularGoals = [new RegularGoal({})];
-    let objective = new Objective({regularGoals});
-    expect(objective.regularGoals).to.equal(regularGoals);
-  });
-
   it('is constructed with budget goals', () => {
     let budgetGoals = [new BudgetGoal({})];
     let objective = new Objective({budgetGoals});
@@ -313,117 +307,6 @@ describe('goal', () => {
 });
 
 
-describe('regular goal', () => {
-  it('is constructed with a name', () => {
-    let name = 'Regular sleep';
-    let goal = new RegularGoal({name});
-    expect(goal.name).to.equal(name);
-  });
-
-  it('is constructed with an identifier', () => {
-    let id = 'e156d27b-1182-433e-9ax3-f29c78b1a113';
-    let goal = new RegularGoal({id});
-    expect(goal.id).to.equal(id);
-  });
-
-  it('is constructed with a description', () => {
-    let description = 'Get high-quality sleep on most days of the week.';
-    let goal = new RegularGoal({description});
-    expect(goal.description).to.equal(description);
-  });
-
-  it('is constructed with a window', () => {
-    let window = 90;
-    let goal = new RegularGoal({window});
-    expect(goal.window).to.equal(window);
-  });
-
-  it('is constructed with a target', () => {
-    let target = 0.7;
-    let goal = new RegularGoal({target});
-    expect(goal.target).to.equal(target);
-  });
-
-  it('is constructed with a total', () => {
-    let total = 28;
-    let goal = new RegularGoal({total});
-    expect(goal.total).to.equal(total);
-  });
-
-  it('is constructed with a unit', () => {
-    let unit = 'km';
-    let goal = new RegularGoal({unit});
-    expect(goal.unit).to.equal(unit);
-  });
-
-  it('has all budget remaining', () => {
-    let goal = new RegularGoal({
-      window: 10,
-      target: 7.5,
-      total: 10,
-      trajectory: (new Trajectory().insert(0, 0).insert(10 * DAY, 10)),
-    });
-    expect(goal.budgetRemaining(10 * DAY)).to.be.approximately(1, 0.000001);
-    expect(goal.value(10 * DAY)).to.be.approximately(10, 0.000001);
-  });
-
-  it('has 20% budget remaining', () => {
-    let goal = new RegularGoal({
-      window: 10,
-      target: 7.5,
-      total: 10,
-      trajectory: (new Trajectory().insert(0, 0).insert(10 * DAY, 8)),
-    });
-    expect(goal.budgetRemaining(10 * DAY)).to.be.approximately(0.20, 0.000001);
-    expect(goal.value(10 * DAY)).to.be.approximately(8, 0.000001);
-  });
-
-  it('has zero budget remaining', () => {
-    let goal = new RegularGoal({
-      window: 10,
-      target: 7.5,
-      total: 10,
-      trajectory: (new Trajectory().insert(0, 0).insert(10 * DAY, 7.5)),
-    });
-    expect(goal.budgetRemaining(10 * DAY)).to.be.approximately(0, 0.000001);
-    expect(goal.value(10 * DAY)).to.be.approximately(7.5, 0.000001);
-  });
-
-  it('has partial data up until window', () => {
-    let goal = new RegularGoal({
-      window: 10,
-      target: 7.5,
-      total: 10,
-      trajectory: (new Trajectory().insert(0, 0))
-    });
-    expect(goal.partialData(10 * DAY - 1)).to.be.true;
-    expect(goal.partialData(10 * DAY)).to.be.false;
-  });
-
-  it('has budget remaining prorated if only partial data available', () => {
-    let goal = new RegularGoal({
-      window: 28,
-      target: 12,
-      total: 20,
-      trajectory: (new Trajectory().insert(14 * DAY, 0).insert(28 * DAY, 8)),
-    });
-    expect(goal.budgetRemainingProrated(28 * DAY))
-        .to.be.approximately(0.50, 0.000001);
-    expect(goal.value(28 * DAY)).to.be.approximately(8, 0.000001);
-  });
-
-  it('has NaN as remaining budget when trajectory is empty', () => {
-    let goal = new RegularGoal({});
-    expect(goal.budgetRemaining(10)).to.be.NaN;
-  });
-
-  it('has NaN as prorated remaining budget when trajectory is empty', () => {
-    let goal = new RegularGoal({});
-    expect(goal.budgetRemainingProrated(10)).to.be.NaN;
-  });
-});
-
-
 describe('budget goal', () => {
   it('is constructed with a name', () => {
     let name = 'Distance';
@@ -651,20 +534,6 @@ describe('objective converter', () => {
             ],
           }
         },
-        regular_goals: {
-          'e156d27b-1182-433e-9ax3-f29c78b1a113': {
-            name: 'name',
-            description: 'description',
-            unit: 'unit',
-            window: 10,
-            target: 0.75,
-            total: 10,
-            trajectory: [
-              {date: 2490, value: 0},
-              {date: 3622, value: 110},
-            ],
-          },
-        },
         budget_goals: {
           '9cdb7b1b-272a-4986-9522-211b21de99a3': {
             name: 'name',
@@ -688,18 +557,6 @@ describe('objective converter', () => {
         end: 5439,
         trajectory: (new Trajectory().insert(2490, 0).insert(3622, 110))
       })],
-      regularGoals: [
-        new RegularGoal({
-          id: 'e156d27b-1182-433e-9ax3-f29c78b1a113',
-          name: 'name',
-          description: 'description',
-          unit: 'unit',
-          window: 10,
-          target: 0.75,
-          total: 10,
-          trajectory: (new Trajectory().insert(2490, 0).insert(3622, 110))
-        }),
-      ],
       budgetGoals: [
         new BudgetGoal({
           id: '9cdb7b1b-272a-4986-9522-211b21de99a3',
@@ -729,7 +586,6 @@ describe('objective converter', () => {
       name: 'name',
       description: 'description',
       goals: [],
-      regularGoals: [],
       budgetGoals: [],
     });
 
@@ -751,18 +607,6 @@ describe('objective converter', () => {
         end: 5439,
         trajectory: (new Trajectory().insert(2490, 0).insert(3622, 110)),
       })],
-      regularGoals: [
-        new RegularGoal({
-          id: 'e156d27b-1182-433e-9ax3-f29c78b1a113',
-          name: 'name',
-          description: 'description',
-          unit: 'unit',
-          window: 10,
-          target: 0.75,
-          total: 10,
-          trajectory: (new Trajectory().insert(0, 0).insert(10, 10)),
-        }),
-      ],
       budgetGoals: [
         new BudgetGoal({
           id: '9cdb7b1b-272a-4986-9522-211b21de99a3',
@@ -788,21 +632,6 @@ describe('objective converter', () => {
           trajectory: [
             {date: 2490, value: 0},
             {date: 3622, value: 110},
-          ],
-        }
-      },
-      regular_goals: {
-        ['e156d27b-1182-433e-9ax3-f29c78b1a113']: {
-          id: 'e156d27b-1182-433e-9ax3-f29c78b1a113',
-          name: 'name',
-          description: 'description',
-          unit: 'unit',
-          window: 10,
-          target: 0.75,
-          total: 10,
-          trajectory: [
-            {date: 0, value: 0},
-            {date: 10, value: 10},
           ],
         }
       },
@@ -1020,24 +849,6 @@ describe('objective component', () => {
     expect(c.text()).to.contain(goalName);
   });
 
-  it('shows regular goal to user', async () => {
-    let goalName = 'find a rainbow';
-    let goal = new RegularGoal({
-      name: goalName,
-      window: 10,
-      target: 0.75,
-      total: 10,
-      trajectory: (new Trajectory().insert(0, 0).insert(10, 10)),
-    });
-    let objective = new Objective({regularGoals: [goal]});
-
-    await c.$nextTick();
-    expect(c.text()).not.to.contain(goalName);
-    c.objective = objective;
-    await c.$nextTick();
-    expect(c.text()).to.contain(goalName);
-  });
-
   it('shows budget goal to user', async () => {
     let goalName = 'find a rainbow';
     let goal = new BudgetGoal({
@@ -1175,127 +986,6 @@ describe('goal component', () => {
 
     await c.$nextTick();
     expect(c.text()).not.to.contain(id);
-  });
-});
-
-describe('regular goal component', () => {
-  let c = null;
-
-  beforeEach(() => {
-    c = new Vue({
-      el: document.createElement('div'),
-      data: {
-        goal: new RegularGoal({}),
-        mode: 'view',
-      },
-      methods: {
-        text() {
-          return this.$el.innerText;
-        }
-      },
-      template:
-          `<regular-goal v-bind:goal='goal' v-bind:mode='mode'></regular-goal>`
-    });
-  });
-
-  it('shows name to user', async () => {
-    let name = 'squat jump';
-    let goal = new RegularGoal({name});
-
-    await c.$nextTick();
-    expect(c.text()).not.to.contain(name);
-    c.goal = goal;
-    await c.$nextTick();
-    expect(c.text()).to.contain(name);
-  });
-
-  it('shows description to user', async () => {
-    let description = 'one giant leap';
-    let goal = new RegularGoal({description});
-
-    await c.$nextTick();
-    expect(c.text()).not.to.contain(description);
-    c.goal = goal;
-    await c.$nextTick();
-    expect(c.text()).to.contain(description);
-  });
-
-  it('allows user to increment or decrement when tracking', async () => {
-    c.mode = 'track';
-    await c.$nextTick();
-    expect(c.text()).to.contain('increment');
-    expect(c.text()).to.contain('decrement');
-  });
-
-  it('does not allow user to increment or decrement when viewing', async () => {
-    c.mode = 'view';
-    await c.$nextTick();
-    expect(c.text()).to.not.contain('increment');
-    expect(c.text()).to.not.contain('decrement');
-  });
-
-  it('does not allow user to increment or decrement when planning',
-     async () => {
-       c.mode = 'plan';
-       await c.$nextTick();
-       expect(c.text()).to.not.contain('increment');
-       expect(c.text()).to.not.contain('decrement');
-     });
-
-  it('shows user the id when planning', async () => {
-    let id = '1234567890';
-    let goal = new RegularGoal({id});
-    c.mode = 'plan';
-
-    c.goal = goal;
-
-    await c.$nextTick();
-    expect(c.text()).to.contain(id);
-  });
-
-  it('does not show the id to user when viewing', async () => {
-    let id = '1234567890';
-    let goal = new RegularGoal({id});
-    c.mode = 'view';
-
-    c.goal = goal;
-
-    await c.$nextTick();
-    expect(c.text()).not.to.contain(id);
-  });
-
-  it('does not show the id to user when tracking', async () => {
-    let id = '1234567890';
-    let goal = new RegularGoal({id});
-    c.mode = 'track';
-
-    c.goal = goal;
-
-    await c.$nextTick();
-    expect(c.text()).not.to.contain(id);
-  });
-
-  it('indicates to user if data is only partially available', async () => {
-    let now = new Date().getTime();
-    c.goal = new RegularGoal({
-      window: 2,
-      total: 2,
-      target: 1,
-      trajectory: (new Trajectory().insert(now - DAY, 0).insert(now, 1)),
-    });
-
-    await c.$nextTick();
-    expect(c.text()).to.contain('budget remaining (partial data)');
-
-    c.goal = new RegularGoal({
-      window: 2,
-      total: 2,
-      target: 1,
-      trajectory: (new Trajectory().insert(now - 2 * DAY, 0).insert(now, 1)),
-    });
-
-    await c.$nextTick();
-    expect(c.text()).not.to.contain('budget remaining (partial data)');
   });
 });
 

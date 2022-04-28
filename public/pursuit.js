@@ -21,11 +21,11 @@ let DAY = 24 * HOUR;
 
 /**
  * Objective represents a set of goals. There are two kinds of goals: One-off
- * goals, and regular goals. One-off goals are scoped to a specific, fixed time
- * window. In contrast, regular goals are bound to a moving time window.
+ * goals, and budget goals. One-off goals are scoped to a specific, fixed time
+ * window. In contrast, budget goals are bound to a moving time window.
  */
 class Objective {
-  constructor({id, name, description, goals, regularGoals, budgetGoals}) {
+  constructor({id, name, description, goals, budgetGoals}) {
     /** @private */
     this._id = id;
     /** @private */
@@ -34,8 +34,6 @@ class Objective {
     this._description = description;
     /** @private */
     this._goals = goals;
-    /** @private */
-    this._regularGoals = regularGoals;
     /** @private */
     this._budgetGoals = budgetGoals;
   }
@@ -76,15 +74,6 @@ class Objective {
   }
 
   /**
-   * regularGoals is the list of regular goals of this objective. All
-   * instances in this list must be of type RegularGoal. See class RegularGoal.
-   * @type {RegularGoal[]}
-   */
-  get regularGoals() {
-    return this._regularGoals;
-  }
-
-  /**
    * budgetGoals is the list of budget goals of this objective. All
    * instances in this list must be of type BudgetGoal. See class BudgetGoal.
    * @type {BudgetGoal[]}
@@ -100,15 +89,6 @@ class Objective {
    */
   set goals(goals) {
     this._goals = goals;
-  }
-
-  /**
-   * regularGoals replaces the set of one-off goals in this objective. See the
-   * corresponding getter.
-   * @param {RegularGoal[]} regularGoals
-   */
-  set regularGoals(regularGoals) {
-    this._regularGoals = regularGoals;
   }
 
   /**
@@ -330,168 +310,6 @@ class Goal {
 
 
 /**
- * RegularGoal is a goal over a moving time window of fixed length. The regular
- * goal has a total, which describes the ideal difference between the
- * timeseries values at the boundaries of the time window. The regular goal has
- * a target, which specifies the percentage of the total, at which we still
- * consider the goal to be reached.
- */
-class RegularGoal {
-  constructor({
-    id = '',
-    name = '',
-    description = '',
-    unit = '',
-    window = 28,
-    target = 0.0,
-    total = 0.0,
-    trajectory = new Trajectory()
-  }) {
-    /** @private */
-    this._id = id;
-    /** @private */
-    this._name = name;
-    /** @private */
-    this._description = description;
-    /** @private */
-    this._unit = unit;
-    /** @private */
-    this._window = window;
-    /** @private */
-    this._target = target;
-    /** @private */
-    this._total = total;
-    /** @private */
-    this._trajectory = trajectory;
-  }
-
-  /**
-   * id uniquely identifies the (regular) goal.
-   * @type {string}
-   */
-  get id() {
-    return this._id;
-  }
-
-  /**
-   * name is the title of the regular goal.
-   * @type {string}
-   */
-  get name() {
-    return this._name;
-  }
-
-  /**
-   * description provides a more detailed narrative of what is to be achieved.
-   * @type {string}
-   */
-  get description() {
-    return this._description;
-  }
-
-  /**
-   * unit describes the unit for the total, and for the values of the
-   * timeseries (trajectory).
-   * @type {string}
-   */
-  get unit() {
-    return this._unit;
-  }
-
-  /**
-   * window defines the length of the moving time window in days.
-   * @type {number}
-   */
-  get window() {
-    return this._window;
-  }
-
-  /**
-   * target defines the percentage of the total that needs to be attained
-   * within the moving time window.
-   * @type {number}
-   */
-  get target() {
-    return this._target;
-  }
-
-  /**
-   * total provides the ideal difference of the timeseries between the start
-   * and the end of the moving time window.
-   * @type {number}
-   */
-  get total() {
-    return this._total;
-  }
-
-  /**
-   * trajectory describes the progress towards the goal. It is a timeseries.
-   * The trajectory can be empty: this means that no values have been reported
-   * for the goal.
-   * @type {Trajectory}
-   */
-  get trajectory() {
-    return this._trajectory;
-  }
-
-  /**
-   * value describes the progress at a given point in time (the end of the time
-   * window) relative to the start of the moving time window. For example, if
-   * the number of pizzas eaten was 12 at the start of the window, and the
-   * number of pizzas eaten is 21 at the end of the window, the value is 21 -
-   * 12 = 9.
-   * @type {number}
-   */
-  value(by_date) {
-    return (
-        this.trajectory.at(by_date) -
-        this.trajectory.at(by_date - this.window * DAY));
-  }
-
-  /**
-   * budget_remaining returns the percentage of the permissible shortfall from
-   * the total; this budget is equivalent to the error budget of a Service
-   * Level Objectives (SLO).
-   * @type {number}
-   */
-  budgetRemaining(by_date) {
-    return (this.value(by_date) - this.target) / (this.total - this.target);
-  }
-
-  /**
-   * budget_remaining_prorated is like budget_remaining, but adjusts for
-   * partial data, i.e. when the moving window extends to earlier dates than
-   * where recordings were available.
-   * @type {number}
-   */
-  budgetRemainingProrated(by_date) {
-    if (!this.trajectory.earliest) {
-      return NaN;
-    }
-    if (this.partialData(by_date)) {
-      let r = (by_date - this.trajectory.earliest.date) / (this.window * DAY);
-      let b = (this.value(by_date) - r * this.target) /
-          (r * this.total - r * this.target);
-      return Math.min(1.0, b);
-    }
-    return this.budgetRemaining(by_date);
-  }
-
-  /**
-   * partialData returns true if the trajectory does not contain any point
-   * earlier than the start of the moving time window.
-   * @type {boolean}
-   */
-  partialData(by_date) {
-    if (!this.trajectory.earliest) {
-      return NaN;
-    }
-    return this.trajectory.earliest.date > (by_date - this.window * DAY);
-  }
-}
-
-
-/**
  * BudgetGoal aims at keeping an indicator within a certain budget.
  * This is loosely modeled after service-level objectives, see
  * https://sre.google/sre-book/service-level-objectives/.
@@ -597,11 +415,6 @@ class RegularGoal {
    * ONE_OFF indicates instance of {@type Goal}.
    */
   ONE_OFF: 'one-off',
-
-  /**
-   * REGULAR indicates instance of {@type RegularGoal}.
-   */
-  REGULAR: 'regular',
 
   /**
    * BUDGET indicates instance of {@type BudgetGoal}.
@@ -770,19 +583,7 @@ class ObjectiveConverter {
         trajectory: Array.from(g.trajectory),
       };
     }
-    let regularGoals = {};
-    for (let g of objective.regularGoals) {
-      regularGoals[g.id] = {
-        id: g.id,
-        name: g.name,
-        description: g.description,
-        unit: g.unit,
-        window: g.window,
-        target: g.target,
-        total: g.total,
-        trajectory: Array.from(g.trajectory),
-      };
-    }
+
     let budgetGoals = {};
     for (let g of objective.budgetGoals) {
       budgetGoals[g.id] = {
@@ -794,11 +595,11 @@ class ObjectiveConverter {
         last_updated: g.lastUpdated,
       };
     }
+
     return {
       name: objective.name,
       description: objective.description,
       goals: goals,
-      regular_goals: regularGoals,
       budget_goals: budgetGoals,
     };
   }
@@ -826,27 +627,6 @@ class ObjectiveConverter {
       }));
     }
 
-    let regularGoals = [];
-    for (let id in objective.regular_goals) {
-      let g = objective.regular_goals[id];
-      let t = new Trajectory();
-      if (g.trajectory) {
-        for (let {date, value} of g.trajectory) {
-          t.insert(date, value);
-        }
-      }
-      regularGoals.push(new RegularGoal({
-        id: id,
-        name: g.name,
-        description: g.description,
-        unit: g.unit,
-        window: g.window,
-        target: g.target,
-        total: g.total,
-        trajectory: t,
-      }));
-    }
-
     let budgetGoals = [];
     for (let id in objective.budget_goals) {
       let g = objective.budget_goals[id];
@@ -865,7 +645,6 @@ class ObjectiveConverter {
       name: objective.name,
       description: objective.description,
       goals: goals,
-      regularGoals: regularGoals,
       budgetGoals: budgetGoals,
     });
   }
@@ -1018,8 +797,8 @@ const Mode = {
 };
 
 /**
- * modeMixin provides common functionality to both the <goal> and the
- * <regular-goal> Vue components.
+ * modeMixin provides a component with information about
+ * the current mode of the UI.
  */
 let modeMixin = {
   props: ['mode'],
@@ -1120,25 +899,6 @@ Vue.component('objective', {
         [`goals.${goalId}.end`]: now + 7 * DAY,
         [`goals.${goalId}.target`]: 100,
         [`goals.${goalId}.trajectory`]: [
-          {date: now, value: 0},
-        ],
-      });
-    },
-
-    /**
-     * createRegularGoal adds a new regular goal to the objective in Firestore.
-     */
-    createRegularGoal() {
-      let goalId = uuidv4();
-      let now = new Date().getTime();
-      this.updateObjective({
-        [`regular_goals.${goalId}.name`]: 'AA New regular goal',
-        [`regular_goals.${goalId}.description`]: '',
-        [`regular_goals.${goalId}.unit`]: '',
-        [`regular_goals.${goalId}.total`]: 100,
-        [`regular_goals.${goalId}.target`]: 0,
-        [`regular_goals.${goalId}.window`]: 28,
-        [`regular_goals.${goalId}.trajectory`]: [
           {date: now, value: 0},
         ],
       });
@@ -1286,124 +1046,6 @@ Vue.component('objective', {
       }
     },
 
-    /**
-     * incrementRegularGoal increments the latest value of a regular goal by
-     * one.
-     */
-    incrementRegularGoal(goal) {
-      let t = _.cloneDeep(goal.trajectory);
-      t.insert(new Date().getTime(), t.latest.value + 1);
-      t.compactHead(HOUR);
-
-      this.updateObjective({
-        [`regular_goals.${goal.id}.trajectory`]: Array.from(t),
-      });
-    },
-
-    /**
-     * decrementRegularGoal decrements the latest value of a regular goal by
-     * one.
-     */
-    decrementRegularGoal(goal) {
-      let t = _.cloneDeep(goal.trajectory);
-      t.insert(new Date().getTime(), t.latest.value - 1);
-      t.compactHead(HOUR);
-
-      this.updateObjective({
-        [`regular_goals.${goal.id}.trajectory`]: Array.from(t),
-      });
-    },
-
-    /** updateRegularGoalName renames a regular goal. */
-    updateRegularGoalName(goal, name) {
-      this.updateObjective({
-        [`regular_goals.${goal.id}.name`]: name,
-      });
-    },
-
-    /**
-       updateRegularGoalDescription changes the description of a regular goal.
-     */
-    updateRegularGoalDescription(goal, description) {
-      this.updateObjective({
-        [`regular_goals.${goal.id}.description`]: description,
-      });
-    },
-
-    /** updateRegularGoalWindow changes the window of a regular goal. */
-    updateRegularGoalWindow(goal, window) {
-      this.updateObjective({
-        [`regular_goals.${goal.id}.window`]: window,
-      });
-    },
-
-    /** updateRegularGoalTarget changes the target of a regular goal. */
-    updateRegularGoalTarget(goal, target) {
-      this.updateObjective({
-        [`regular_goals.${goal.id}.target`]: target,
-      });
-    },
-
-    /** updateRegularGoalTotal changes the total of a regular goal. */
-    updateRegularGoalTotal(goal, total) {
-      this.updateObjective({
-        [`regular_goals.${goal.id}.total`]: total,
-      });
-    },
-
-    /**
-     * updateRegularGoalUnit changes the unit of a regular goal.
-     * @param {RegularGoal} goal
-     * @param {string} unit
-     */
-    updateRegularGoalUnit(goal, unit) {
-      this.updateObjective({
-        [`regular_goals.${goal.id}.unit`]: unit,
-      });
-    },
-
-    /** updateRegularGoalCurrent changes the latest value of a regular goal. */
-    updateRegularGoalCurrent(goal, current) {
-      let t = _.cloneDeep(goal.trajectory);
-      t.insert(new Date().getTime(), current);
-      t.compactHead(HOUR);
-
-      this.updateObjective({
-        [`regular_goals.${goal.id}.trajectory`]: Array.from(t),
-      });
-    },
-
-    /** copyRegularGoal emits an event about copying the regular goal from the
-     * objective. */
-    copyRegularGoal(goal) {
-      this.$emit('copy', {
-        fromObjective: this.objective,
-        goal: goal,
-        action: ClipboardAction.COPY,
-        type: GoalType.REGULAR,
-      });
-    },
-
-    /** cutRegularGoal emits an event about cutting the regular goal from the
-     * objective. */
-    cutRegularGoal(goal) {
-      this.$emit('cut', {
-        fromObjective: this.objective,
-        goal: goal,
-        action: ClipboardAction.CUT,
-        type: GoalType.REGULAR,
-      });
-    },
-
-    /** deleteRegularGoal removes the goal from its objective. */
-    deleteRegularGoal(goal) {
-      if (confirm(`Really delete the regular goal "${goal.name}"?`)) {
-        this.updateObjective({
-          [`regular_goals.${goal.id}`]: firebase.firestore.FieldValue.delete()
-        });
-      }
-    },
-
     /** updateBudgetGoalName renames a budget goal. */
     updateBudgetGoalName(goal, name) {
       this.updateObjective({
@@ -1445,7 +1087,7 @@ Vue.component('objective', {
       });
     },
 
-    /** cutBudgetGoal emits an event about cutting the regular goal from the
+    /** cutBudgetGoal emits an event about cutting the budget goal from the
      * objective. */
     cutBudgetGoal(goal) {
       this.$emit('cut', {
@@ -1497,7 +1139,6 @@ Vue.component('objective', {
       </div>
       <div v-show="planning">
         <button v-on:click="createGoal">Add goal</button>
-        <button v-on:click="createRegularGoal">Add regular goal</button>
         <button v-on:click="createBudgetGoal">Add budget goal</button>
         <button v-on:click="paste">Paste goal</button>
         <button v-on:click="deleteObjective">Delete objective</button>
@@ -1525,24 +1166,6 @@ Vue.component('objective', {
         v-on:cut="cutGoal($event)"
         v-on:delete="deleteGoal($event)"
       ></goal>
-      <regular-goal
-        v-for="g in objective.regularGoals"
-        v-bind:goal="g"
-        v-bind:mode="mode"
-        v-bind:key="g.id"
-        v-on:increment="incrementRegularGoal($event)"
-        v-on:decrement="decrementRegularGoal($event)"
-        v-on:update-name="updateRegularGoalName($event.goal, $event.name)"
-        v-on:update-description="updateRegularGoalDescription($event.goal, $event.description)"
-        v-on:update-window="updateRegularGoalWindow($event.goal, $event.window)"
-        v-on:update-target="updateRegularGoalTarget($event.goal, $event.target)"
-        v-on:update-total="updateRegularGoalTotal($event.goal, $event.total)"
-        v-on:update-current="updateRegularGoalCurrent($event.goal, $event.current)"
-        v-on:update-unit="updateRegularGoalUnit($event.goal, $event.unit)"
-        v-on:copy="copyRegularGoal($event)"
-        v-on:cut="cutRegularGoal($event)"
-        v-on:delete="deleteRegularGoal($event)"
-      ></regular-goal>
       <budget-goal
         v-for="g in objective.budgetGoals"
         v-bind:goal="g"
@@ -1561,8 +1184,10 @@ Vue.component('objective', {
 });
 
 /**
- * goalMixin provides common functionality to both the <goal> and the
- * <regular-goal> Vue components.
+ * goalMixin provides common functionality to the <goal>
+ * Vue components. This mixin may be merged into the
+ * component since the <regular-goal> component no longer
+ * exists.
  */
 let goalMixin = {
   props: ['goal'],
@@ -1862,197 +1487,6 @@ Vue.component('goal', {
   `,
 });
 
-/**
- * Registers the <regular-goal> Vue component globally. This component renders a
- * regular goal.
- */
-Vue.component('regular-goal', {
-  mixins: [goalMixin, modeMixin],
-
-  computed: {
-    barColor() {
-      let now = new Date().getTime();
-      return this.goal.budgetRemainingProrated(now) > 0 ? 'rgb(136,187,77)' :
-                                                          'rgb(187, 102, 77)'
-    },
-
-    barXPos() {
-      let now = new Date().getTime();
-      let b = this.goal.budgetRemainingProrated(now);
-      if (b > 0) {
-        return '0%';
-      } else {
-        return (100 - Math.max(0, Math.min(100, Math.abs((100 * b))))) + '%';
-      }
-    },
-
-    barWidth() {
-      let now = new Date().getTime();
-      let b = this.goal.budgetRemainingProrated(now);
-      return Math.max(0, Math.min(100, Math.abs((100 * b)))) + '%';
-    },
-
-    budgetClass() {
-      let now = new Date().getTime();
-      if (this.goal.budgetRemainingProrated(now) > 0) {
-        return 'within-budget';
-      } else {
-        return 'out-of-budget';
-      }
-    },
-
-    budgetRemaining() {
-      let now = new Date().getTime();
-      return (100 * this.goal.budgetRemainingProrated(now)).toFixed(0) + '%';
-    },
-
-    descriptionHtml() {
-      let markdown = new SafeMarkdownRenderer();
-      return markdown.render(this.goal.description);
-    },
-
-    partialData() {
-      let now = new Date().getTime();
-      if (this.goal.partialData(now)) {
-        return '(partial data)';
-      } else {
-        return '';
-      }
-    },
-
-    status() {
-      let now = new Date().getTime();
-      return `@ ${this.goal.value(now).toFixed(2)},
-              targeting ${(this.goal.target).toFixed(2)} / ${this.goal.total} ${
-          this.goal.unit}
-              over ${this.goal.window}-day window`;
-    },
-
-    name: {
-      get() {
-        return this.goal.name;
-      },
-      set: _.debounce(
-          function(name) {
-            this.$emit('update-name', {
-              goal: this.goal,
-              name: name,
-            });
-          },
-          1000),
-    },
-
-    description: {
-      get() {
-        return this.goal.description;
-      },
-      set: _.debounce(
-          function(description) {
-            this.$emit('update-description', {
-              goal: this.goal,
-              description: description,
-            });
-          },
-          1000),
-    },
-
-    window: {
-      get() {
-        return this.goal.window;
-      },
-      set: _.debounce(
-          function(window) {
-            this.$emit('update-window', {
-              goal: this.goal,
-              window: window,
-            });
-          },
-          1000),
-    },
-
-    target: {
-      get() {
-        return this.goal.target;
-      },
-      set: _.debounce(
-          function(target) {
-            this.$emit('update-target', {
-              goal: this.goal,
-              target: target,
-            });
-          },
-          1000),
-    },
-
-    total: {
-      get() {
-        return this.goal.total;
-      },
-      set: _.debounce(
-          function(total) {
-            this.$emit('update-total', {
-              goal: this.goal,
-              total: total,
-            });
-          },
-          1000),
-    },
-
-    unit: {
-      get() {
-        return this.goal.unit
-      },
-      set: _.debounce(
-          function(unit) {
-            this.$emit('update-unit', {
-              goal: this.goal,
-              unit: unit,
-            });
-          },
-          1000),
-    },
-  },
-
-  template: `
-    <div class="regular-goal">
-      <div :class="budgetClass">
-        <div class="name">{{ goal.name }}<button class="id" v-if="planning" v-on:click="copyGoalIdToClipboard()">{{ goal.id }}</button></div>
-        <div v-show="planning">
-          <button v-on:click="$emit('copy', goal)">copy</button>
-          <button v-on:click="$emit('cut', goal)">cut</button>
-          <button v-on:click="$emit('delete', goal)">delete</button>
-        </div>
-        <div v-if="tracking">
-          <button v-on:click="$emit('increment', goal)" title="increment">increment</button>
-          <button v-on:click="$emit('decrement', goal)" title="decrement">decrement</button>
-        </div>
-        <div class="goal-description"><span v-html="descriptionHtml"></span></div>
-        <div class="level">
-          <span class="budget">{{ budgetRemaining }}</span>
-          <span class="window"> of budget remaining {{ partialData }}</span>
-          <span class="value">{{ status }}</span>
-          <svg class="chart" preserveAspectRatio="none" style="height: 6px">
-            <rect y="2" height="2" width="100%" fill="#ccc"></rect>
-            <rect y="0" height="6" :x="barXPos" :width="barWidth" :fill="barColor"></rect>
-          </svg>
-        </div>
-        <div>
-          <span class="last-updated">{{ trajectory_last_updated }}</span>
-        </div>
-      </div>
-      <div class="edit" v-if="planning">
-        <div><div>Name</div> <input type="text" v-model="name"></div>
-        <div><div>Description</div> <input type="text" v-model="description"></div>
-        <div><div>Window</div> <input type="number" v-model.number="window"></div>
-        <div><div>Target</div> <input type="number" v-model.number="target"></div>
-        <div><div>Total</div> <input type="number" v-model.number="total"></div>
-        <div><div>Current</div> <input type="number" v-model.number="current"> <div>{{ trajectory_last_updated }}</div></div>
-        <div><div>Unit</div> <input type="text" v-model="unit"></div>
-      </div>
-    </div>
-  `
-});
-
 
 /**
  * Registers the <budget-goal> Vue component globally. This component renders a
@@ -2289,7 +1723,6 @@ let vue = new Vue({
         name: 'AA New objective',
         description: '',
         goals: [],
-        regularGoals: [],
         budgetGoals: [],
       });
       firebase.firestore()
@@ -2317,7 +1750,6 @@ let vue = new Vue({
             snapshot.forEach((d) => {
               let o = d.data();
               o.goals = _.sortBy(o.goals, ['name', 'id']);
-              o.regularGoals = _.sortBy(o.regularGoals, ['name', 'id']);
               o.budgetGoals = _.sortBy(o.budgetGoals, ['name', 'id']);
               objectives.push(o);
             });
@@ -2384,8 +1816,6 @@ let vue = new Vue({
       let prefix = '';
       if (this.clippedGoal.type == GoalType.ONE_OFF) {
         prefix = 'goals';
-      } else if (this.clippedGoal.type == GoalType.REGULAR) {
-        prefix = 'regular_goals';
       } else if (this.clippedGoal.type == GoalType.BUDGET) {
         prefix = 'budget_goals';
       } else {

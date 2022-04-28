@@ -194,7 +194,6 @@ textarea {
 }
 
 .goal,
-.regular-goal,
 .budget-goal {
   border-bottom: 1px dotted lightgray;
   margin-left: 10px;
@@ -203,11 +202,6 @@ textarea {
 
 .goal {
   padding-bottom: 5px;
-}
-
-.regular-goal {
-  fill: darkgrey;
-  font-size: 14px;
 }
 
 .out-of-budget {
