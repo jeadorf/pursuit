@@ -1,6 +1,6 @@
 module github.com/jeadorf/pursuit
 
-go 1.19
+go 1.22
 
 require (
 	cloud.google.com/go/firestore v1.5.0
