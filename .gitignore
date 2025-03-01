@@ -5,3 +5,5 @@ firestore-debug.log
 ui-debug.log
 .firebase/
 public/out
+
+vendor/
