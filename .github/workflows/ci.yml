@@ -16,6 +16,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  GOTOOLCHAIN: auto
+
 jobs:
   build_and_test:
     name: Build & Test
@@ -28,7 +31,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: '1.24.x'
+          go-version-file: 'go.mod'
           cache-dependency-path: 'go.sum'
 
       - name: Tidy Go Modules
