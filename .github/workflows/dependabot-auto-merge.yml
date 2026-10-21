@@ -1,0 +1,125 @@
+# Auto-merges safe Dependabot PRs after CI succeeds.
+# Native auto-merge ('gh pr merge --auto') is paywalled for private repos on GitHub Free.
+# Using 'workflow_run' runs with write permissions after CI passes, allowing a direct merge.
+# Docs: https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#workflow_run
+
+name: Dependabot Auto-Merge
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  dependabot-merge:
+    name: Approve and Merge Dependabot PR
+    runs-on: ubuntu-latest
+    if: >-
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.actor.login == 'dependabot[bot]' &&
+      github.event.workflow_run.pull_requests[0] != null
+
+    steps:
+      - name: Inspect PR eligibility
+        id: check-eligibility
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.workflow_run.pull_requests[0].number }}
+        run: |
+          PR_JSON=$(gh pr view "$PR_NUMBER" --json isDraft,state,title,body,labels)
+
+          STATE=$(echo "$PR_JSON" | jq -r '.state')
+          if [ "$STATE" != "OPEN" ]; then
+            echo "PR state is '$STATE' (expected 'OPEN'). Skipping merge."
+            echo "should_merge=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          IS_DRAFT=$(echo "$PR_JSON" | jq -r '.isDraft')
+          if [ "$IS_DRAFT" = "true" ]; then
+            echo "PR is marked as draft. Skipping auto-merge."
+            echo "should_merge=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Skip PRs with explicit major bump labels
+          HAS_MAJOR_LABEL=$(echo "$PR_JSON" | jq -r '[.labels[]?.name | ascii_downcase] | any(test("semver-major|^major$|breaking"))')
+          if [ "$HAS_MAJOR_LABEL" = "true" ]; then
+            echo "PR has a major version bump label. Requiring manual human review."
+            echo "should_merge=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Inspect title and update summary for breaking bumps (new_major > old_major or 0.x minor increments)
+          export PR_JSON
+          IS_MAJOR_BUMP=$(python3 - << 'EOF'
+          import json, os, re, sys
+
+          pr_data = json.loads(os.environ.get("PR_JSON", "{}"))
+          title = pr_data.get("title", "")
+          body = pr_data.get("body", "") or ""
+
+          # Strip changelogs and release notes to prevent false-positive version detections
+          for marker in ["### Release notes", "### Changelog", "### Commits", "### Detailed Changelog"]:
+              if marker in body:
+                  body = body.split(marker)[0]
+
+          lines_to_inspect = [title] + [
+              line.strip() for line in body.splitlines()
+              if line.strip().startswith(("-", "*", "•")) or any(k in line.lower() for k in ["updates", "bumps"])
+          ]
+
+          # Matches "from [v]X[.y.z] to [v]Y[.a.b]"
+          pattern = re.compile(
+              r'\bfrom\s+[`\'"]?v?(\d+)(?:\.(\d+))?(?:\.[^`\'"\s]+)?[`\'"]?\s+to\s+[`\'"]?v?(\d+)(?:\.(\d+))?(?:\.[^`\'"\s]+)?[`\'"]?',
+              re.IGNORECASE
+          )
+
+          major_bumps = []
+          for line in lines_to_inspect:
+              for match in pattern.finditer(line):
+                  old_maj, old_min = int(match.group(1)), int(match.group(2) or 0)
+                  new_maj, new_min = int(match.group(3)), int(match.group(4) or 0)
+                  if new_maj > old_maj or (old_maj == 0 and new_maj == 0 and new_min > old_min):
+                      major_bumps.append(f"{old_maj}.{old_min} -> {new_maj}.{new_min}")
+
+          if major_bumps:
+              print(f"Detected breaking bump(s): {', '.join(major_bumps)}", file=sys.stderr)
+              print("true")
+          else:
+              print("false")
+          EOF
+          )
+
+          if [ "$IS_MAJOR_BUMP" = "true" ]; then
+            echo "PR contains a major/breaking update. Halting auto-merge for human review."
+            echo "should_merge=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "should_merge=true" >> "$GITHUB_OUTPUT"
+
+      - name: Approve Dependabot PR
+        if: steps.check-eligibility.outputs.should_merge == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.workflow_run.pull_requests[0].number }}
+        run: |
+          gh pr review --approve "$PR_NUMBER"
+
+      # Direct squash merge without '--auto' (merges immediately via API since CI already passed)
+      - name: Direct Squash Merge Dependabot PR
+        if: steps.check-eligibility.outputs.should_merge == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.workflow_run.pull_requests[0].number }}
+        run: |
+          gh pr merge "$PR_NUMBER" --squash --delete-branch

@@ -1,0 +1,57 @@
+# Go Continuous Integration Pipeline with status gate aggregation
+# Docs: https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions
+
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build_and_test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v7
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.24.x'
+          cache-dependency-path: 'go.sum'
+
+      - name: Tidy Go Modules
+        run: go mod tidy -v
+
+      - name: Build Packages
+        run: go build -v ./...
+
+      - name: Run Tests
+        run: go test -v ./...
+
+  ci-gate:
+    name: CI Gate
+    needs: [build_and_test]
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Evaluate Build Status
+        run: |
+          echo "Build & Test Job Status: ${{ needs.build_and_test.result }}"
+          if [[ "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}" == "true" ]]; then
+            echo "CI GATE: FAILED. Upstream build/test job failed or was cancelled."
+            exit 1
+          fi
+          echo "CI GATE: PASSED. All required checks succeeded."
